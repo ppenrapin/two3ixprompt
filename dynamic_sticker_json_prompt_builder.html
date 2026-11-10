@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Sticker JSON Prompt Builder</title>
+<style>
+:root{color-scheme:dark;--bg:#10131a;--panel:#191f2b;--panel2:#202838;--line:#303b4e;--text:#edf2fa;--muted:#aab6c8;--accent:#79b8ff;--good:#9ce0b1}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,"Segoe UI",sans-serif}
+header{padding:26px max(20px,calc((100% - 1200px)/2));background:linear-gradient(120deg,#17263a,#1a1d2b);border-bottom:1px solid var(--line)}
+h1{font-size:clamp(22px,3vw,32px);margin:0 0 6px}header p{margin:0;color:var(--muted)}
+main{max-width:1200px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.95fr);gap:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+h2{font-size:18px;margin:0 0 14px}h3{font-size:15px;margin:20px 0 10px;color:#cfe2ff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:5px;min-width:0}.field.full{grid-column:1/-1}
+label{font-weight:600;font-size:13px;color:#d5deeb}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#0f1520;color:var(--text);padding:10px;font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px #79b8ff22}
+textarea{resize:vertical;min-height:76px}small,.hint{font-size:12px;color:var(--muted)}
+.upload{border:1px dashed #52647e;border-radius:10px;padding:14px;background:#111925}
+.preview{display:flex;gap:12px;align-items:center;margin-top:10px}.preview img{max-width:150px;max-height:130px;object-fit:contain;background:#fff;border-radius:8px}.preview span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:9px;font-weight:650;cursor:pointer}
+button.primary{background:#24558a;border-color:#3979b9}button:hover{filter:brightness(1.15)}
+pre{white-space:pre;overflow:auto;max-height:70vh;background:#0b1018;border:1px solid var(--line);border-radius:10px;padding:14px;font:12px/1.55 ui-monospace,Consolas,monospace}
+.status{color:var(--good);font-size:12px;min-height:18px}.note{background:#111925;border-left:3px solid var(--accent);padding:10px 12px;border-radius:6px;color:var(--muted);font-size:13px}
+.checks{display:flex;gap:14px;flex-wrap:wrap}.checks label{font-weight:400;display:flex;align-items:center;gap:6px}.checks input{width:auto}
+footer{max-width:1200px;margin:0 auto;padding:0 18px 28px;color:var(--muted);font-size:12px}
+@media(max-width:850px){main{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Dynamic Sticker JSON Prompt Builder</h1>
+  <p>อัปโหลดภาพต้นแบบ → กำหนดข้อความและรูปแบบ → สร้าง JSON Prompt แบบเรียลไทม์</p>
+</header>
+<main>
+<section class="panel">
+  <h2>1. ภาพต้นแบบและข้อมูลสติกเกอร์</h2>
+  <div class="upload">
+    <div class="field">
+      <label for="imageFile">อัปโหลดภาพต้นแบบ</label>
+      <input id="imageFile" type="file" accept="image/*">
+      <small>ภาพจะแสดงตัวอย่างในหน้านี้ แต่ไม่ได้ถูกส่งไปยัง AI อัตโนมัติ ต้องแนบภาพเดียวกันตอนนำ Prompt ไปใช้</small>
+    </div>
+    <div class="preview" id="previewWrap" hidden>
+      <img id="preview" alt="ภาพต้นแบบ">
+      <span id="fileInfo"></span>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:14px">
+    <div class="field full">
+      <label for="stickerText">ข้อความต้นฉบับบนสติกเกอร์</label>
+      <textarea id="stickerText" placeholder="พิมพ์ข้อความตามภาพต้นแบบให้ตรงทุกตัวอักษร"></textarea>
+      <small>ใส่ข้อความเพื่อช่วยให้ AI ออกแบบท่าทางและเอฟเฟกต์ให้ตรงความหมาย หากไม่ทราบให้เว้นว่างและสั่ง AI อ่านจากภาพ</small>
+    </div>
+    <div class="field">
+      <label for="language">ภาษาของ Prompt</label>
+      <select id="language"><option value="English">English (แนะนำสำหรับโมเดลภาพ)</option><option value="Thai">ภาษาไทย</option><option value="Bilingual">ไทย + English</option></select>
+    </div>
+    <div class="field">
+      <label for="textPolicy">การจัดการข้อความต้นฉบับ</label>
+      <select id="textPolicy"><option value="preserve_exactly">คงคำเดิมทุกตัวอักษร</option><option value="read_and_preserve">ให้ AI อ่านจากภาพแล้วคงคำเดิม</option><option value="preserve_and_style">คงคำเดิม แต่ปรับตำแหน่ง/ลูกเล่นได้</option></select>
+    </div>
+  </div>
+
+  <h3>2. รูปแบบภาพและเฟรม</h3>
+  <div class="grid">
+    <div class="field"><label for="columns">จำนวนคอลัมน์</label><select id="columns"><option>2</option><option>4</option><option>1</option></select></div>
+    <div class="field"><label for="rows">จำนวนแถว</label><select id="rows"><option>2</option><option>1</option><option>4</option></select></div>
+    <div class="field"><label for="frameW">ความกว้างต่อเฟรม (px)</label><input id="frameW" type="number" min="64" max="2048" value="320"></div>
+    <div class="field"><label for="frameH">ความสูงต่อเฟรม (px)</label><input id="frameH" type="number" min="64" max="2048" value="270"></div>
+    <div class="field"><label for="format">รูปแบบไฟล์</label><select id="format"><option>PNG</option><option>WebP</option></select></div>
+    <div class="field"><label for="background">พื้นหลัง</label><select id="background"><option value="solid white, clean and uniform">สีขาวเรียบ ตัดพื้นหลังง่าย</option><option value="transparent background (if supported)">โปร่งใส (ถ้าโมเดลรองรับ)</option><option value="solid bright green chroma key">เขียว Chroma Key</option><option value="solid magenta chroma key">ม่วงแดง Chroma Key</option></select></div>
+  </div>
+
+  <h3>3. กำหนดแนวทาง Animation</h3>
+  <div class="grid">
+    <div class="field"><label for="motion">ลักษณะการเคลื่อนไหว</label><select id="motion"><option value="expressive cartoon movement">การ์ตูนชัดเจน มีพลัง</option><option value="subtle natural movement">เคลื่อนไหวเล็กน้อยเป็นธรรมชาติ</option><option value="exaggerated comedy movement">เว่อร์ สนุก ตลก ทะเล้น</option><option value="dynamic action movement">แอ็กชัน รวดเร็ว มีแรงปะทะ</option><option value="cute bouncy movement">น่ารัก เด้งดึ๋ง</option><option value="dramatic emotional movement">อารมณ์ชัดเจน ดรามาติก</option></select></div>
+    <div class="field"><label for="emotion">อารมณ์หลัก</label><select id="emotion"><option value="infer from the original message">ให้ AI วิเคราะห์จากข้อความ</option><option>happy / excited</option><option>angry / frustrated</option><option>sad / disappointed</option><option>confused / surprised</option><option>teasing / playful</option><option>love / affection</option><option>sleepy / tired</option><option>sarcastic / cheeky</option><option>determined / confident</option></select></div>
+    <div class="field"><label for="textEffect">เอฟเฟกต์ตัวอักษร</label><select id="textEffect"><option value="AI chooses effects based on meaning">ให้ AI เลือกให้เหมาะกับความหมาย</option><option value="bounce, squash and stretch">เด้ง ยืด หด</option><option value="scale pop and impact burst">ขยายป๊อปและแรงกระแทก</option><option value="wobble and wave">สั่นและพริ้วไหว</option><option value="dynamic rotation and tilt">หมุนและเอียง</option><option value="subtle floating motion">ลอยและขยับเบา ๆ</option></select></div>
+    <div class="field"><label for="effects">ลูกเล่นประกอบ</label><select id="effects"><option value="only effects relevant to the message">AI เลือกเฉพาะที่เกี่ยวข้อง</option><option value="motion lines and impact marks">เส้นแสดงการเคลื่อนไหว/แรงปะทะ</option><option value="simple emotion symbols">สัญลักษณ์แสดงอารมณ์</option><option value="minimal effects">ลูกเล่นน้อยที่สุด</option><option value="no additional effects">ไม่เพิ่มลูกเล่นประกอบ</option></select></div>
+    <div class="field full"><label for="extra">คำสั่งเพิ่มเติม (ถ้ามี)</label><textarea id="extra" placeholder="เช่น ห้ามเปลี่ยนสีเสื้อ, ให้ตัวละครอยู่กึ่งกลาง, เน้นท่าทางมือ..."></textarea></div>
+  </div>
+
+  <h3>4. กฎการคงรูปต้นฉบับ</h3>
+  <div class="checks">
+    <label><input id="keepFace" type="checkbox" checked> คงใบหน้า/ตัวตน</label>
+    <label><input id="keepClothes" type="checkbox" checked> คงเสื้อผ้าและสี</label>
+    <label><input id="keepLogo" type="checkbox" checked> คง Logo</label>
+    <label><input id="keepStyle" type="checkbox" checked> คงสไตล์ภาพ</label>
+    <label><input id="cleanEdges" type="checkbox" checked> ขอบคม ตัดง่าย</label>
+    <label><input id="noExtras" type="checkbox" checked> ห้ามสิ่งไม่เกี่ยวข้อง</label>
+  </div>
+  <div class="note" style="margin-top:14px">
+    <b>หมายเหตุ:</b> โปรแกรมนี้สร้าง JSON จากตัวเลือกแบบเรียลไทม์ ไม่ได้เรียก AI หรือทำ OCR เอง การวิเคราะห์ความหมายภาพ/ข้อความจะเกิดขึ้นเมื่อคุณนำ JSON ไปใช้กับโมเดล AI พร้อมแนบภาพต้นแบบ
+  </div>
+</section>
+
+<section class="panel">
+  <h2>ผลลัพธ์ JSON Prompt</h2>
+  <div class="hint">แก้ตัวเลือกด้านซ้าย แล้ว JSON จะอัปเดตทันที</div>
+  <div class="actions">
+    <button class="primary" id="copyBtn">คัดลอก JSON</button>
+    <button id="downloadBtn">ดาวน์โหลด .json</button>
+    <button id="resetBtn">คืนค่าเริ่มต้น</button>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <pre id="output" aria-label="Generated JSON"></pre>
+  <h3>วิธีใช้งาน</h3>
+  <ol class="hint">
+    <li>อัปโหลดภาพต้นแบบ และพิมพ์คำบนสติกเกอร์ให้ตรงต้นฉบับ</li>
+    <li>เลือกจำนวนเฟรม ขนาด และแนว Animation</li>
+    <li>คัดลอก JSON หรือดาวน์โหลดไฟล์</li>
+    <li>เปิด ChatGPT / Google Flow แล้วแนบภาพต้นแบบ พร้อมวาง JSON นี้</li>
+    <li>ตรวจขนาดภาพจริงหลังสร้าง เพราะโมเดลภาพอาจไม่ทำตาม Pixel เป๊ะทุกครั้ง</li>
+  </ol>
+</section>
+</main>
+<footer>ทำงานภายในเบราว์เซอร์ ไม่อัปโหลดภาพไปยังเซิร์ฟเวอร์ และไม่ต้องติดตั้งโปรแกรมเพิ่ม</footer>
+<script>
+const $ = id => document.getElementById(id);
+const ids = ["stickerText","language","textPolicy","columns","rows","frameW","frameH","format","background","motion","emotion","textEffect","effects","extra","keepFace","keepClothes","keepLogo","keepStyle","cleanEdges","noExtras"];
+let imageName = "";
+let imageUrl = "";
+function val(id){return $(id).value}
+function checked(id){return $(id).checked}
+function build(){
+  const cols = Math.max(1, Number(val("columns")) || 2);
+  const rows = Math.max(1, Number(val("rows")) || 2);
+  const fw = Math.max(64, Number(val("frameW")) || 320);
+  const fh = Math.max(64, Number(val("frameH")) || 270);
+  const count = cols * rows;
+  const frames = Array.from({length:count},(_,i)=>({
+    frame: i+1,
+    sequence_role: count===4 ? ["Starting pose","Anticipation","Main action","Follow-through"][i] : `Sequential animation step ${i+1}`,
+    instruction: "Create a distinct pose that flows naturally from the previous frame and communicates the original message. Do not add frame numbers or labels to the artwork."
+  }));
+  const data = {
+    task: "dynamic_image_to_animated_sticker_sprite_sheet",
+    prompt_language: val("language"),
+    reference_image: {
+      instruction: "Use the attached uploaded image as the visual source of truth.",
+      uploaded_file_name: imageName || null,
+      image_is_attached_separately: true,
+      analyze_visual_content: true,
+      analyze_original_text_if_text_field_is_empty: true
+    },
+    source_text: {
+      exact_original_text: val("stickerText").trim() || null,
+      text_handling: val("textPolicy"),
+      semantic_analysis: "Understand the meaning, tone and emotion of the original wording before designing the animation.",
+      rule: "Preserve the original wording exactly. Never invent, translate, omit or replace words."
+    },
+    canvas: {
+      layout: "sprite_sheet_grid",
+      columns: cols,
+      rows: rows,
+      total_frames: count,
+      frame_size_px: {width: fw, height: fh},
+      output_size_px: {width: cols*fw, height: rows*fh},
+      file_format: val("format"),
+      color_mode: val("format")==="PNG" ? "RGBA" : "RGBA if supported",
+      background: val("background")
+    },
+    dynamic_art_direction: {
+      analysis_order: [
+        "Read and understand the original text and image.",
+        "Identify the message, emotion and intended reaction.",
+        "Choose a suitable character gesture and body movement.",
+        "Design a clear sequential animation across all frames.",
+        "Add only visual effects that reinforce the message."
+      ],
+      movement_style: val("motion"),
+      primary_emotion: val("emotion"),
+      text_animation_effect: val("textEffect"),
+      supporting_effects: val("effects"),
+      frame_sequence: frames
+    },
+    character_consistency: {
+      preserve_facial_identity: checked("keepFace"),
+      preserve_clothing_and_colors: checked("keepClothes"),
+      preserve_original_logo: checked("keepLogo"),
+      preserve_original_art_style: checked("keepStyle"),
+      consistency_rule: "Keep the same character identity, proportions, recognizable details and design across every frame. Change pose, expression and movement only as required by the message."
+    },
+    composition_and_cutout: {
+      independent_cells: true,
+      prevent_cross_cell_overlap: true,
+      keep_all_content_inside_each_cell: true,
+      clean_defined_edges: checked("cleanEdges"),
+      background_removal_friendly: true,
+      avoid_tiny_detached_details: true,
+      safe_margin: "Keep a visible margin around the character, text and effects.",
+      extra_element_policy: checked("noExtras") ? "Do not add anything unrelated to the original message. No numbering, labels, captions, watermark or decorative clutter." : "Additional elements are allowed only when they directly support the original message."
+    },
+    text_design: {
+      preserve_exact_wording: true,
+      readable_in_every_frame: true,
+      allow_position_and_scale_changes: true,
+      animation_must_be_visible: true,
+      instruction: "Animate the original text meaningfully with suitable scale, bounce, squash-and-stretch, wobble, tilt or other selected effects while keeping every word legible."
+    },
+    custom_instructions: val("extra").trim() || null,
+    negative_prompt: [
+      "Do not change the character identity or original wording.",
+      "Do not add frame numbers, sequence labels, unrelated objects or unrelated text.",
+      "Do not let elements cross cell boundaries.",
+      "Do not crop important parts of the character, text or effects.",
+      "Avoid tiny particles, hairline details and clutter that make background removal difficult.",
+      "Do not create four unrelated poses; all frames must form one coherent animation."
+    ],
+    output_requirements: {
+      deliverable: "One sprite sheet image containing all frames in the specified grid.",
+      exact_canvas_target_px: {width: cols*fw, height: rows*fh},
+      frame_order: "left to right, top to bottom",
+      quality_check: [
+        "Verify grid dimensions and frame count.",
+        "Verify the original text is unchanged and readable.",
+        "Verify character identity and outfit remain consistent.",
+        "Verify motion is visibly different and sequential across frames.",
+        "Verify no content crosses cell boundaries."
+      ],
+      technical_note: "Image models may not guarantee exact pixel dimensions or perfect grid boundaries. If necessary, crop and resize each frame in an image editor after generation."
+    }
+  };
+  $("output").textContent = JSON.stringify(data,null,2);
+}
+ids.forEach(id=>$(id).addEventListener("input",build));
+$("imageFile").addEventListener("change",e=>{
+  const file=e.target.files && e.target.files[0];
+  if(!file)return;
+  if(imageUrl)URL.revokeObjectURL(imageUrl);
+  imageUrl=URL.createObjectURL(file); imageName=file.name;
+  $("preview").src=imageUrl; $("fileInfo").textContent=`${file.name} · ${(file.size/1024).toFixed(1)} KB`;
+  $("previewWrap").hidden=false; build();
+});
+$("copyBtn").addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText($("output").textContent);$("status").textContent="คัดลอก JSON แล้ว";}
+  catch(e){$("status").textContent="คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความในกรอบแล้วคัดลอก";}
+});
+$("downloadBtn").addEventListener("click",()=>{
+  const blob=new Blob([$("output").textContent],{type:"application/json;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="dynamic_sticker_prompt.json";a.click();URL.revokeObjectURL(a.href);
+  $("status").textContent="สร้างไฟล์ JSON แล้ว";
+});
+$("resetBtn").addEventListener("click",()=>{
+  $("stickerText").value="";$("language").value="English";$("textPolicy").value="preserve_exactly";
+  $("columns").value="2";$("rows").value="2";$("frameW").value=320;$("frameH").value=270;
+  $("format").value="PNG";$("background").value="solid white, clean and uniform";
+  $("motion").value="expressive cartoon movement";$("emotion").selectedIndex=0;$("textEffect").selectedIndex=0;$("effects").selectedIndex=0;$("extra").value="";
+  ["keepFace","keepClothes","keepLogo","keepStyle","cleanEdges","noExtras"].forEach(id=>$(id).checked=true);
+  $("imageFile").value="";imageName="";if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl="";
+  $("previewWrap").hidden=true;$("status").textContent="คืนค่าเริ่มต้นแล้ว";build();
+});
+build();
+</script>
+</body>
+</html>

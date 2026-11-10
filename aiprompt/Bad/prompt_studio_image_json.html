@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt Studio — Image Editing JSON Builder</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2d;--panel2:#18233a;--line:#2a3855;--text:#edf3ff;--muted:#9eacc5;--accent:#8b9cff;--accent2:#56d6c3;--danger:#ff7888;--radius:16px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,#1b2850 0,transparent 34%),var(--bg);color:var(--text);font:15px/1.55 system-ui,"Segoe UI",sans-serif}
+header{padding:26px max(20px,calc((100% - 1320px)/2));border-bottom:1px solid var(--line);background:#0b1020dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+h1{font-size:clamp(22px,3vw,32px);margin:0 0 4px}header p{margin:0;color:var(--muted)}
+main{max-width:1320px;margin:24px auto;padding:0 18px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:18px}
+.panel{background:linear-gradient(155deg,var(--panel),#10182a);border:1px solid var(--line);border-radius:var(--radius);padding:19px;min-width:0;box-shadow:0 12px 35px #0002}
+.panel h2{font-size:18px;margin:0 0 14px}.panel h3{font-size:15px;margin:0 0 10px;color:#dce6ff}
+.topbar{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+button,select,input,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 13px;border-radius:10px}button:hover{border-color:var(--accent);filter:brightness(1.1)}button.primary{background:linear-gradient(120deg,#687cff,#8269e8);border:0;color:white;font-weight:700}button.good{border-color:#2f887f;color:#9af0df}button.danger{color:#ff9daa}
+label{display:block;color:#cbd6ec;font-size:13px;margin:0 0 6px}input,select,textarea{width:100%;background:#0b1324;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 11px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px #8b9cff22}textarea{min-height:84px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-bottom:12px}.wide{grid-column:1/-1}.muted,.hint{color:var(--muted);font-size:12px}.hint{margin-top:5px}
+.upload{border:1px dashed #506184;border-radius:12px;padding:15px;display:flex;gap:14px;align-items:center}.preview{width:110px;height:110px;object-fit:cover;border-radius:10px;background:#080d18;display:none}.upload-info{flex:1;min-width:0}
+.selector{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.action-list{display:grid;gap:12px;margin-top:14px}
+.action-card{border:1px solid var(--line);background:#0e1729;border-radius:13px;padding:14px}.action-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.action-head strong{font-size:14px}
+.description{background:#192641;border-left:3px solid var(--accent2);padding:11px 13px;border-radius:8px;color:#d5e2f7;font-size:13px;margin:12px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.output{font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:380px;white-space:pre;overflow:auto;background:#080e1b;border:1px solid var(--line);border-radius:12px;padding:14px}
+.saved-item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;margin-top:8px}.saved-item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}.tag{font-size:11px;color:#a9b9d6;border:1px solid var(--line);padding:3px 7px;border-radius:20px}
+.status{color:var(--accent2);font-size:12px;min-height:18px}.checkline{display:flex;gap:8px;align-items:center}.checkline input{width:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}.output{min-height:300px}}@media(max-width:560px){.grid,.selector{grid-template-columns:1fr}.upload{align-items:flex-start}.preview{width:80px;height:80px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="topbar"><span class="tag">OFFLINE • Single HTML file</span><button id="langBtn">EN</button></div>
+ <h1 id="appTitle">Prompt Studio — เครื่องมือสร้าง JSON สำหรับแก้ไขภาพ AI</h1>
+ <p id="appSub">วางแผนการแก้ไขเป็นจุด ๆ สร้างคำสั่งแบบมีโครงสร้าง และบันทึก Prompt ไว้ใช้ซ้ำ</p>
+</header>
+<main>
+<section class="panel">
+ <h2 data-i="project">1. ภาพและโปรเจกต์</h2>
+ <div class="grid">
+  <div class="field"><label data-i="platform">แพลตฟอร์มเป้าหมาย</label><select id="platform"><option value="ChatGPT">ChatGPT</option><option value="Google Flow">Google Flow</option><option value="Gemini">Gemini</option><option value="Universal JSON">Universal JSON</option></select></div>
+  <div class="field"><label data-i="aspect">อัตราส่วนภาพเป้าหมาย</label><select id="aspect"><option>Keep original</option><option>1:1</option><option>4:5</option><option>3:4</option><option>16:9</option><option>9:16</option><option>Custom</option></select></div>
+  <div class="field wide"><label data-i="title">ชื่อภาพ / สิ่งที่ต้องการสร้างหรือแก้ไข</label><input id="imageTitle" placeholder="เช่น ภาพตัวละครแฟนตาซี / เปลี่ยนชุดโดยคงใบหน้าเดิม"></div>
+  <div class="field wide"><label data-i="goal">คำอธิบายเป้าหมายโดยรวม</label><textarea id="goal" placeholder="อธิบายภาพที่ต้องการ ผลลัพธ์ และรายละเอียดสำคัญ..."></textarea></div>
+  <div class="field wide">
+   <label data-i="upload">ภาพต้นฉบับ (ถ้ามี)</label>
+   <div class="upload"><img id="preview" class="preview" alt="Image preview"><div class="upload-info"><input type="file" id="imageFile" accept="image/*"><div class="hint" data-i="uploadHint">ภาพจะถูกใช้เป็นภาพอ้างอิงในขั้นตอนเขียน Prompt เท่านั้น ไฟล์ไม่ได้ถูกส่งออกไปกับ JSON</div><div id="fileName" class="muted"></div></div></div>
+  </div>
+ </div>
+ <hr>
+ <h2 data-i="editTitle">2. เพิ่มรายการแก้ไข (เลือกหัวข้อหลักและหัวข้อย่อย)</h2>
+ <div class="selector">
+  <div><label data-i="category">หมวดหมู่</label><select id="category"></select></div>
+  <div><label data-i="operation">รายการแก้ไข</label><select id="operation"></select></div>
+  <button class="primary" id="addAction" data-i="add">+ เพิ่ม</button>
+ </div>
+ <div id="description" class="description"></div>
+ <div id="fields" class="grid"></div>
+ <div class="actions"><button class="primary" id="addCurrent" data-i="addCurrent">เพิ่มรายการนี้ลงแผน</button><button id="clearFields" data-i="clear">ล้างค่าฟอร์ม</button></div>
+ <div id="actionList" class="action-list"></div>
+ <hr>
+ <h2 data-i="globalRules">3. กฎการคงรายละเอียดและข้อห้าม</h2>
+ <div class="grid">
+  <div class="field wide"><label data-i="preserve">สิ่งที่ต้องคงเดิม (Identity / Composition Lock)</label><textarea id="preserve" placeholder="เช่น ใบหน้าเดิม, ทรงผม, สัดส่วนร่างกาย, มุมกล้อง, ตำแหน่งตัวละคร..."></textarea></div>
+  <div class="field wide"><label data-i="negative">สิ่งที่ห้ามเกิด (Negative Constraints)</label><textarea id="negative" placeholder="เช่น ห้ามเปลี่ยนใบหน้า ห้ามเพิ่มนิ้ว ห้ามเปลี่ยนฉาก ห้ามมีตัวหนังสือ..."></textarea></div>
+  <div class="field"><label data-i="strength">ระดับการแก้ไข</label><select id="strength"><option value="subtle">น้อย / Subtle</option><option value="moderate" selected>ปานกลาง / Moderate</option><option value="strong">มาก / Strong</option><option value="maximum">เฉพาะจุดแบบเข้มงวด / Strict local edit</option></select></div>
+  <div class="field"><label data-i="detail">ระดับรายละเอียด</label><select id="detail"><option value="balanced">สมดุล / Balanced</option><option value="high" selected>สูง / High</option><option value="maximum">สูงสุด / Maximum</option></select></div>
+ </div>
+ <div class="actions"><button class="primary" id="generate" data-i="generate">✦ Generate Auto JSON</button><button id="reset" data-i="reset">เริ่มโปรเจกต์ใหม่</button></div>
+ <div id="status" class="status" aria-live="polite"></div>
+</section>
+<aside>
+ <section class="panel">
+  <h2 data-i="outputTitle">4. ผลลัพธ์ Prompt JSON</h2>
+  <p class="muted" data-i="outputHint">JSON นี้เป็นโครงสร้างกลาง พร้อมคำสั่งภาษาธรรมชาติสำหรับนำไปวางใน ChatGPT หรือ Google Flow</p>
+  <textarea id="output" class="output" spellcheck="false" aria-label="Generated JSON"></textarea>
+  <div class="actions"><button class="primary" id="copy" data-i="copy">คัดลอก JSON</button><button id="download" data-i="download">ดาวน์โหลด .json</button><button id="save" class="good" data-i="save">บันทึก Prompt</button></div>
+ </section>
+ <section class="panel" style="margin-top:18px">
+  <h2 data-i="library">5. Prompt ที่บันทึกไว้</h2>
+  <p class="muted" data-i="libraryHint">เก็บใน Local Storage ของเบราว์เซอร์เครื่องนี้ ไม่อัปโหลดขึ้นเซิร์ฟเวอร์</p>
+  <div id="savedList"></div>
+ </section>
+ <section class="panel" style="margin-top:18px">
+  <h2 data-i="tips">แนวทางใช้งานให้แม่นยำ</h2>
+  <ul class="muted" id="tipsList">
+   <li>เพิ่มรายการแยกกันตามบริเวณ เช่น ใบหน้า เสื้อผ้า และฉากหลัง</li>
+   <li>ระบุพิกัดเป็นเปอร์เซ็นต์ 0–100 จากมุมซ้ายบน และแนบ Mask เมื่อเครื่องมือรองรับ</li>
+   <li>อัปโหลดภาพต้นฉบับในหน้าสนทนาของ AI ด้วย เพราะ JSON ไม่ได้ฝังไฟล์ภาพ</li>
+   <li>AI อาจไม่ตีความพิกัดเหมือนกันทุกระบบ ควรตรวจภาพผลลัพธ์และปรับทีละรอบ</li>
+  </ul>
+ </section>
+</aside>
+</main>
+<script>
+const schema = [
+ {id:"subject",th:"องค์ประกอบหลัก",en:"Subject & Objects",items:[
+  ["object","เพิ่ม / ลบ / แทนที่วัตถุ","Insert / Remove / Replace Object","กำหนดวัตถุเดิมและวัตถุใหม่ พร้อมตำแหน่ง เพื่อให้แก้เฉพาะสิ่งที่ระบุ","ชนิดการทำงาน|action|select|แทนที่|เพิ่ม|ลบ|แทนที่","วัตถุเดิม|oldObject|text|เช่น เสื้อยืดสีดำ","วัตถุใหม่|newObject|text|เช่น แจ็คเก็ตหนังสีดำ","ตำแหน่ง (x,y,w,h) %|region|text|เช่น 20,10,35,60","รายละเอียดเพิ่ม|notes|textarea|วัสดุ สี ขนาด มุมมอง..."],
+  ["pose","ท่าทาง / อิริยาบถ","Pose & Gesture","บอกท่าทางเดิมและท่าทางใหม่ รวมถึงมือ แขน ลำตัว และทิศทางการเคลื่อนไหว","ท่าทางเดิม|from|text|เช่น ยืนกอดอก","ท่าทางใหม่|to|text|เช่น ยกมือชูสองนิ้ว","ตำแหน่งตัวละคร|region|text|เช่น กลางภาพ เต็มตัว","รายละเอียด|notes|textarea|องศาแขน มือ นิ้ว และน้ำหนักตัว"],
+  ["face","สีหน้า / สายตา","Facial Expression & Gaze","ระบุอารมณ์ กล้ามเนื้อใบหน้า รอยยิ้ม และจุดที่ดวงตามอง","สีหน้าใหม่|expression|text|เช่น ยิ้มมุมปากอย่างมั่นใจ","ทิศทางสายตา|gaze|select|มองกล้อง|มองซ้าย|มองขวา|มองขึ้น|มองลง|หลับตา","ระดับอารมณ์|intensity|select|อ่อนโยน|เป็นธรรมชาติ|ชัดเจน|เข้มข้น","ข้อควรระวัง|notes|textarea|คงเอกลักษณ์ใบหน้าและสัดส่วนเดิม"],
+  ["scale","ขนาด / ตำแหน่ง / องค์ประกอบ","Scale, Position & Composition","ควบคุมขนาดและตำแหน่งของวัตถุโดยอ้างอิงกรอบภาพ","วัตถุเป้าหมาย|target|text|เช่น ตัวละครหลัก","การเปลี่ยนแปลง|change|text|เช่น เลื่อนมาทางซ้าย 5%","พิกัดเป้าหมาย|region|text|x,y,w,h เป็นเปอร์เซ็นต์","หมายเหตุ|notes|textarea|ระยะห่างและความสัมพันธ์กับวัตถุอื่น"]
+ ]},
+ {id:"local",th:"แก้ไขเฉพาะจุด",en:"Local Edit & Inpainting",items:[
+  ["mask","กำหนดพื้นที่ Mask","Mask Region & Coordinates","ใช้กรอบ x,y,w,h เป็นเปอร์เซ็นต์จากมุมซ้ายบน หรืออธิบาย Mask ที่แนบมา ระบุให้ชัดว่าส่วนใดแก้ได้","พิกัด x,y,w,h (%)|region|text|เช่น 32,18,24,20","ชนิด Mask|maskType|select|Bounding Box|Mask ภาพขาวดำ|Brush Mask|Polygon","พื้นที่ที่อนุญาตให้แก้|editable|textarea|อธิบายขอบเขตพื้นที่","พื้นที่ที่ต้องป้องกัน|protected|textarea|เช่น เส้นผมและใบหน้ารอบนอก","ขอบ Mask|feather|select|ขอบคม|นุ่มเล็กน้อย|นุ่มปานกลาง","หมายเหตุ|notes|textarea|ระบุให้ blend กับบริเวณรอบข้าง"],
+  ["clothes","เสื้อผ้า / เครื่องแต่งกาย","Clothing & Wardrobe","แยกชิ้นเสื้อผ้าให้ชัด ระบุสี วัสดุ ลวดลาย ทรง และรอยพับ","ชิ้นเสื้อผ้า|item|text|เช่น เสื้อคลุม แจ็กเก็ต รองเท้า","การเปลี่ยนแปลง|change|textarea|เช่น เปลี่ยนเป็นแจ็กเก็ตหนังทรงสั้น","สี / Hex|color|text|เช่น #18202A หรือ ดำอมกรม","วัสดุ / ผิวสัมผัส|material|text|เช่น หนังด้าน ผ้าไหม ผ้าฝ้าย","ตำแหน่งบนภาพ|region|text|เช่น ลำตัวช่วงบน","สิ่งที่ต้องคงเดิม|preserve|textarea|เช่น ท่าทาง รอยพับตามธรรมชาติ และมือ"],
+  ["hair","ทรงผม / เมคอัพ","Hair & Makeup","ระบุเฉพาะส่วนผมและเครื่องสำอาง แยกสี ความยาว รูปทรง และความเข้ม","ส่วนที่แก้|target|select|ทรงผม|สีผม|ความยาวผม|ริมฝีปาก|อายไลเนอร์|คิ้ว|ผิวหน้า","รายละเอียดใหม่|change|textarea|เช่น ผมยาวประบ่าสีน้ำตาลเข้ม","ระดับความเข้ม|intensity|select|ธรรมชาติ|บางเบา|ชัดเจน|แฟชั่น","บริเวณ|region|text|เช่น รอบศีรษะ / ริมฝีปาก","สิ่งที่ต้องคงเดิม|preserve|textarea|เช่น โครงหน้า แนวไรผม และสีผิว"],
+  ["retouch","ลบตำหนิ / รีทัช","Retouch & Cleanup","ลบสิ่งรบกวนหรือปรับรายละเอียดเล็ก ๆ โดยไม่ทำให้ภาพดูปลอม","สิ่งที่ต้องแก้|target|text|เช่น ฝุ่น รอยพับ สิว วัตถุรบกวน","วิธีแก้|change|textarea|ระบุให้ลบหรือเก็บรายละเอียดอย่างไร","บริเวณ|region|text|พิกัดหรือคำอธิบายตำแหน่ง","ระดับ|intensity|select|เบามาก|ธรรมชาติ|ชัดเจน","ข้อห้าม|notes|textarea|เช่น ห้ามทำผิวเนียนจนสูญเสีย texture"]
+ ]},
+ {id:"light",th:"แสง สี และบรรยากาศ",en:"Lighting, Color & Mood",items:[
+  ["lighting","ทิศทาง / คุณภาพแสง","Lighting & Shadows","กำหนดชนิดแสง ทิศทาง ความนุ่ม ความเข้ม และเงาที่สัมพันธ์กับวัตถุ","แหล่งกำเนิดแสง|source|select|Studio Softbox|Golden Hour|Backlight|Rim Light|Window Light|Neon","ทิศทางแสง|direction|text|เช่น ซ้ายบน 45 องศา","ความนุ่ม / ความเข้ม|quality|select|นุ่มมาก|นุ่ม|ปานกลาง|แข็ง / คอนทราสต์สูง","เงาที่ต้องการ|shadow|textarea|เช่น เงาทอดไปทางขวาล่าง","หมายเหตุ|notes|textarea|ให้แสงสอดคล้องกับฉากและวัตถุ"],
+  ["color","โทนสี / Color Grading","Color Palette & Grading","กำหนดสีเฉพาะวัตถุด้วยชื่อสีหรือ Hex และกำหนดโทนภาพรวม","เป้าหมายสี|target|text|เช่น เสื้อแจ็กเก็ต / ภาพรวม","สีเป้าหมาย|color|text|เช่น #00D9FF หรือ teal","โทนภาพรวม|grade|select|Natural|Cinematic Teal & Orange|Cyberpunk Neon|Pastel|Monochrome|Vintage Film","ความอิ่มสี|saturation|select|ต่ำ|ธรรมชาติ|สูง","หมายเหตุ|notes|textarea|รักษารายละเอียดแสงเงาและสีผิว"],
+  ["weather","บรรยากาศ / สภาพอากาศ","Atmosphere & Weather","เพิ่มหมอก ฝน ฝุ่น ละอองแสง หรือบรรยากาศโดยควบคุมความหนาแน่นและตำแหน่ง","เอฟเฟกต์|effect|select|หมอก|ฝน|หิมะ|ฝุ่น / อนุภาค|Volumetric Light|แสงสะท้อน|ควัน","ตำแหน่ง|region|text|เช่น ฉากหลังเท่านั้น","ความหนาแน่น|density|select|บางเบา|ปานกลาง|หนาแน่น","สี / อุณหภูมิ|color|text|เช่น ฟ้าเย็น / ส้มทอง","รายละเอียด|notes|textarea|อย่าบดบังใบหน้าหรือวัตถุหลัก"]
+ ]},
+ {id:"environment",th:"ฉากหลังและกล้อง",en:"Background & Camera",items:[
+  ["background","เปลี่ยน / ขยายฉากหลัง","Background Replacement & Outpainting","อธิบายฉากใหม่ มุมมอง แสง และการรักษาขอบตัวแบบให้กลมกลืน","ฉากเดิม|from|text|เช่น ห้องนอน","ฉากใหม่|to|textarea|เช่น คาเฟ่มินิมอล มีหน้าต่างและต้นไม้","ขอบเขต|region|select|พื้นหลังทั้งหมด|ด้านซ้าย|ด้านขวา|ด้านบน|พื้นที่ว่างรอบตัวแบบ","สิ่งที่ต้องคงเดิม|preserve|textarea|เช่น ตัวละครเดิม เสื้อผ้าและตำแหน่ง","รายละเอียดแสง|notes|textarea|ให้แสงและ perspective ตรงกับตัวแบบ"],
+  ["camera","ระยะชัดลึก / เลนส์ / มุมกล้อง","Depth of Field & Camera","ควบคุมระยะโฟกัส ความเบลอ ทางยาวโฟกัส และมุมกล้อง","ทางยาวโฟกัส|focal|select|24mm Wide|35mm|50mm|85mm Portrait|135mm Telephoto|Macro","รูรับแสง|aperture|text|เช่น f/1.8, f/4, f/8","ระยะชัดลึก|dof|select|หน้าชัดหลังเบลอ (Bokeh)|ชัดลึกทั้งภาพ|โฟกัสเฉพาะวัตถุ","มุมกล้อง|angle|select|ระดับสายตา|มุมต่ำ|มุมสูง|Bird's-eye|Dutch angle","หมายเหตุ|notes|textarea|ระบุจุดโฟกัสและ perspective"],
+  ["style","สไตล์ภาพ / สื่อ / ความคมชัด","Art Style & Rendering","กำหนดสื่อและสไตล์ให้สอดคล้องกัน โดยไม่เปลี่ยนตัวตนหรือองค์ประกอบที่ล็อกไว้","สไตล์|style|select|Photorealistic|Digital Painting|Anime|3D Render|Cinematic|Watercolor|Concept Art","พื้นผิว / เทคนิค|medium|text|เช่น painterly brush, fine grain","ระดับความสมจริง|realism|select|Stylized|กึ่งสมจริง|สมจริงสูง","รายละเอียด|notes|textarea|เช่น รายละเอียดผิว วัสดุ ขอบวัตถุ"]
+ ]},
+ {id:"quality",th:"คุณภาพและการตรวจสอบ",en:"Quality & Validation",items:[
+  ["anatomy","ตรวจมือ ใบหน้า และกายวิภาค","Anatomy & Artifact Check","กำหนดให้ตรวจความถูกต้องของมือ นิ้ว ดวงตา ฟัน สัดส่วน และขอบวัตถุ","จุดที่ต้องตรวจ|target|text|เช่น มือทั้งสองข้างและดวงตา","เกณฑ์ที่ต้องได้|criteria|textarea|เช่น นิ้วครบ ข้อต่อสมจริง ไม่มีส่วนเกิน","ข้อห้าม|notes|textarea|เช่น ห้ามเพิ่มแขนขาหรือวัตถุซ้ำ"],
+  ["text","ข้อความ / โลโก้ / ตัวอักษร","Text, Logo & Typography","จัดการตัวอักษรโดยระบุข้อความตรงตัว ภาษา ตำแหน่ง และความถูกต้อง","ข้อความที่ต้องการ|textValue|textarea|พิมพ์ข้อความให้ตรงทุกตัว","ภาษา / ฟอนต์|font|text|เช่น Thai, clean sans-serif","ตำแหน่ง|region|text|เช่น มุมขวาล่าง","การจัดวาง|notes|textarea|ขนาด สี ระยะห่าง และห้ามสะกดผิด"],
+  ["consistency","ตรวจความสอดคล้องทั้งภาพ","Global Consistency Check","ให้ตรวจแสง เงา perspective สัดส่วน สี และความต่อเนื่องหลังแก้ไข","รายการตรวจ|target|textarea|ระบุจุดที่ต้องเทียบกัน","เกณฑ์ผ่าน|criteria|textarea|เช่น ทิศทางแสงเดียวกัน เงาสัมผัสถูกต้อง","หมายเหตุ|notes|textarea|ห้ามแก้ส่วนที่ไม่ได้ร้องขอ"]
+ ]}
+];
+const i18n={
+ th:{project:"1. ภาพและโปรเจกต์",platform:"แพลตฟอร์มเป้าหมาย",aspect:"อัตราส่วนภาพเป้าหมาย",title:"ชื่อภาพ / สิ่งที่ต้องการสร้างหรือแก้ไข",goal:"คำอธิบายเป้าหมายโดยรวม",upload:"ภาพต้นฉบับ (ถ้ามี)",uploadHint:"ภาพจะถูกใช้เป็นภาพอ้างอิงในขั้นตอนเขียน Prompt เท่านั้น ไฟล์ไม่ได้ถูกส่งออกไปกับ JSON",editTitle:"2. เพิ่มรายการแก้ไข (เลือกหัวข้อหลักและหัวข้อย่อย)",category:"หมวดหมู่",operation:"รายการแก้ไข",add:"+ เพิ่ม",addCurrent:"เพิ่มรายการนี้ลงแผน",clear:"ล้างค่าฟอร์ม",globalRules:"3. กฎการคงรายละเอียดและข้อห้าม",preserve:"สิ่งที่ต้องคงเดิม (Identity / Composition Lock)",negative:"สิ่งที่ห้ามเกิด (Negative Constraints)",strength:"ระดับการแก้ไข",detail:"ระดับรายละเอียด",generate:"✦ Generate Auto JSON",reset:"เริ่มโปรเจกต์ใหม่",outputTitle:"4. ผลลัพธ์ Prompt JSON",outputHint:"JSON นี้เป็นโครงสร้างกลาง พร้อมคำสั่งภาษาธรรมชาติสำหรับนำไปวางใน ChatGPT หรือ Google Flow",copy:"คัดลอก JSON",download:"ดาวน์โหลด .json",save:"บันทึก Prompt",library:"5. Prompt ที่บันทึกไว้",libraryHint:"เก็บใน Local Storage ของเบราว์เซอร์เครื่องนี้ ไม่อัปโหลดขึ้นเซิร์ฟเวอร์",tips:"แนวทางใช้งานให้แม่นยำ",saved:"บันทึกแล้ว",copied:"คัดลอกแล้ว",generated:"สร้าง JSON แล้ว",empty:"ยังไม่มีรายการแก้ไข",name:"ไม่มีชื่อ",load:"โหลด",delete:"ลบ",confirm:"ลบรายการนี้หรือไม่?",added:"เพิ่มรายการแล้ว",noActions:"เพิ่มรายการแก้ไขอย่างน้อยหนึ่งรายการก่อน Generate"},
+ en:{project:"1. Image & Project",platform:"Target platform",aspect:"Target aspect ratio",title:"Image name / desired edit",goal:"Overall goal and visual direction",upload:"Source image (optional)",uploadHint:"The image is only a visual reference while preparing the prompt. It is not embedded in the exported JSON.",editTitle:"2. Add edit instructions",category:"Category",operation:"Edit operation",add:"+ Add",addCurrent:"Add this instruction",clear:"Clear form",globalRules:"3. Preservation rules & constraints",preserve:"Elements to preserve (identity / composition lock)",negative:"Negative constraints",strength:"Edit strength",detail:"Detail level",generate:"✦ Generate Auto JSON",reset:"New project",outputTitle:"4. Generated Prompt JSON",outputHint:"Platform-neutral structured JSON with a natural-language instruction for ChatGPT or Google Flow.",copy:"Copy JSON",download:"Download .json",save:"Save prompt",library:"5. Saved prompts",libraryHint:"Saved in this browser's Local Storage. Nothing is uploaded to a server.",tips:"Tips for precise edits",saved:"Saved",copied:"Copied",generated:"JSON generated",empty:"No edit instructions yet",name:"Untitled",load:"Load",delete:"Delete",confirm:"Delete this saved prompt?",added:"Instruction added",noActions:"Add at least one edit instruction before generating"}
+};
+let lang="th", actions=[], currentFile=null, editingId=null;
+const $=id=>document.getElementById(id);
+const tr=k=>i18n[lang][k]||k;
+function labelOf(cat){return lang==="th"?cat.th:cat.en}
+function opLabel(op){return lang==="th"?op[1]:op[2]}
+function currentCat(){return schema.find(c=>c.id===$("category").value)||schema[0]}
+function currentOp(){return currentCat().items.find(o=>o[0]===$("operation").value)||currentCat().items[0]}
+function setStatus(s){$("status").textContent=s;setTimeout(()=>{if($("status").textContent===s)$("status").textContent=""},2600)}
+function fillCategories(){const c=$("category");c.innerHTML=schema.map(x=>`<option value="${x.id}">${labelOf(x)}</option>`).join("");fillOperations()}
+function fillOperations(){const c=currentCat();$("operation").innerHTML=c.items.map(o=>`<option value="${o[0]}">${opLabel(o)}</option>`).join("");renderFields()}
+function renderFields(){
+ const op=currentOp();$("description").textContent=op[3];$("fields").innerHTML="";
+ op.slice(4).forEach(def=>{
+  const [name,key,type,placeholder,...opts]=def;const wrap=document.createElement("div");wrap.className="field"+(type==="textarea"?" wide":"");
+  const lab=document.createElement("label");lab.textContent=name;wrap.appendChild(lab);
+  let el;
+  if(type==="select"){el=document.createElement("select");opts.forEach(v=>{const o=document.createElement("option");o.textContent=v;o.value=v;el.appendChild(o)})}
+  else if(type==="textarea"){el=document.createElement("textarea");el.placeholder=placeholder}
+  else{el=document.createElement("input");el.placeholder=placeholder}
+  el.dataset.key=key;el.dataset.label=name;wrap.appendChild(el);$("fields").appendChild(wrap);
+ });
+}
+function collectCurrent(){const values={};$("fields").querySelectorAll("[data-key]").forEach(el=>{if(el.value.trim())values[el.dataset.key]={label:el.dataset.label,value:el.value.trim()}});return values}
+function addAction(){const op=currentOp(),vals=collectCurrent();if(!Object.keys(vals).length){setStatus(lang==="th"?"กรอกข้อมูลอย่างน้อยหนึ่งช่อง":"Fill at least one field");return}
+ actions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),category:currentCat().id,categoryLabel:labelOf(currentCat()),operation:op[0],operationLabel:opLabel(op),description:op[3],values});renderActions();setStatus(tr("added"))}
+function renderActions(){$("actionList").innerHTML=actions.length?actions.map((a,i)=>`<div class="action-card"><div class="action-head"><strong>${i+1}. ${esc(a.operationLabel)}</strong><button class="danger" data-remove="${i}">✕</button></div><div class="muted">${esc(a.categoryLabel)}</div><div>${Object.values(a.values).map(v=>`<div class="hint"><b>${esc(v.label)}:</b> ${esc(v.value)}</div>`).join("")}</div></div>`).join(""):`<div class="muted">${tr("empty")}</div>`;$("actionList").querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{actions.splice(+b.dataset.remove,1);renderActions()})}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function buildJSON(){
+ if(!actions.length){setStatus(tr("noActions"));return null}
+ const val=id=>$ (id).value.trim();
+ const payload={
+  schema:"image-edit-prompt/v1",
+  project:{title:val("imageTitle"),platform:$("platform").value,aspect_ratio:$("aspect").value,overall_goal:val("goal"),source_image:currentFile?{provided:true,file_name:currentFile.name,usage:"Use the image uploaded in the target AI conversation as the reference image."}:{provided:false,instruction:"Ask user to attach the source image if an edit of an existing image is intended."}},
+  edit_plan:actions.map((a,i)=>({step:i+1,category:a.category,operation:a.operation,description:a.description,parameters:Object.fromEntries(Object.entries(a.values).map(([k,v])=>[k,v.value])),scope:"Edit only the explicitly described target region; blend naturally with surrounding pixels."})),
+  preservation:{keep_unchanged:val("preserve"),negative_constraints:val("negative"),edit_strength:$("strength").value,detail_level:$("detail").value},
+  execution:{instruction:"Treat the uploaded source image as the primary reference. Apply edit_plan in order. Preserve all unmentioned regions. Respect spatial coordinates as normalized percentages from the top-left corner when coordinates are supplied. If a mask is provided, treat white as editable and black as protected unless the user specifies otherwise. Do not invent missing details; ask for clarification when a requested region or transformation is ambiguous.",quality_checks:["Preserve subject identity and recognizable facial features unless explicitly requested otherwise.","Maintain anatomy, hands, fingers, object geometry, and realistic edges.","Match lighting direction, shadow softness, perspective, reflections, and color temperature.","Avoid unintended changes outside target regions, duplicated objects, artifacts, halos, and text errors.","Return the edited image; do not merely describe the changes."]},
+  natural_language_prompt:"Edit the provided image according to the JSON edit_plan. Make only the requested changes, in the listed order. Preserve all elements listed in preservation.keep_unchanged and do not introduce preservation.negative_constraints. Keep all unmentioned areas visually identical. Use precise local editing and seamless blending. Before finalizing, inspect identity, anatomy, edges, lighting, shadows, perspective, and artifacts. If a requested change conflicts with a preservation rule, prioritize the preservation rule and ask for clarification."
+ };
+ if(lang==="th")payload.natural_language_prompt="แก้ไขภาพต้นฉบับตาม edit_plan โดยทำตามลำดับรายการ แก้เฉพาะบริเวณที่ระบุและผสานขอบให้เป็นธรรมชาติ คงทุกส่วนที่ระบุใน preservation.keep_unchanged และห้ามสร้างสิ่งที่อยู่ใน preservation.negative_constraints เปลี่ยนแปลงส่วนอื่นให้น้อยที่สุด ตรวจสอบเอกลักษณ์ใบหน้า กายวิภาค มือ นิ้ว ขอบวัตถุ แสง เงา perspective และสิ่งแปลกปลอมก่อนส่งผลลัพธ์ หากคำสั่งขัดแย้งกับกฎการคงเดิม ให้ยึดกฎการคงเดิมและถามเพื่อยืนยัน";
+ return payload;
+}
+function generate(){const obj=buildJSON();if(!obj)return;$("output").value=JSON.stringify(obj,null,2);setStatus(tr("generated"))}
+function projectFromUI(){return {output:$("output").value,title:$("imageTitle").value||tr("name"),savedAt:new Date().toISOString()}}
+function savePrompt(){let raw=$("output").value;if(!raw){generate();raw=$("output").value}if(!raw)return;let arr=JSON.parse(localStorage.getItem("promptStudioSaved")||"[]");const item={id:editingId||String(Date.now()),...projectFromUI()};if(editingId){arr=arr.map(x=>x.id===editingId?item:x)}else arr.unshift(item);localStorage.setItem("promptStudioSaved",JSON.stringify(arr));editingId=null;renderSaved();setStatus(tr("saved"))}
+function renderSaved(){let arr=[];try{arr=JSON.parse(localStorage.getItem("promptStudioSaved")||"[]")}catch{}$("savedList").innerHTML=arr.length?arr.map(x=>`<div class="saved-item"><span title="${esc(x.title)}">${esc(x.title)}</span><div style="display:flex;gap:5px"><button data-load="${x.id}">${tr("load")}</button><button class="danger" data-del="${x.id}">✕</button></div></div>`).join(""):`<div class="muted">${tr("empty")}</div>`;
+ $("savedList").querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{const x=arr.find(v=>v.id===b.dataset.load);if(x){$("output").value=x.output;editingId=x.id;try{const p=JSON.parse(x.output);$("imageTitle").value=p.project?.title||"";actions=(p.edit_plan||[]).map((a,i)=>({id:String(i),category:a.category,categoryLabel:a.category,operationLabel:a.operation,description:a.description,values:Object.fromEntries(Object.entries(a.parameters||{}).map(([k,v])=>[k,{label:k,value:String(v)}]))}));renderActions()}catch{}setStatus(tr("load"))}});
+ $("savedList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(!confirm(tr("confirm")))return;const next=arr.filter(x=>x.id!==b.dataset.del);localStorage.setItem("promptStudioSaved",JSON.stringify(next));renderSaved()});
+}
+function changeLang(){lang=lang==="th"?"en":"th";$("langBtn").textContent=lang==="th"?"EN":"TH";document.querySelectorAll("[data-i]").forEach(el=>el.textContent=tr(el.dataset.i));$("appTitle").textContent=lang==="th"?"Prompt Studio — เครื่องมือสร้าง JSON สำหรับแก้ไขภาพ AI":"Prompt Studio — AI Image Editing JSON Builder";$("appSub").textContent=lang==="th"?"วางแผนการแก้ไขเป็นจุด ๆ สร้างคำสั่งแบบมีโครงสร้าง และบันทึก Prompt ไว้ใช้ซ้ำ":"Plan precise edits, generate structured instructions, and save reusable prompts.";fillCategories();renderActions();renderSaved();if($("output").value){try{const o=JSON.parse($("output").value);o.project.language=lang;o.natural_language_prompt=lang==="th"?"แก้ไขภาพต้นฉบับตาม edit_plan โดยทำตามลำดับรายการ แก้เฉพาะบริเวณที่ระบุและคงส่วนอื่นไว้ ตรวจสอบเอกลักษณ์ กายวิภาค แสง เงา และสิ่งแปลกปลอมก่อนส่งผลลัพธ์":"Edit the source image according to edit_plan in order. Change only specified regions, preserve all other areas, and validate identity, anatomy, lighting, shadows, and artifacts before returning the result."; $("output").value=JSON.stringify(o,null,2)}catch{}}}
+$("category").onchange=fillOperations;$("operation").onchange=renderFields;$("addAction").onclick=addAction;$("addCurrent").onclick=addAction;$("clearFields").onclick=renderFields;$("generate").onclick=generate;$("save").onclick=savePrompt;$("langBtn").onclick=changeLang;
+$("copy").onclick=async()=>{if(!$("output").value)generate();try{await navigator.clipboard.writeText($("output").value);setStatus(tr("copied"))}catch{ $("output").select();document.execCommand("copy");setStatus(tr("copied"))}};
+$("download").onclick=()=>{if(!$("output").value)generate();if(!$("output").value)return;const blob=new Blob([ $("output").value ],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(( $("imageTitle").value||"image-edit-prompt").replace(/[^\wก-๙-]+/g,"_"))+".json";a.click();URL.revokeObjectURL(a.href)};
+$("imageFile").onchange=e=>{const f=e.target.files[0];if(!f)return;currentFile=f;$("fileName").textContent=f.name;const url=URL.createObjectURL(f);$("preview").src=url;$("preview").style.display="block"};
+$("reset").onclick=()=>{if(!confirm(lang==="th"?"เริ่มโปรเจกต์ใหม่และล้างข้อมูลบนหน้าจอ?":"Start a new project and clear the current screen?"))return;["imageTitle","goal","preserve","negative","output"].forEach(id=>$(id).value="");$("imageFile").value="";$("preview").style.display="none";$("fileName").textContent="";currentFile=null;actions=[];editingId=null;renderActions()};
+fillCategories();renderActions();renderSaved();
+</script>
+</body></html>

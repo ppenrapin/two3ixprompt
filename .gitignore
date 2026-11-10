@@ -1,0 +1,14 @@
+# ละเว้นโฟลเดอร์ Build และไฟล์ Executable
+/build/
+/bin/
+*.exe
+
+# ละเว้นไฟล์ต้นฉบับ Asset ที่ใหญ่เกินไป
+*.psd
+*.blend
+*.wav
+
+# ละเว้นไฟล์ระบบของ OS
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Image Edit JSON Prompt Builder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono&display=swap">
+<style>
+:root{--bg:#e9eef1;--sf:#fff;--ink:#14202b;--mut:#5b6b78;--ln:#cfd8de;--ac:#0e6b6b;--act:#fff;--code:#0f1d24;--cinK:#c9f0e4;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d151a;--sf:#16222a;--ink:#e6eef2;--mut:#8fa2ae;--ln:#2a3b46;--ac:#4fd1b5;--act:#06201a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d151a;--sf:#16222a;--ink:#e6eef2;--mut:#8fa2ae;--ln:#2a3b46;--ac:#4fd1b5;--act:#06201a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "IBM Plex Sans Thai",system-ui,sans-serif}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--ln);background:var(--sf);flex-wrap:wrap}
+h1{font-size:18px;margin:0;font-weight:600}
+header p{margin:0;color:var(--mut);font-size:13px}
+main{display:grid;gap:16px;padding:16px;max-width:1280px;margin:auto;grid-template-columns:minmax(0,1fr)}
+@media(min-width:980px){main{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}.sticky{position:sticky;top:12px;align-self:start}}
+section{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 10px;font-weight:600}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:8px 10px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+textarea{resize:vertical;min-height:64px}
+.row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+button{font:inherit;cursor:pointer;border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:6px;padding:8px 14px}
+button.p{background:var(--ac);color:var(--act);border-color:var(--ac);font-weight:600}
+button.sm{padding:3px 9px;font-size:13px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.desc{background:var(--bg);border-left:3px solid var(--ac);padding:10px 12px;margin:10px 0;border-radius:0 6px 6px 0;font-size:14px}
+.pv{position:relative;display:inline-block;max-width:100%;margin-top:8px;touch-action:none;cursor:crosshair}
+.pv img{max-width:100%;max-height:260px;display:block;border-radius:6px}
+.pv i{position:absolute;border:2px solid var(--ac);background:#4fd1b533;pointer-events:none}
+ul{list-style:none;margin:0;padding:0}
+li.e{border:1px solid var(--ln);border-radius:6px;padding:8px 10px;margin-bottom:6px;display:flex;gap:8px;justify-content:space-between;align-items:flex-start;font-size:14px}
+li.e small{display:block;color:var(--mut)}
+.mut{color:var(--mut);font-size:13px}
+.chk{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:14px;color:var(--ink)}
+.chk input{width:auto}
+pre{background:var(--code);color:var(--cinK);font:12.5px/1.5 "IBM Plex Mono",ui-monospace,monospace;padding:14px;border-radius:8px;overflow:auto;max-height:60vh;margin:0;white-space:pre-wrap;word-break:break-word}
+#st{min-height:20px;color:var(--ac);font-size:13px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+ <div><h1 data-i="title"></h1><p data-i="sub"></p></div>
+ <button id="lg" class="p" type="button">EN</button>
+</header>
+<main>
+<div>
+ <section>
+  <h2 data-i="s1"></h2>
+  <div class="row">
+   <div><label data-i="mode"></label><select id="mode"></select></div>
+   <div><label data-i="tg"></label><select id="tg"><option>ChatGPT</option><option>Gemini</option><option>Google Flow</option></select></div>
+  </div>
+  <label data-i="subj"></label>
+  <textarea id="subj"></textarea>
+  <label data-i="up"></label>
+  <input type="file" id="file" accept="image/*">
+  <div id="pvw"></div>
+  <p class="mut" data-i="uph"></p>
+ </section>
+ <section>
+  <h2 data-i="s2"></h2>
+  <div class="row">
+   <div><label data-i="cat"></label><select id="cat"></select></div>
+   <div><label data-i="op"></label><select id="op"></select></div>
+  </div>
+  <div class="desc" id="desc"></div>
+  <div id="fields"></div>
+  <div class="bar">
+   <button class="p" id="add" type="button" data-i="add"></button>
+   <button id="fill" type="button" data-i="fill"></button>
+  </div>
+  <div id="st" role="status"></div>
+ </section>
+ <section>
+  <h2 data-i="s3"></h2>
+  <ul id="list"></ul>
+  <h2 style="margin-top:14px" data-i="keep"></h2>
+  <div id="keeps"></div>
+  <label data-i="neg"></label>
+  <input id="neg">
+ </section>
+</div>
+<div class="sticky">
+ <section>
+  <h2 data-i="s4"></h2>
+  <div class="bar" style="margin-top:0">
+   <button class="p" id="gen" type="button" data-i="gen"></button>
+   <button id="cp" type="button" data-i="copy"></button>
+  </div>
+  <p class="mut" data-i="genh"></p>
+  <pre id="out"></pre>
+ </section>
+ <section>
+  <h2 data-i="s5"></h2>
+  <div class="row"><input id="sname"><button id="save" type="button" data-i="save"></button></div>
+  <ul id="lib" style="margin-top:10px"></ul>
+ </section>
+</div>
+</main>
+<script>
+const S={
+title:["ตัวช่วยเขียน JSON Prompt แก้ภาพ AI","AI Image Edit JSON Prompt Builder"],
+sub:["สำหรับ ChatGPT และ Google Flow – ระบุทุกจุดให้เป๊ะ","For ChatGPT and Google Flow – precise, point-by-point edits"],
+s1:["1. งานของคุณ","1. Your task"],mode:["ประเภทงาน","Task type"],tg:["ปลายทาง","Target"],
+subj:["ชื่อภาพ / ภาพที่จะแก้ (พิมพ์ไทยหรืออังกฤษได้)","Image name / what to edit (Thai or English)"],
+up:["อัปโหลดภาพต้นฉบับ (ไม่บังคับ)","Upload source image (optional)"],
+uph:["ภาพอยู่ในเครื่องคุณเท่านั้น ใช้ลากเลือกพื้นที่เพื่อกรอกพิกัดอัตโนมัติ และต้องแนบภาพเดิมใน ChatGPT/Flow เองอีกครั้ง","The image stays on your device. Drag on it to fill in region coordinates. Attach the original again in ChatGPT/Flow."],
+s2:["2. เพิ่มรายการแก้ไข","2. Add an edit"],cat:["หมวดหลัก","Category"],op:["หัวข้อย่อย","Operation"],
+add:["เพิ่มเข้ารายการ","Add to list"],fill:["ใส่ตัวอย่างเป็นแม่แบบ","Fill with example"],
+s3:["3. รายการแก้ไข","3. Edit list"],empty:["ยังไม่มีรายการ เลือกหัวข้อด้านบนแล้วกด “เพิ่มเข้ารายการ”","No edits yet. Pick an operation above and press “Add to list”."],
+keep:["สิ่งที่ต้องคงเดิม","Keep unchanged"],neg:["ห้ามเกิดขึ้น (Negative)","Must NOT happen (negative)"],
+s4:["4. ผลลัพธ์ JSON","4. JSON output"],gen:["Generate (ขยายรายละเอียดอัตโนมัติ)","Generate (auto-detail)"],copy:["คัดลอก","Copy"],
+genh:["ระบบจะเติมกฎควบคุม ลำดับขั้น และ prompt สรุปให้อัตโนมัติ วาง JSON ทั้งก้อนลงในช่องแชทพร้อมแนบภาพ","Adds control rules, step order and a summary prompt. Paste the whole JSON in chat with your image attached."],
+s5:["5. คลัง Prompt ที่บันทึก","5. Saved prompts"],save:["บันทึก","Save"],sph:["ตั้งชื่อ Prompt","Name this prompt"],
+load:["เปิดแก้ไข","Open"],del:["ลบ","Delete"],edit:["แก้","Edit"],rm:["ลบ","Remove"],
+need:["กรอกอย่างน้อย 1 ช่องก่อน","Fill at least one field first"],added:["เพิ่มแล้ว","Added"],copied:["คัดลอกแล้ว","Copied"],saved:["บันทึกแล้ว","Saved"],nolib:["ยังไม่มีที่บันทึก","Nothing saved yet"],
+inc:["แก้ภาพ","Edit image"],};
+const MODES=[["edit",["แก้ภาพที่อัปโหลด","Edit an uploaded image"]],["create",["สร้างภาพใหม่","Create a new image"]]];
+// field: [thLabel, enLabel, thExample, enExample]
+const F={
+obj:["วัตถุเดิม","Original object","เสื้อยืดสีดำ","black T-shirt"],
+new:["วัตถุ/ของใหม่","New object","แจ็คเก็ตหนังสีน้ำตาล","brown leather jacket"],
+region:["พิกัดพื้นที่ (x,y,w,h)","Region (x,y,w,h)","x=20%,y=35%,w=40%,h=50% (ลากบนภาพได้)","x=20%,y=35%,w=40%,h=50% (drag on image)"],
+pose:["ท่าทางใหม่","New pose","จากยืนกอดอก เป็นชูสองนิ้ว","from arms crossed to a peace sign"],
+angle:["มุมศีรษะ/ลำตัว","Head/body angle","หันหน้าซ้าย 30° ลำตัวตรง","head turned 30° left, torso straight"],
+emotion:["สีหน้า/อารมณ์","Expression","ยิ้มอ่อน แววตาอบอุ่น","soft smile, warm eyes"],
+gaze:["ทิศทางสายตา","Gaze","มองกล้องตรง ๆ","looking straight at camera"],
+age:["อายุ/รูปร่าง","Age / body","ดูอ่อนลงราว 5 ปี รูปร่างเดิม","look about 5 years younger, same build"],
+color:["สี (ชื่อ/Hex/RGB)","Color (name/Hex/RGB)","#1E3A8A น้ำเงินเข้ม","#1E3A8A navy"],
+material:["เนื้อผ้า/วัสดุ","Material","ผ้าไหม เงาละมุน","silk with soft sheen"],
+pattern:["ลวดลาย/ดีไซน์","Pattern / design","ลายดอกไม้เล็ก คอวี","small floral print, V-neck"],
+hair:["ทรงผม/ความยาว/สี","Hair style / length / color","บ็อบสั้นระดับคาง สีน้ำตาลช็อกโกแลต","chin-length bob, chocolate brown"],
+makeup:["จุด/ระดับแต่งหน้า","Makeup area / level","ลิปสีแดงเชอร์รี่ อายไลเนอร์ปีกบาง","cherry-red lips, thin winged eyeliner"],
+light:["แหล่งแสง/ทิศทางเงา","Light source / shadow","Golden hour จากหลังขวา เงาทอดไปซ้าย","golden hour from back-right, shadows falling left"],
+grade:["เกรดสี/โทน","Color grade","Teal & Orange แบบภาพยนตร์","cinematic teal and orange"],
+atmos:["บรรยากาศ/สภาพอากาศ","Atmosphere / weather","หมอกบาง ละอองแดดเป็นลำ","light fog with volumetric sun rays"],
+scene:["ฉากหลังใหม่","New background","คาเฟ่มินิมอลโทนขาว","minimalist white café"],
+lens:["เลนส์/รูรับแสง","Lens / aperture","85mm f/1.8 หน้าชัดหลังเบลอ","85mm f/1.8, sharp subject, creamy bokeh"],
+text:["ข้อความ","Text","ข้อความที่ต้องให้ปรากฏตรงตัว","exact text that must appear"],
+style:["สไตล์ภาพ","Style","ภาพถ่ายฟิล์ม เกรนบาง","film photograph, fine grain"],
+ratio:["สัดส่วน/ทิศที่ขยาย","Aspect / extend","ขยายซ้ายขวาเป็น 16:9","extend left and right to 16:9"],
+level:["ความแรง 0–100","Strength 0–100","30","30"],
+detail:["รายละเอียดเพิ่มเติม","Extra detail","ระบุให้ชัดที่สุด","be as specific as possible"],
+};
+// category: [id,[th,en],[items]]; item: [id,[th,en],[descTh,descEn],"fields"]
+const C=[
+["subject",["องค์ประกอบหลัก","Subject & global"],[
+["add_object",["เพิ่มวัตถุ","Add object"],["วาดวัตถุใหม่ลงในภาพ ระบุชื่อวัตถุและตำแหน่งที่จะวาง เช่น เพิ่มแว่นกันแดดบนหัวที่มุมขวาบน","Insert a new object. Give its name and where it goes, e.g. sunglasses resting on the head at top right."],"new,region,detail"],
+["remove_object",["ลบวัตถุ","Remove object"],["ลบวัตถุออกแล้วเติมพื้นหลังให้เนียน ระบุชื่อและกรอบพื้นที่ให้ตรงจุด","Erase an object and fill the gap seamlessly. Name it and box its area."],"obj,region"],
+["replace_object",["แทนที่วัตถุ","Replace object"],["เปลี่ยนวัตถุหนึ่งเป็นอีกสิ่ง โดยคงขนาด มุม และแสงเดิม เช่น เสื้อยืดดำ เป็นแจ็คเก็ตหนัง","Swap one object for another while keeping scale, angle and lighting, e.g. black tee to leather jacket."],"obj,new,region"],
+["pose",["ท่าทาง/อิริยาบถ","Pose & gesture"],["กำหนดท่าใหม่ของตัวละคร รวมถึงมุมศีรษะและลำตัว ควรบอกท่าเดิมและท่าใหม่","Define a new pose including head and torso angle. State the old and new pose."],"pose,angle"],
+["expression",["สีหน้า/สายตา","Expression & gaze"],["ควบคุมอารมณ์ รอยยิ้ม แววตา และทิศทางที่มอง (มองกล้อง/มองข้าง)","Control mood, smile, eyes and gaze direction (to camera or aside)."],"emotion,gaze"],
+["age_body",["อายุ/รูปร่าง","Age & body"],["ปรับอายุที่ดูได้หรือรูปร่าง โดยคงเอกลักษณ์ใบหน้าไว้","Adjust apparent age or body shape while keeping facial identity."],"age,level"]]],
+["mask",["แก้เฉพาะจุด (Mask)","Inpaint & mask"],[
+["mask_region",["กำหนดพื้นที่แก้","Mask region"],["กำหนดกรอบ (x,y,w,h) ที่อนุญาตให้แก้ไข ส่วนอื่นต้องไม่เปลี่ยน ใช้ร่วมกับรายการอื่นได้","Define the (x,y,w,h) box that may change. Everything else must stay identical."],"region,detail"],
+["wardrobe",["เสื้อผ้า/เครื่องแต่งกาย","Clothing & wardrobe"],["เปลี่ยนสี ลวดลาย เนื้อผ้า หรือดีไซน์ของชิ้นที่ระบุเท่านั้น","Change color, pattern, fabric or design of one garment only."],"obj,color,material,pattern,region"],
+["hair",["ทรงผม","Hair"],["เปลี่ยนทรง ความยาว หรือสีผม โดยไม่แตะใบหน้า","Change hair style, length or color without touching the face."],"hair,region"],
+["makeup",["แต่งหน้า","Makeup"],["เพิ่มหรือปรับการแต่งหน้า เช่น ริมฝีปาก อายไลเนอร์ แก้ม","Add or tune makeup: lips, eyeliner, cheeks."],"makeup,level"],
+["accessory",["เครื่องประดับ","Accessories"],["เพิ่ม/เปลี่ยนแว่น ต่างหู นาฬิกา หมวก พร้อมตำแหน่ง","Add or swap glasses, earrings, watch, hat, with placement."],"new,region,color"],
+["retouch",["ผิว/รีทัช","Skin retouch"],["ปรับความเรียบเนียนของผิว โดยรักษาเนื้อสัมผัสธรรมชาติ","Smooth skin while keeping natural texture."],"detail,level"],
+["text_logo",["ข้อความ/โลโก้","Text & logo"],["เพิ่มหรือแก้ข้อความบนภาพ ต้องพิมพ์ข้อความตรงตัวอักษร","Add or fix text in the image. Type the exact characters."],"text,region,color"]]],
+["light",["แสง สี บรรยากาศ","Light, color, mood"],[
+["lighting",["แสงและเงา","Lighting & shadows"],["กำหนดแหล่งกำเนิดแสง (Backlight, Softbox, Golden Hour) และทิศทางเงา","Set the light source (backlight, softbox, golden hour) and shadow direction."],"light,level"],
+["grading",["เกรดสีภาพรวม","Color grading"],["กำหนดโทนสีทั้งภาพ เช่น Cyberpunk Neon, Teal & Orange","Set the overall look, e.g. cyberpunk neon or teal and orange."],"grade,level"],
+["object_color",["สีเฉพาะวัตถุ","Object color"],["เปลี่ยนสีของวัตถุเดียวด้วย Hex/RGB","Recolor one object by Hex/RGB."],"obj,color,region"],
+["atmosphere",["หมอก ฝน แสงฟุ้ง","Weather & atmosphere"],["ใส่หมอก ฝน แสงสะท้อน ละอองแดด (Volumetric) ในฉาก","Add fog, rain, reflections or volumetric light to the scene."],"atmos,level"]]],
+["bg",["ฉากหลังและกล้อง","Background & camera"],[
+["bg_replace",["เปลี่ยนฉากหลัง","Background replace"],["สลับฉากหลังทั้งหมด แต่ตัวละครหลักต้องคงเดิม","Replace the whole background; the main subject stays untouched."],"scene,detail"],
+["dof_lens",["ชัดลึก/เลนส์","Depth of field & lens"],["กำหนดรูรับแสง ทางยาวโฟกัส เช่น พอร์ตเทรต 85mm หน้าชัดหลังเบลอ","Set aperture and focal length, e.g. 85mm portrait with bokeh."],"lens,level"],
+["framing",["มุมกล้อง/ครอป","Angle & framing"],["เปลี่ยนมุมกล้อง ระยะ หรือการครอป เช่น low angle, ครึ่งตัว","Change camera angle, distance or crop, e.g. low angle, half body."],"detail"],
+["outpaint",["ขยายภาพ (Outpaint)","Extend canvas"],["ต่อขอบภาพออกไปให้ต่อเนื่อง","Extend the canvas outward consistently."],"ratio"]]],
+["style",["สไตล์และข้อกำหนด","Style & rules"],[
+["art_style",["สไตล์ภาพ","Art style"],["แปลงสไตล์ เช่น สีน้ำ อนิเมะ ภาพถ่ายฟิล์ม","Convert style, e.g. watercolor, anime, film photo."],"style,level"],
+["quality",["คุณภาพ/ความละเอียด","Quality & resolution"],["สั่งเพิ่มความคมชัด ลดนอยส์ หรือซ่อมภาพเก่า","Sharpen, denoise or restore an old photo."],"detail"]]]];
+const K=[["identity",["คงใบหน้า/เอกลักษณ์บุคคลเดิม","Keep face and identity"]],["outside",["ไม่แตะส่วนนอกพื้นที่ที่ระบุ","Do not touch areas outside listed regions"]],["size",["คงสัดส่วนและความละเอียดเดิม","Keep aspect ratio and resolution"]],["style",["คงสไตล์และเนื้อสัมผัสเดิม","Keep original style and texture"]]];
+const RULES=[["ทำเฉพาะรายการที่ระบุ ห้ามเพิ่มการเปลี่ยนแปลงอื่น","Apply only the listed edits; make no other changes."],["ทำตามลำดับ step และอ้างพิกัดเป็นสัดส่วนของภาพต้นฉบับ","Follow step order; coordinates are relative to the source image."],["ถ้าคำสั่งขัดกัน ให้ยึดข้อที่ระบุเฉพาะเจาะจงกว่า","If instructions conflict, the more specific one wins."]];
+let lang=0,edits=[],img=null,sel=[0,0];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ld=()=>{try{return JSON.parse(localStorage.getItem("iep_lib")||"[]")}catch(e){return[]}};
+const sv=a=>{try{localStorage.setItem("iep_lib",JSON.stringify(a))}catch(e){}};
+const say=k=>{$("#st").textContent=S[k][lang];setTimeout(()=>$("#st").textContent="",1800)};
+function fillSel(el,arr,i){el.innerHTML=arr.map((x,n)=>`<option value="${n}">${esc(x)}</option>`).join("");el.value=i}
+function ui(){
+ document.documentElement.lang=lang?"en":"th";$("#lg").textContent=lang?"ไทย":"EN";
+ $$("[data-i]").forEach(e=>e.textContent=S[e.dataset.i][lang]);
+ $("#sname").placeholder=S.sph[lang];
+ fillSel($("#mode"),MODES.map(m=>m[1][lang]),$("#mode").value||0);
+ fillSel($("#cat"),C.map(c=>c[1][lang]),sel[0]);
+ form();list();keeps();lib();gen()}
+function form(){
+ const it=C[sel[0]][2][sel[1]];
+ fillSel($("#op"),C[sel[0]][2].map(i=>i[1][lang]),sel[1]);
+ $("#desc").textContent=it[2][lang];
+ $("#fields").innerHTML=it[3].split(",").map(k=>`<label>${esc(F[k][lang])}</label><input data-f="${k}" ${k=="level"?'type="number" min="0" max="100"':""} placeholder="${esc(F[k][2+lang])}">`).join("")}
+function keeps(){
+ const on=$$("#keeps input:checked").map(i=>i.value);
+ $("#keeps").innerHTML=K.map(k=>`<label class="chk"><input type="checkbox" value="${k[0]}" ${on.includes(k[0])||!on.length&&!$("#keeps").dataset.s?"checked":""}>${esc(k[1][lang])}</label>`).join("");$("#keeps").dataset.s=1}
+function list(){
+ $("#list").innerHTML=edits.length?edits.map((e,n)=>{const it=C[e.c][2][e.i];return `<li class="e"><span><b>${n+1}. ${esc(it[1][lang])}</b><small>${esc(Object.entries(e.v).map(([k,v])=>F[k][lang]+": "+v).join(" | "))}</small></span><span><button class="sm" data-a="ed" data-n="${n}" type="button">${S.edit[lang]}</button> <button class="sm" data-a="rm" data-n="${n}" type="button">${S.rm[lang]}</button></span></li>`}).join(""):`<li class="mut">${S.empty[lang]}</li>`}
+function state(){return{mode:$("#mode").value,target:$("#tg").value,subject:$("#subj").value,edits,keep:$$("#keeps input:checked").map(i=>i.value),neg:$("#neg").value,img:img&&{name:img.name,w:img.w,h:img.h}}}
+function build(){
+ const s=state(),L=lang,e=s.edits.map((x,n)=>{const it=C[x.c][2][x.i];return{step:n+1,category:C[x.c][0],operation:it[0],parameters:x.v,instruction:it[1][1]+": "+Object.entries(x.v).map(([k,v])=>k+"="+v).join("; ")}});
+ const keep=K.filter(k=>s.keep.includes(k[0])).map(k=>k[1][L]),neg=s.neg.split(",").map(x=>x.trim()).filter(Boolean);
+ const fp=(L?"Edit the image":"แก้ไขภาพ")+(s.subject?` “${s.subject}”`:"")+": "+e.map(x=>x.instruction).join(". ")+". "+(keep.length?(L?"Keep unchanged: ":"คงเดิม: ")+keep.join("; ")+". ":"")+(neg.length?(L?"Avoid: ":"ห้าม: ")+neg.join(", ")+".":"");
+ return{schema:"image_edit_v1",target:s.target,language:L?"en":"th",task:MODES[s.mode][0],subject:s.subject,source_image:s.img?{filename:s.img.name,width:s.img.w,height:s.img.h,coordinate_system:"percent_of_image"}:null,edits:e,preserve:keep,negative:neg,rules:RULES.map(r=>r[L]).concat(s.target=="Google Flow"?[L?"Use as an image-to-image edit prompt; run one step at a time if results drift.":"ใช้เป็น prompt แก้ภาพ (image-to-image) หากผลเพี้ยนให้ทำทีละ step"]:[L?"Attach the source image and apply this JSON as the edit instruction.":"แนบภาพต้นฉบับ แล้วใช้ JSON นี้เป็นคำสั่งแก้ภาพ"]),final_prompt:fp}}
+function gen(){$("#out").textContent=JSON.stringify(build(),null,2)}
+function lib(){const a=ld();$("#lib").innerHTML=a.length?a.map((x,n)=>`<li class="e"><span><b>${esc(x.name)}</b><small>${esc(x.s.edits.length)} edits</small></span><span><button class="sm" data-a="ld" data-n="${n}" type="button">${S.load[lang]}</button> <button class="sm" data-a="dl" data-n="${n}" type="button">${S.del[lang]}</button></span></li>`).join(""):`<li class="mut">${S.nolib[lang]}</li>`}
+$("#lg").onclick=()=>{lang=1-lang;ui()};
+$("#cat").onchange=e=>{sel=[+e.target.value,0];form()};
+$("#op").onchange=e=>{sel[1]=+e.target.value;form()};
+$("#fill").onclick=()=>$$("#fields input").forEach(i=>i.value=i.placeholder.replace(/ \((ลาก|drag).*\)$/,""));
+$("#add").onclick=()=>{const v={};$$("#fields input").forEach(i=>{if(i.value.trim())v[i.dataset.f]=i.value.trim()});if(!Object.keys(v).length)return say("need");edits.push({c:sel[0],i:sel[1],v});$$("#fields input").forEach(i=>i.value="");list();gen();say("added")};
+$("#list").onclick=e=>{const b=e.target.closest("button");if(!b)return;const n=+b.dataset.n,x=edits[n];if(b.dataset.a=="ed"){sel=[x.c,x.i];$("#cat").value=x.c;form();$$("#fields input").forEach(i=>i.value=x.v[i.dataset.f]||"")}edits.splice(n,1);list();gen()};
+$("#gen").onclick=gen;
+$("#cp").onclick=()=>{gen();const t=$("#out").textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const r=document.createRange();r.selectNodeContents($("#out"));getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand("copy")});say("copied")};
+$("#save").onclick=()=>{const a=ld(),n=$("#sname").value.trim()||(state().subject||"Prompt")+" "+(a.length+1);a.unshift({name:n,s:state()});sv(a);lib();say("saved")};
+$("#lib").onclick=e=>{const b=e.target.closest("button");if(!b)return;const a=ld(),n=+b.dataset.n;if(b.dataset.a=="dl"){a.splice(n,1);sv(a);return lib()}const s=a[n].s;edits=s.edits;$("#mode").value=s.mode;$("#tg").value=s.target;$("#subj").value=s.subject;$("#neg").value=s.neg;$("#keeps").innerHTML="";$("#keeps").dataset.s=1;keeps();$$("#keeps input").forEach(i=>i.checked=s.keep.includes(i.value));list();gen()};
+["#mode","#tg","#subj","#neg"].forEach(s=>$(s).addEventListener("input",gen));
+$("#keeps").addEventListener("change",gen);
+$("#file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{img={name:f.name,w:im.naturalWidth,h:im.naturalHeight};$("#pvw").innerHTML='<div class="pv" id="pv"><img src="'+r.result+'" alt=""></div>';drag();gen()};im.src=r.result};r.readAsDataURL(f)};
+function drag(){const pv=$("#pv");let a=null,box=null;
+ const pt=e=>{const r=pv.getBoundingClientRect();return[Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100)),Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100))]};
+ pv.onpointerdown=e=>{a=pt(e);pv.setPointerCapture(e.pointerId);box&&box.remove();box=document.createElement("i");pv.appendChild(box)};
+ pv.onpointermove=e=>{if(!a)return;const p=pt(e),x=Math.min(a[0],p[0]),y=Math.min(a[1],p[1]);Object.assign(box.style,{left:x+"%",top:y+"%",width:Math.abs(p[0]-a[0])+"%",height:Math.abs(p[1]-a[1])+"%"})};
+ pv.onpointerup=e=>{if(!a)return;const p=pt(e),x=Math.min(a[0],p[0]),y=Math.min(a[1],p[1]),w=Math.abs(p[0]-a[0]),h=Math.abs(p[1]-a[1]);a=null;const f=$('#fields [data-f="region"]');if(f&&w>1&&h>1)f.value=`x=${x.toFixed(0)}%,y=${y.toFixed(0)}%,w=${w.toFixed(0)}%,h=${h.toFixed(0)}%`}}
+ui();
+</script>
+</body>
+</html>

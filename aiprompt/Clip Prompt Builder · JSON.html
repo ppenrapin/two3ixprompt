@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clip Prompt Builder · JSON</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f2;--card:#fff;--tx:#1d1d1b;--mu:#6b6a66;--bd:#dedbd3;--ac:#d9531e;--ac2:#fff;--code:#f0eee8}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#222226;--tx:#ececea;--mu:#9c9ba3;--bd:#38383f;--ac:#ff7a45;--ac2:#1a1a1a;--code:#111114}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#222226;--tx:#ececea;--mu:#9c9ba3;--bd:#38383f;--ac:#ff7a45;--ac2:#1a1a1a;--code:#111114}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Sarabun","Noto Sans Thai",system-ui,sans-serif}
+.w{max-width:1000px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1{font-size:20px;margin:0}h2{font-size:16px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:3px}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 9px}
+textarea{min-height:60px;resize:vertical}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:7px 12px}
+button.p{background:var(--ac);color:var(--ac2);border-color:var(--ac);font-weight:600}
+button.s{padding:3px 9px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sub{border:1px dashed var(--bd);border-radius:10px;padding:10px;margin-bottom:10px}
+.hint{font-size:12px;color:var(--mu)}
+pre{background:var(--code);border-radius:8px;padding:10px;overflow-x:auto;font-size:12px;max-height:420px;white-space:pre-wrap;word-break:break-word}
+img.th{max-height:70px;border-radius:6px;margin-top:6px}
+.tag{display:inline-block;background:var(--code);border-radius:6px;padding:1px 8px;font-size:12px;color:var(--mu)}
+</style>
+</head>
+<body>
+<div class="w">
+<header>
+ <h1>🎬 <span data-i="title"></span></h1>
+ <div class="row"><button id="lg"></button><button id="th2" class="s">◐</button></div>
+</header>
+
+<div class="card">
+ <h2>1 · <span data-i="basic"></span></h2>
+ <div class="g" style="grid-template-columns:1fr">
+  <div><label data-i="subject"></label><textarea id="subject" placeholder="เช่น แมวส้มใส่แว่นกำลังชงกาแฟ / A ginger cat in glasses brewing coffee"></textarea></div>
+  <div class="g">
+   <div><label data-i="ref"></label><input type="file" id="refimg" accept="image/*"><img id="refprev" class="th" hidden></div>
+   <div><label data-i="loc"></label><input id="loc" placeholder="Café, Chiang Mai"></div>
+  </div>
+ </div>
+</div>
+
+<div class="card">
+ <h2>2 · <span data-i="opts"></span></h2>
+ <div class="g" id="sels"></div>
+ <div style="margin-top:10px"><label data-i="neg"></label><textarea id="neg" style="min-height:44px"></textarea></div>
+</div>
+
+<div class="card">
+ <h2>3 · 🔒 <span data-i="clock"></span></h2>
+ <p class="hint" data-i="clockhint"></p>
+ <div id="chars"></div>
+ <button id="addc" class="s"></button>
+</div>
+
+<div class="card">
+ <h2>4 · <span data-i="shots"></span> <span class="tag" id="tot"></span></h2>
+ <p class="hint" data-i="shothint"></p>
+ <div id="shots"></div>
+ <button id="adds" class="s"></button>
+</div>
+
+<div class="card">
+ <div class="row"><button id="gen" class="p"></button><button id="cpall"></button><button id="dl"></button></div>
+ <p class="hint" data-i="autohint"></p>
+ <div id="out"></div>
+</div>
+
+<div class="card">
+ <h2>5 · 💾 <span data-i="saved"></span></h2>
+ <div class="row" style="margin-bottom:8px"><input id="sname" style="max-width:260px"><button id="save" class="p"></button></div>
+ <div id="list"></div>
+</div>
+</div>
+
+<script>
+const D={
+title:["ตัวช่วยเขียน JSON Prompt สร้างคลิปวิดีโอ","Video Clip JSON Prompt Builder"],
+basic:["ข้อมูลหลัก","Basics"],subject:["ชื่อ / เรื่องที่ต้องการ หรือสิ่งที่ต้องแก้ไขในภาพ (ไทย/อังกฤษ)","Subject / what to create or edit (Thai/English)"],
+ref:["อัปโหลดภาพอ้างอิง / ภาพที่ต้องการแก้","Upload reference / image to edit"],loc:["สถานที่ / ฉากหลัง","Location / setting"],
+opts:["ตัวเลือก (หลัก/ย่อย)","Options (main / sub)"],neg:["Negative prompt (สิ่งที่ห้ามเกิด)","Negative prompt (must not appear)"],
+clock:["ล็อกตัวละคร (Character Lock)","Character Lock"],clockhint:["ใส่ตัวละครได้หลายตัว ระบบจะใส่บล็อกตัวตนชุดเดียวกันซ้ำในทุก shot","Add one or more characters; the same identity block is repeated in every shot."],
+shots:["Shot ต่อเนื่อง","Continuous shots"],shothint:["แต่ละ shot ไม่เกิน 10 วินาที และเริ่มจากเฟรมสุดท้ายของ shot ก่อนหน้า","Each shot is max 10 s and starts from the last frame of the previous one."],
+autohint:["Generate Auto = สร้าง JSON ละเอียดด้วยกฎในตัว (ไม่เรียก AI ภายนอก) แล้วนำไปวางใน ChatGPT/Flow ได้ทันที","Generate Auto builds a detailed JSON using built-in rules (no external AI call). Paste it into ChatGPT/Flow."],
+saved:["Prompt ที่บันทึกไว้","Saved prompts"],
+gen:["⚡ Generate Auto","⚡ Generate Auto"],cpall:["คัดลอก JSON ทั้งหมด","Copy full JSON"],dl:["ดาวน์โหลด .json","Download .json"],
+addc:["+ เพิ่มตัวละคร","+ Add character"],adds:["+ เพิ่ม Shot","+ Add shot"],save:["บันทึก","Save"],sname:["ชื่อ prompt","Prompt name"],
+cname:["ชื่อตัวละคร","Name"],cdesc:["รูปลักษณ์ (หน้า ผม ผิว ชุด อายุ ฯลฯ)","Appearance (face, hair, skin, outfit, age…)"],clk:["จุดที่ห้ามเปลี่ยน","Must NOT change"],cimg:["ภาพต้นฉบับตัวละคร","Source image"],
+act:["การกระทำ / เหตุการณ์","Action"],end:["ภาพเฟรมสุดท้ายของ shot นี้ (ให้ shot ถัดไปต่อ)","Final frame description (next shot continues from it)"],
+spk:["ผู้พูด","Speaker"],line:["บทพูด (พูดได้ ~20–25 คำ/10 วิ)","Dialogue (~20–25 words per 10 s)"],dur:["วินาที (≤10)","Seconds (≤10)"],
+size:["ขนาดภาพ","Shot size"],mov:["การเคลื่อนกล้อง","Camera move"],del:["ลบ","Delete"],cp:["คัดลอก prompt","Copy prompt"],load:["โหลด","Load"],
+copied:["คัดลอกแล้ว ✓","Copied ✓"],none:["(ไม่มี / บรรยาย)","(none / narration)"],empty:["ยังไม่มีรายการ","Nothing saved yet"],
+lock_def:["ใบหน้า ทรงผม สีผิว ชุด อุปกรณ์ประกอบ สัดส่วนร่างกาย","face, hairstyle, skin tone, outfit, accessories, body proportions"]
+};
+const S=[ // id, [th,en], options "en|th"
+["task",["งาน","Task"],["Generate new clip|สร้างคลิปใหม่","Edit uploaded image/clip|แก้ไขภาพ/คลิปที่อัปโหลด","Image-to-video|ภาพเป็นวิดีโอ"]],
+["platform",["แพลตฟอร์ม","Platform"],["ChatGPT (Sora)","Google Flow (Veo 3)","Runway Gen-4","Kling AI","Luma Dream Machine","Hailuo MiniMax","Pika"]],
+["aspect",["อัตราส่วน","Aspect ratio"],["16:9","9:16","1:1","4:5","21:9"]],
+["style",["สไตล์ภาพ","Visual style"],["Photorealistic|สมจริง","Cinematic film|ภาพยนตร์","3D animation (Pixar-like)|อนิเมชัน 3D","Anime|อนิเมะ","Commercial ad|โฆษณา","Documentary|สารคดี","Handheld vlog|วล็อก","Claymation|ดินปั้น"]],
+["shotsize",["ขนาดภาพหลัก","Main shot size"],["Wide|กว้าง","Medium|กลาง","Close-up|ใกล้","Extreme close-up|ใกล้มาก","Over-the-shoulder|ข้ามไหล่","POV"]],
+["movement",["กล้องเคลื่อน","Camera movement"],["Static tripod|นิ่ง","Slow dolly in|ดอลลีเข้า","Dolly out|ดอลลีออก","Pan|แพน","Tracking|ตามติด","Handheld|ถือกล้อง","Drone / crane|โดรน/เครน","Orbit|วนรอบ"]],
+["lens",["เลนส์","Lens"],["24mm","35mm","50mm","85mm","Macro|มาโคร","Anamorphic"]],
+["lighting",["แสง","Lighting"],["Natural daylight|แสงธรรมชาติ","Golden hour|แสงทอง","Soft studio|สตูดิโอนุ่ม","Neon night|ไฟนีออนกลางคืน","Low-key moody|มืดดราม่า","Overcast|ฟ้าปิด"]],
+["mood",["อารมณ์","Mood"],["Warm|อบอุ่น","Dramatic|ดราม่า","Playful|สนุก","Calm|สงบ","Tense|ตึงเครียด","Inspiring|สร้างแรงบันดาลใจ"]],
+["grade",["โทนสี","Color grade"],["Natural|ธรรมชาติ","Teal & orange","Warm vintage film|ฟิล์มวินเทจ","Muted|ซีด","High-contrast B&W|ขาวดำ"]],
+["tod",["ช่วงเวลา","Time of day"],["Morning|เช้า","Noon|เที่ยง","Sunset|เย็น","Night|กลางคืน"]],
+["fps",["เฟรมเรต","FPS"],["24","30","60"]],
+["speechlang",["ภาษาบทพูด","Speech language"],["Thai|ไทย","English|อังกฤษ","No speech|ไม่มีเสียงพูด"]],
+["sfx",["เสียง/ดนตรี","Audio"],["Ambient natural|บรรยากาศจริง","Soft background music|ดนตรีเบา","Upbeat music|ดนตรีสนุก","Silence + dialogue only|เฉพาะบทพูด"]]
+];
+let lang="th",chars=[],shots=[],imgs={};
+const $=s=>document.querySelector(s),t=k=>D[k][lang==="th"?0:1];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ol=o=>{const[a,b]=o.split("|");return[a,lang==="th"&&b?b:a]};
+let uid=1;
+function buildSels(){
+ const keep={};S.forEach(([id])=>{const e=$("#s_"+id);if(e)keep[id]=e.selectedIndex});
+ $("#sels").innerHTML=S.map(([id,l,o])=>`<div><label>${l[lang==="th"?0:1]}</label><select id="s_${id}">${o.map(x=>{const[a,b]=ol(x);return`<option value="${esc(x.split("|")[0])}">${esc(b)}</option>`}).join("")}</select></div>`).join("");
+ S.forEach(([id])=>{if(keep[id]>0)$("#s_"+id).selectedIndex=keep[id]});
+}
+function ui(){
+ document.querySelectorAll("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));
+ $("#lg").textContent=lang==="th"?"EN":"ไทย";
+ ["gen","cpall","dl","addc","adds","save"].forEach(k=>$("#"+k).textContent=t(k));
+ $("#sname").placeholder=t("sname");
+ buildSels();rChars();rShots();rList();
+ if(!$("#neg").value)$("#neg").value="morphing, face change, outfit change, extra fingers, flicker, text artifacts, watermark, subtitles, inconsistent background, identity drift";
+}
+function rChars(){
+ $("#chars").innerHTML=chars.map((c,i)=>`<div class="sub"><div class="g">
+ <div><label>${t("cname")}</label><input value="${esc(c.name)}" oninput="chars[${i}].name=this.value"></div>
+ <div><label>${t("cimg")}</label><input type="file" accept="image/*" onchange="cimg(${i},this)">${imgs[c.id]?`<img class="th" src="${imgs[c.id]}">`:c.file?`<span class="hint">${esc(c.file)}</span>`:""}</div></div>
+ <label style="margin-top:8px">${t("cdesc")}</label><textarea oninput="chars[${i}].desc=this.value">${esc(c.desc)}</textarea>
+ <label>${t("clk")}</label><textarea oninput="chars[${i}].lock=this.value" placeholder="${esc(t("lock_def"))}">${esc(c.lock)}</textarea>
+ <button class="s" onclick="chars.splice(${i},1);rChars();rShots()">${t("del")}</button></div>`).join("");
+}
+function cimg(i,el){const f=el.files[0];if(!f)return;chars[i].file=f.name;const r=new FileReader();r.onload=()=>{imgs[chars[i].id]=r.result;rChars()};r.readAsDataURL(f)}
+function rShots(){
+ const so=S.find(s=>s[0]==="shotsize")[2],mo=S.find(s=>s[0]==="movement")[2];
+ const opt=(arr,v)=>arr.map(x=>`<option value="${esc(x.split("|")[0])}" ${x.split("|")[0]===v?"selected":""}>${esc(ol(x)[1])}</option>`).join("");
+ $("#shots").innerHTML=shots.map((s,i)=>`<div class="sub"><b>Shot ${i+1}</b>
+ <div class="g" style="margin-top:6px">
+ <div><label>${t("dur")}</label><input type="number" min="1" max="10" value="${s.dur}" oninput="shots[${i}].dur=Math.min(10,Math.max(1,+this.value||1));tot()"></div>
+ <div><label>${t("size")}</label><select onchange="shots[${i}].size=this.value">${opt(so,s.size)}</select></div>
+ <div><label>${t("mov")}</label><select onchange="shots[${i}].mov=this.value">${opt(mo,s.mov)}</select></div>
+ <div><label>${t("spk")}</label><select onchange="shots[${i}].spk=this.value"><option value="">${t("none")}</option>${chars.map(c=>`<option ${c.name===s.spk?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div></div>
+ <label style="margin-top:8px">${t("act")}</label><textarea oninput="shots[${i}].act=this.value">${esc(s.act)}</textarea>
+ <label>${t("line")}</label><textarea style="min-height:44px" oninput="shots[${i}].line=this.value">${esc(s.line)}</textarea>
+ <label>${t("end")}</label><textarea style="min-height:44px" oninput="shots[${i}].end=this.value">${esc(s.end)}</textarea>
+ <button class="s" onclick="shots.splice(${i},1);rShots()">${t("del")}</button></div>`).join("");
+ tot();
+}
+function tot(){$("#tot").textContent=shots.reduce((a,s)=>a+s.dur,0)+" s"}
+function addShot(){shots.push({dur:10,size:"",mov:"",spk:"",act:"",line:"",end:""});rShots()}
+function g(id){return $("#s_"+id).value}
+function build(){
+ const th=lang==="th",G={};S.forEach(([id])=>G[id]=g(id));
+ const idb=c=>`${c.name||"Character"}: ${c.desc||""}. LOCKED (do not change): ${c.lock||t("lock_def")}.`;
+ const cs=chars.map((c,i)=>({id:"char_"+(i+1),name:c.name,reference_image:c.file||null,appearance:c.desc,locked_traits:c.lock||t("lock_def"),identity_block:idb(c)}));
+ let acc=0;
+ const sh=shots.map((s,i)=>{
+  const a=acc;acc+=s.dur;const prev=shots[i-1];
+  const size=s.size||G.shotsize,mov=s.mov||G.movement;
+  const cont=i===0?"Opening shot. Establish the scene and all characters clearly.":`Start EXACTLY from the final frame of Shot ${i}${prev&&prev.end?` (${prev.end})`:""}: same character positions, wardrobe, lighting, background and camera angle. No cut, no re-design.`;
+  const dl=s.line?{speaker:s.spk||null,line:s.line,language:G.speechlang,lip_sync:true,delivery:"natural pacing, speech finishes before the final 0.5 s"}:null;
+  const txt=[
+   `[${G.platform} | ${G.aspect} | ${G.fps}fps | ${s.dur}s | ${G.style}]`,
+   `Task: ${G.task}. Subject: ${$("#subject").value||"-"}. Setting: ${$("#loc").value||"-"}, ${G.tod}.`,
+   chars.length?`CHARACTER LOCK — ${chars.map(idb).join(" ")}`:"",
+   `CONTINUITY: ${cont}`,
+   `ACTION (${a}–${acc}s): ${s.act||"-"}`,
+   `CAMERA: ${size}, ${mov}, ${G.lens} lens. LIGHT: ${G.lighting}. MOOD: ${G.mood}. GRADE: ${G.grade}.`,
+   dl?`DIALOGUE (${G.speechlang}, lip-synced) ${s.spk||""}: "${s.line}"`:"No dialogue.",
+   `AUDIO: ${G.sfx}.`,
+   s.end?`END FRAME: ${s.end}`:"",
+   `AVOID: ${$("#neg").value}`
+  ].filter(Boolean).join("\n");
+  return{shot:i+1,duration_sec:s.dur,time_range:`${a}-${acc}s`,continuity:{mode:i===0?"first_shot":"continue_from_last_frame",instruction:cont},
+   camera:{shot_size:size,movement:mov,lens:G.lens,stabilization:mov==="Handheld"?"subtle handheld":"smooth"},
+   action:s.act,dialogue:dl,characters_in_shot:cs.map(c=>c.identity_block),end_frame:s.end||null,text_prompt:txt};
+ });
+ return{meta:{tool:"Clip Prompt Builder",language:lang,platform:G.platform,task:G.task,total_duration_sec:acc,shots_count:sh.length},
+  project:{subject:$("#subject").value,location:$("#loc").value,reference_image:$("#refimg").files[0]?.name||null},
+  global_style:{visual_style:G.style,aspect_ratio:G.aspect,fps:+G.fps,lighting:G.lighting,mood:G.mood,color_grade:G.grade,time_of_day:G.tod,lens:G.lens,audio:G.sfx},
+  consistency_rules:["Keep every character identical across all shots (face, hair, outfit, proportions).","Keep background, props, color grade and lighting constant unless a shot says otherwise.","Each shot begins on the previous shot's final frame.","Use the same seed / reference image on every generation if the platform allows."],
+  characters:cs,shots:sh,negative_prompt:$("#neg").value,
+  usage:th?"วาง JSON นี้ให้ AI แล้วสั่งแก้ฟิลด์ที่ต้องการ หรือคัดลอก text_prompt ของแต่ละ shot ไปสร้างคลิปทีละช่วง และอัปโหลดเฟรมสุดท้ายของ shot ก่อนหน้าเป็นภาพเริ่มต้น":"Paste this JSON to an AI and ask it to edit any field, or copy each shot's text_prompt to generate clips one by one, uploading the previous shot's last frame as the start image."};
+}
+let cur=null;
+function cp(txt,btn){navigator.clipboard?.writeText(txt).then(()=>{const o=btn.textContent;btn.textContent=t("copied");setTimeout(()=>btn.textContent=o,1200)}).catch(()=>{})}
+function gen(){
+ if(!shots.length)addShot();
+ cur=build();
+ $("#out").innerHTML=cur.shots.map((s,i)=>`<div class="sub"><div class="row" style="justify-content:space-between"><b>Shot ${s.shot} · ${s.time_range}</b><button class="s" onclick="cp(cur.shots[${i}].text_prompt,this)">${t("cp")}</button></div><pre>${esc(s.text_prompt)}</pre></div>`).join("")+`<pre>${esc(JSON.stringify(cur,null,2))}</pre>`;
+ $("#out").scrollIntoView({behavior:"smooth"});
+}
+function state(){const o={subject:$("#subject").value,loc:$("#loc").value,neg:$("#neg").value,sel:{},chars:chars.map(c=>({...c})),shots:shots.map(s=>({...s})),lang};S.forEach(([id])=>o.sel[id]=$("#s_"+id).selectedIndex);return o}
+function setState(o){
+ lang=o.lang||lang;$("#subject").value=o.subject;$("#loc").value=o.loc;$("#neg").value=o.neg;chars=o.chars;shots=o.shots;
+ ui();S.forEach(([id])=>{if(o.sel[id]!=null)$("#s_"+id).selectedIndex=o.sel[id]});window.scrollTo({top:0,behavior:"smooth"})
+}
+function store(){try{return JSON.parse(localStorage.getItem("cpb")||"[]")}catch(e){return[]}}
+function put(a){try{localStorage.setItem("cpb",JSON.stringify(a))}catch(e){}}
+function rList(){
+ const a=store();
+ $("#list").innerHTML=a.length?a.map((x,i)=>`<div class="row" style="margin-bottom:6px"><span style="flex:1">${esc(x.name)} <span class="hint">${esc(x.date)}</span></span><button class="s" onclick="setState(store()[${i}].data)">${t("load")}</button><button class="s" onclick="const a=store();a.splice(${i},1);put(a);rList()">${t("del")}</button></div>`).join(""):`<span class="hint">${t("empty")}</span>`;
+}
+$("#lg").onclick=()=>{const s=state();lang=lang==="th"?"en":"th";$("#subject").value=s.subject;ui();S.forEach(([id])=>$("#s_"+id).selectedIndex=s.sel[id])};
+$("#th2").onclick=()=>{const r=document.documentElement,d=r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=d?"light":"dark"};
+$("#addc").onclick=()=>{chars.push({id:uid++,name:"",desc:"",lock:"",file:""});rChars();rShots()};
+$("#adds").onclick=addShot;$("#gen").onclick=gen;
+$("#cpall").onclick=e=>{if(!cur)gen();cp(JSON.stringify(cur,null,2),e.target)};
+$("#dl").onclick=()=>{if(!cur)gen();const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(cur,null,2)],{type:"application/json"}));a.download="clip-prompt.json";a.click()};
+$("#save").onclick=()=>{const a=store();a.unshift({name:$("#sname").value||$("#subject").value.slice(0,30)||"Untitled",date:new Date().toLocaleString(),data:state()});put(a);rList()};
+$("#refimg").onchange=e=>{const f=e.target.files[0],p=$("#refprev");if(!f){p.hidden=true;return}const r=new FileReader();r.onload=()=>{p.src=r.result;p.hidden=false};r.readAsDataURL(f)};
+$("#addc").click();addShot();ui();
+</script>
+</body>
+</html>

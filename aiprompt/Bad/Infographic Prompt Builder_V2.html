@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Infographic Prompt Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--sf:#fff;--ink:#14263a;--mut:#5b6b7b;--ln:#d3dae1;--ac:#e8a317;--acx:#14263a;--acl:#fff3d6;--code:#0f1c2b;--codet:#e6edf3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1621;--sf:#16222f;--ink:#e8eef4;--mut:#93a4b5;--ln:#2a3a4a;--ac:#f0b429;--acx:#f0b429;--acl:#33290f;--code:#0a121b;--codet:#dce6ee}}
+:root[data-theme="dark"]{--bg:#0e1621;--sf:#16222f;--ink:#e8eef4;--mut:#93a4b5;--ln:#2a3a4a;--ac:#f0b429;--acx:#f0b429;--acl:#33290f;--code:#0a121b;--codet:#dce6ee}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 'IBM Plex Sans Thai',system-ui,sans-serif}
+header{padding:22px 20px 8px;max-width:1180px;margin:auto;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+h1{margin:0;font-size:24px;font-weight:600}
+header p{margin:2px 0 0;color:var(--mut);font-size:14px}
+main{max-width:1180px;margin:auto;padding:12px 20px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+section.card{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 4px;font-weight:600}
+.hint{color:var(--mut);font-size:13px;margin:0 0 10px}
+label{display:block;font-size:13px;font-weight:500;margin:0 0 3px}
+input[type=text],input[type=number],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:8px 10px}
+textarea{resize:vertical;min-height:110px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 12px}
+.sub{font-size:13px;font-weight:600;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--ln)}
+button{font:inherit;cursor:pointer;border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:8px;padding:8px 14px;font-weight:500}
+button:hover{border-color:var(--ac)}
+.pri{background:var(--ac);border-color:var(--ac);color:#14263a;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ref{border:1px dashed var(--ln);border-radius:10px;padding:10px;margin-bottom:8px;display:grid;grid-template-columns:64px 1fr;gap:10px}
+.ref .th{width:64px;height:64px;border-radius:8px;background:var(--bg);border:1px solid var(--ln);object-fit:cover;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:11px;text-align:center}
+.ref .f{display:grid;gap:6px}
+.chk{display:flex;flex-wrap:wrap;gap:6px 14px}
+.chk label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0}
+.tip{background:var(--acl);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:10px}
+.tip b{font-weight:600}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs button.on{background:var(--acx);color:var(--bg);border-color:var(--acx)}
+pre{background:var(--code);color:var(--codet);border-radius:10px;padding:14px;margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;max-height:560px;overflow:auto;min-height:200px}
+.out{position:sticky;top:10px}
+.cnt{font-size:12px;color:var(--mut);text-align:right}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--acx);color:var(--bg);padding:8px 16px;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.s{opacity:1}
+.del{padding:3px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Infographic Prompt Builder</h1><p>สร้าง Prompt แบบ JSON และข้อความ สำหรับ Infographic และ Dynamic Infographic</p></div>
+ <button id="theme" aria-label="สลับธีม">โหมดมืด/สว่าง</button>
+</header>
+<main>
+<div>
+ <section class="card">
+  <h2>1. ข้อมูลพื้นฐาน</h2>
+  <p class="hint">พิมพ์ได้ทั้งไทยและอังกฤษ</p>
+  <div class="g">
+   <div style="grid-column:1/-1"><label for="title">ชื่อภาพ / หัวข้อ Infographic</label><input type="text" id="title" placeholder="เช่น 5 ขั้นตอนดูแลสุขภาพหัวใจ / Guide to Solar Energy"></div>
+   <div><label for="ai">ใช้กับ AI ตัวไหน</label><select id="ai"></select></div>
+   <div><label for="lang">ภาษาของข้อความบนภาพ</label><select id="lang"></select></div>
+  </div>
+ </section>
+
+ <section class="card">
+  <h2>2. รูปภาพอ้างอิง / ตัวอย่าง</h2>
+  <p class="hint">เพิ่มได้หลายรูป อัปโหลดเพื่อดูตัวอย่างในเครื่อง (ไฟล์ไม่ถูกส่งออกไปที่ใด) แล้วอธิบายว่าต้องการใช้รูปนั้นอย่างไร แนบไฟล์จริงในแชตของ AI ตอนใช้งาน</p>
+  <div id="refs"></div>
+  <button id="addref">+ เพิ่มรูปอ้างอิง</button>
+ </section>
+
+ <section class="card">
+  <h2>3. รูปแบบและสไตล์</h2>
+  <div class="g" id="opts"></div>
+  <div class="sub">ตัวเลือกเพิ่มเติม (เลือกได้หลายข้อ)</div>
+  <div class="chk" id="checks"></div>
+  <div class="sub">สีแบรนด์ (ถ้ามี)</div>
+  <div class="g"><div><label for="colors">รหัสสีหรือชื่อสี</label><input type="text" id="colors" placeholder="#14263A, #E8A317, ขาว"></div>
+  <div><label for="footer">ข้อความท้ายภาพ / แหล่งที่มา / ลายน้ำ</label><input type="text" id="footer" placeholder="เช่น ที่มา: WHO 2025 | @ชื่อเพจ"></div></div>
+ </section>
+
+ <section class="card">
+  <h2>4. เนื้อหา</h2>
+  <div class="tip"><b>คำแนะนำ:</b> หัวข้อหลัก 1 บรรทัด (ไม่เกิน 8 คำ) · ประเด็นย่อย 3–7 ข้อ ข้อละ 1 บรรทัด (10–20 คำ) · ใส่ตัวเลขหรือสถิติจริงอย่างน้อย 1–2 ค่า · ปิดท้ายด้วยสรุปหรือ Call to Action 1 ประโยค · รวมทั้งหมดไม่เกิน ~120 คำ ข้อความมากเกินไปทำให้ AI สะกดผิด<br>รูปแบบ: <code>หัวข้อ | รายละเอียดสั้น | ตัวเลข</code> ข้อละบรรทัด</div>
+  <div class="g" style="margin-bottom:10px"><div><label for="n">จำนวนประเด็นที่ต้องการให้สร้างอัตโนมัติ</label><input type="number" id="n" min="2" max="12" value="5"></div></div>
+  <textarea id="content" aria-label="เนื้อหา" placeholder="หัวข้อหลัก: ...&#10;1. หัวข้อ | รายละเอียด | ตัวเลข&#10;2. ...&#10;สรุป: ..."></textarea>
+  <div class="row" style="justify-content:space-between;margin-top:8px"><button id="autoc">สร้างเนื้อหาโครงร่างอัตโนมัติ</button><span class="cnt" id="cnt">0 คำ</span></div>
+ </section>
+
+ <section class="card" id="dyn" hidden>
+  <h2>5. Dynamic Infographic (แอนิเมชัน)</h2>
+  <p class="hint">แสดงเมื่อเลือกรูปแบบ Dynamic / Animated</p>
+  <div class="g" id="dopts"></div>
+ </section>
+
+ <section class="card">
+  <h2>Negative Prompt (สิ่งที่ไม่ต้องการ)</h2>
+  <input type="text" id="neg" value="ตัวอักษรผิด, ข้อความเบลอ, ลายน้ำที่ไม่ได้ขอ, องค์ประกอบแน่นเกินไป, ภาพมือผิดรูป, สีฉูดฉาดขัดกัน">
+ </section>
+</div>
+
+<div class="out">
+ <section class="card">
+  <h2>ผลลัพธ์ Prompt</h2>
+  <div class="row" style="margin-bottom:10px">
+   <button class="pri" id="gen">สร้าง Prompt</button>
+   <button id="enh">ขยายรายละเอียดอัตโนมัติ</button>
+  </div>
+  <div class="tabs" role="tablist"><button class="on" id="tj">JSON</button><button id="tt">ข้อความ</button></div>
+  <pre id="out" aria-live="polite">กรอกข้อมูลทางซ้าย แล้วกด “สร้าง Prompt”</pre>
+  <div class="row" style="margin-top:10px"><button id="copy">คัดลอก</button><button id="dl">ดาวน์โหลด</button><button id="reset">ล้างทั้งหมด</button></div>
+ </section>
+</div>
+</main>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const AI=["Gemini (Nano Banana / Imagen)","ChatGPT (GPT-image / DALL·E)","Midjourney","Claude (สร้างเป็น HTML/SVG)","Copilot / Bing Designer","Leonardo.ai","Ideogram (เก่งเรื่องตัวอักษร)","Canva Magic Media","Stable Diffusion / Flux","อื่น ๆ"];
+const LANG=["ไทย","English","ไทย + English (สองภาษา)","ไม่มีข้อความ (เว้นที่ว่างให้ใส่เอง)"];
+// [id,label,[[value,label]]]
+const O=[
+["type","ประเภท Infographic (หลัก)",["Event / training announcement poster|โปสเตอร์ประชาสัมพันธ์อบรม/อีเวนต์ (ตามภาพตัวอย่าง)","Statistical / data-driven|สถิติ ข้อมูลตัวเลข","Process / step-by-step|ขั้นตอน กระบวนการ","Timeline|ไทม์ไลน์ ลำดับเวลา","Comparison|เปรียบเทียบ A vs B","List / tips|รายการ เคล็ดลับ","Hierarchy / pyramid|ลำดับขั้น พีระมิด","Mind map / concept map|แผนผังความคิด","Geographic / map|แผนที่","Anatomy / diagram|แผนภาพส่วนประกอบ","Flowchart / decision tree|แผนผังการตัดสินใจ","Roadmap / plan|แผนงาน","Resume / profile|โปรไฟล์ ประวัติ","Report summary|สรุปรายงาน","Dynamic / Animated|Dynamic เคลื่อนไหว"]],
+["sub","รูปแบบย่อย",["Large headline at top, photo hero on right, highlighted offer banner, date/place info panels, topic cards, QR and contacts, partner logo bar at bottom|หัวข้อใหญ่บน ภาพคนขวา แบนเนอร์ไฮไลต์ แผงวันที่/สถานที่ การ์ดหัวข้อ QR+ติดต่อ แถบโลโก้ท้าย (ตามภาพตัวอย่าง)","Vertical long scroll|แนวตั้งยาว","Horizontal flow|เรียงแนวนอน","Grid cards|การ์ดตาราง","Zigzag / snake path|เส้นทางซิกแซก","Radial / circular|วงกลมกระจายรอบศูนย์กลาง","Central hero + callouts|ภาพกลาง + คำอธิบายรอบ","Split screen|แบ่งครึ่งซ้ายขวา","Dashboard|แดชบอร์ด","Bento box|Bento box","Single focus|เด่นจุดเดียว"]],
+["chart","ชนิดกราฟ/องค์ประกอบข้อมูล",["Floating UI cards and big number callouts|การ์ด UI ลอย + ตัวเลขใหญ่ (ตามภาพตัวอย่าง)","None|ไม่มีกราฟ","Bar chart|แท่ง","Donut / pie|โดนัท วงกลม","Line chart|เส้น","Big number callouts|ตัวเลขใหญ่","Icon array / pictogram|พิกโตแกรม","Progress bars|แถบความคืบหน้า","Mixed charts|ผสมหลายแบบ"]],
+["ratio","สัดส่วนภาพ",["4:5|4:5 (Instagram/Facebook)","9:16|9:16 (Story/Reel)","1:1|1:1 (สี่เหลี่ยมจัตุรัส)","16:9|16:9 (สไลด์/YouTube)","2:3|2:3 (Pinterest/โปสเตอร์)","1:3|1:3 (ยาวพิเศษ)","A4 portrait|A4 แนวตั้ง"]],
+["style","สไตล์ภาพ",["Modern tech 3D glossy with glassmorphism UI cards and a photorealistic smiling person|ไฮเทค 3D เงา + การ์ดกระจก + คนภาพถ่ายจริง (ตามภาพตัวอย่าง)","Flat vector|เวกเตอร์แบน","Isometric|ไอโซเมตริก","3D render|3D","Minimal clean|มินิมอล","Hand-drawn sketch|วาดมือ","Corporate professional|องค์กร ทางการ","Cartoon / playful|การ์ตูน สนุก","Paper cut|กระดาษตัด","Glassmorphism|กระจกโปร่ง","Retro / vintage|เรโทร","Neon / cyber|นีออน ไซเบอร์","Watercolor|สีน้ำ","Editorial magazine|นิตยสาร"]],
+["palette","โทนสี",["Blue gradient (navy to sky blue) with orange and gold highlight panels, white text|ไล่สีน้ำเงิน + แผงส้ม/ทองเน้น ตัวอักษรขาว (ตามภาพตัวอย่าง)","Blue & white trust|น้ำเงินขาว น่าเชื่อถือ","Green eco|เขียว ธรรมชาติ","Warm orange & yellow|ส้มเหลือง อบอุ่น","Red & black bold|แดงดำ เข้ม","Pastel soft|พาสเทล","Monochrome|โทนเดียว","Dark mode with accent|พื้นเข้ม + สีเน้น","Gold & navy luxury|ทองกรมท่า หรูหรา","Vibrant multicolor|หลากสีสด","Earth tones|เอิร์ธโทน","Brand colors (ตามช่องสีแบรนด์)|ตามสีแบรนด์"]],
+["font","ฟอนต์/ตัวอักษร",["Bold italic Thai display headline with rounded sans-serif body (Prompt/Anuphan style)|หัวข้อตัวเอียงหนา + เนื้อความมนอ่านง่าย (ตามภาพตัวอย่าง)","Modern sans-serif (Thai: Prompt/Sarabun style)|Sans ทันสมัย","Rounded friendly|มนเป็นมิตร","Bold display headline|หัวข้อหนาใหญ่","Elegant serif|Serif หรูหรา","Handwritten|ลายมือ","Monospace tech|Monospace เทคนิค"]],
+["icon","สไตล์ไอคอน/ภาพประกอบ",["3D glossy icons inside glass cards|ไอคอน 3D ในการ์ดกระจก (ตามภาพตัวอย่าง)","Line icons|ไอคอนเส้น","Solid filled icons|ไอคอนทึบ","Duotone icons|สองโทน","3D icons|ไอคอน 3D","Flat illustrations|ภาพประกอบแบน","Realistic photos|ภาพถ่ายจริง","Characters / mascot|ตัวละคร มาสคอต"]],
+["bg","พื้นหลัง",["Blurred modern office/retail photo with blue gradient overlay|ภาพออฟฟิศเบลอ + ไล่สีน้ำเงินทับ (ตามภาพตัวอย่าง)","Solid color|สีพื้น","Soft gradient|ไล่สี","Subtle pattern|ลวดลายจาง","Paper texture|พื้นผิวกระดาษ","Photo blurred|ภาพถ่ายเบลอ","White clean|ขาวสะอาด","Dark|พื้นเข้ม"]],
+["audience","กลุ่มเป้าหมาย",["SME business owners|ผู้ประกอบการ SME","General public|ประชาชนทั่วไป","Students|นักเรียน นักศึกษา","Executives|ผู้บริหาร","Customers / social media|ลูกค้า โซเชียล","Kids|เด็ก","Professionals / experts|ผู้เชี่ยวชาญ","Seniors|ผู้สูงอายุ"]],
+["tone","โทนอารมณ์",["Energetic and trustworthy|มีพลังและน่าเชื่อถือ","Friendly|เป็นมิตร","Authoritative|น่าเชื่อถือ","Energetic|มีพลัง","Calm|สงบ","Urgent|เร่งด่วน","Fun|สนุก"]],
+["density","ปริมาณรายละเอียด",["Dense, information-rich but well organized|แน่น ข้อมูลเยอะ จัดเป็นระเบียบ (ตามภาพตัวอย่าง)","Balanced|พอดี","Light, lots of white space|น้อย โปร่ง"]],
+["quality","คุณภาพผลลัพธ์",["High detail 4K|ละเอียดสูง 4K","Standard|มาตรฐาน","Print-ready 300dpi|พร้อมพิมพ์"]]
+];
+const C=[["icons","มีไอคอนประกอบทุกหัวข้อ",1],["nums","มีตัวเลขลำดับ (เฉพาะเนื้อหาที่เป็นขั้นตอน)",0],["logo","มีโลโก้หน่วยงานด้านบนและแถบโลโก้พันธมิตรท้ายภาพ",1],["src","มีแหล่งอ้างอิงท้ายภาพ",0],["cta","มีปุ่ม/ข้อความ Call to Action",1],["qr","เว้นที่วาง QR code",1],["a11y","คอนทราสต์สูง อ่านง่าย",1],["conn","ใช้เส้นเชื่อม/ลูกศรนำสายตา",1]];
+const D=[["anim","รูปแบบแอนิเมชัน",["Sequential reveal|ทยอยปรากฏทีละส่วน","Count-up numbers|ตัวเลขนับขึ้น","Chart grow|กราฟค่อย ๆ โต","Flow line draw|วาดเส้นเชื่อม","Parallax scroll|พารัลแลกซ์ตามการเลื่อน","Looping ambient|เคลื่อนไหววนเบา ๆ"]],
+["dur","ความยาว",["8s|8 วินาที","15s|15 วินาที","30s|30 วินาที","60s|60 วินาที"]],
+["fmt","รูปแบบไฟล์",["MP4 video|MP4","GIF|GIF","Lottie / SVG animation|Lottie / SVG","Interactive HTML|HTML โต้ตอบได้"]],
+["ease","จังหวะการเคลื่อนไหว",["Smooth ease-in-out|นุ่มนวล","Snappy|กระชับ","Bouncy|เด้ง"]],
+["loop","การเล่นซ้ำ",["Loop|วนซ้ำ","Play once|เล่นครั้งเดียว"]]];
+function fill(id,arr){const s=$(id);arr.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;s.appendChild(o)})}
+function mk(host,list){list.forEach(([id,l,ops])=>{const d=document.createElement('div');d.innerHTML=`<label for="${id}">${l}</label><select id="${id}"></select>`;host.appendChild(d);ops.forEach(p=>{const[v,t]=p.split('|');const o=document.createElement('option');o.value=v;o.textContent=t;$(id).appendChild(o)})})}
+fill('ai',AI);fill('lang',LANG);mk($('opts'),O);mk($('dopts'),D);
+C.forEach(([id,l,on])=>{const lb=document.createElement('label');lb.innerHTML=`<input type="checkbox" id="c_${id}" ${on?'checked':''}> ${l}`;$('checks').appendChild(lb)});
+const val=id=>$(id).value, txt=id=>$(id).selectedOptions[0].textContent;
+const isDyn=()=>val('type').startsWith('Dynamic');
+function syncDyn(){$('dyn').hidden=!isDyn()}
+$('type').onchange=syncDyn;
+
+// refs
+let rc=0;
+const ROLES=["Style reference|อ้างอิงสไตล์","Layout reference|อ้างอิงเลย์เอาต์","Content / data source|แหล่งเนื้อหา/ข้อมูล","Logo / brand asset|โลโก้ แบรนด์","Character / object to include|ตัวละคร/วัตถุที่ต้องใส่"];
+function addRef(){const id=++rc,d=document.createElement('div');d.className='ref';d.dataset.id=id;
+d.innerHTML=`<div class="th" id="th${id}">ไม่มีรูป</div><div class="f"><input type="file" accept="image/*" aria-label="อัปโหลดรูป"><select>${ROLES.map(r=>{const[v,t]=r.split('|');return`<option value="${v}">${t}</option>`}).join('')}</select><textarea style="min-height:54px" placeholder="บอกรายละเอียด/คำบรรยายรูปนี้ และให้ AI นำไปใช้อย่างไร"></textarea><div><button class="del">ลบรูปนี้</button></div></div>`;
+d.querySelector('input').onchange=e=>{const f=e.target.files[0];if(!f)return;d.dataset.name=f.name;const r=new FileReader();r.onload=()=>{$('th'+id).innerHTML=`<img src="${r.result}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px">`};r.readAsDataURL(f)};
+d.querySelector('.del').onclick=()=>d.remove();$('refs').appendChild(d)}
+$('addref').onclick=addRef;addRef();
+
+// content
+const words=s=>(s.trim().match(/\S+/g)||[]).length;
+$('content').oninput=()=>{const n=words(val('content'));$('cnt').textContent=n+' คำ'+(n>150?' (ยาวเกินไป ควรลดลง)':'')};
+function eventContent(){const t=val('title').trim()||'AI ช่วยขาย สสว. ช่วยโต';return [`หัวข้อหลัก: ${t}`,'หัวข้อรอง: โครงการพัฒนา SMEs ไทยด้วยเทคโนโลยีดิจิทัลและปัญญาประดิษฐ์ (AI) เพื่อเพิ่มยอดขาย','คำโปรย: ใช้ AI ให้เป็น ขายเก่งขึ้น ธุรกิจโตได้จริง','คำอธิบาย: หลักสูตรสำหรับผู้ประกอบการ SME ที่อยากใช้ Digital & AI เพื่อเพิ่มโอกาสทางการขาย สร้างคอนเทนต์ และเข้าถึงลูกค้าใหม่','ไฮไลต์: เปิดรับ 1,200 SMEs ทั่วประเทศ | รับ 1,000 AI Prompts สำหรับธุรกิจ | ผู้เป็นสมาชิก SME One ID ได้รับการพิจารณาเป็นพิเศษ','วันที่: 18 พฤศจิกายน 2569','เวลา: 09.30 - 16.30','สถานที่: จังหวัดขอนแก่น | ห้อง Auditorium อาคารอำนวยการอุทยานวิทยาศาสตร์ภูมิภาคภาคตะวันออกเฉียงเหนือ','เรียนอะไรบ้าง:','1. วิเคราะห์ธุรกิจ | เห็น Growth Gap','2. ทำคอนเทนต์ด้วย AI | เขียนโพสต์ คิดแคปชัน','3. เพิ่มโอกาสปิดการขาย | เข้าถึงลูกค้าใหม่','4. วัดผลและต่อยอด | ดู KPI และ Roadmap','ป้ายลอย: คอนเทนต์พร้อมใช้ | เข้าถึงลูกค้าใหม่ | ยอดขายเพิ่มขึ้น','สโลแกน: YOUR BUSINESS GROWTH รู้สถานะธุรกิจวันนี้ เห็นจุดที่ต้องพัฒนา และมี Roadmap สำหรับก้าวต่อไป','สแกนเพื่อสมัคร: [QR code]','ติดต่อ: FB.com/SMEgrowthhubTH | LINE @SMEgrowthhubTH | โทร 044-224847'].join('\n')}
+const LBL={Process:"ขั้นตอน",Timeline:"ช่วงเวลา",Comparison:"เกณฑ์เปรียบเทียบ",Statistical:"ตัวเลขสำคัญ",List:"เคล็ดลับ",Roadmap:"เฟส"};
+$('autoc').onclick=()=>{if(val('type').startsWith('Event')){$('content').value=eventContent();$('content').oninput();toast('สร้างเนื้อหาแล้ว แก้ไขข้อความได้ตามต้องการ');return}const t=val('title').trim()||'[ชื่อหัวข้อ]',n=Math.min(12,Math.max(2,+val('n')||5));
+const k=LBL[val('type').split(/[ /]/)[0]]||'ประเด็น';let s=`หัวข้อหลัก: ${t}\nคำโปรย: [ประโยคสั้นบอกประโยชน์ ไม่เกิน 15 คำ]\n`;
+for(let i=1;i<=n;i++)s+=`${i}. ${k}ที่ ${i} | [อธิบาย 10–15 คำ] | [ตัวเลข/สถิติ ถ้ามี]\n`;
+s+=`สรุป/Call to Action: [1 ประโยค เช่น เริ่มวันนี้]\nแหล่งที่มา: [ชื่อแหล่งข้อมูล ปี]`;$('content').value=s;$('content').oninput();toast('สร้างโครงร่างแล้ว แก้ไขข้อความในวงเล็บเหลี่ยม')};
+
+// build
+function parse(){const L=val('content').split('\n').map(s=>s.trim()).filter(Boolean);return L.map(l=>{const p=l.replace(/^\d+[.)]\s*/,'').split('|').map(x=>x.trim());return p.length>1?{heading:p[0],detail:p[1]||'',value:p[2]||''}:{text:l}})}
+function build(enh){
+const g=id=>val(id),on=id=>$('c_'+id).checked;
+const refs=[...document.querySelectorAll('.ref')].map(r=>({file_name:r.dataset.name||null,role:r.querySelector('select').value,description:r.querySelector('textarea').value.trim()})).filter(r=>r.file_name||r.description);
+const o={task:isDyn()?"dynamic_infographic":"infographic",target_ai:g('ai'),title:g('title').trim()||null,infographic_type:g('type'),layout:{structure:g('sub'),aspect_ratio:g('ratio'),information_density:g('density'),flow_guides:on('conn')},
+visual_style:{style:g('style'),color_palette:g('palette'),brand_colors:g('colors').trim()||null,typography:g('font'),icon_style:g('icon'),background:g('bg'),mood:g('tone')},
+audience:g('audience'),text_language:g('lang'),data_visualization:g('chart'),content:parse(),
+elements:{icons_per_section:on('icons'),numbered_steps:on('nums'),logo_space:on('logo'),source_credit:on('src'),call_to_action:on('cta'),qr_space:on('qr'),high_contrast:on('a11y')},
+footer_text:g('footer').trim()||null,reference_images:refs,quality:g('quality'),negative_prompt:g('neg').trim()};
+if(isDyn())o.animation={style:g('anim'),duration:g('dur'),output_format:g('fmt'),easing:g('ease'),playback:g('loop'),storyboard:["0-10%: title enters","10-85%: sections reveal in order with matching icon motion","85-100%: summary and call to action hold"]};
+if(enh){o.composition_rules={focal_point:"Title block is the strongest element at the top, with a clear reading path from top to bottom or left to right",grid:"Consistent grid, equal gutters, safe margins of about 5% on all sides",hierarchy:"3 text levels: title, section headings, body. Headings at least 2x body size",spacing:"Generous white space; avoid clutter; align elements to the grid",consistency:"Same icon style, stroke width, corner radius and color logic across all sections"};
+o.typography_rules={rendering:"Render every text exactly as written in content; spell correctly; no lorem ipsum, no extra invented text",max_words_per_block:20,readability:"Dark text on light areas or light text on dark areas with at least 4.5:1 contrast"};
+o.data_rules={accuracy:"Use only the numbers given; keep chart proportions faithful to the values; label axes and units",emphasis:"Highlight key figures with the accent color and larger size"};
+o.render_settings={detail:"crisp edges, clean vector-like finish, balanced lighting, no distortion",avoid:"watermarks, cropped text, duplicate elements, unreadable small print",fallback_note:"If text accuracy is poor, generate the layout without text and add text afterward in Canva or Figma"}}
+return o}
+const clean=o=>JSON.parse(JSON.stringify(o,(k,v)=>v===null||v===''?undefined:v));
+function toText(o){const s=o.visual_style,l=o.layout,e=o.elements;const c=o.content.map(x=>x.text?x.text:`- ${x.heading}${x.detail?': '+x.detail:''}${x.value?' ('+x.value+')':''}`).join('\n');
+const el=Object.entries({icons_per_section:'an icon for each section',numbered_steps:'numbered steps',logo_space:'reserved space for a logo',source_credit:'a source credit at the bottom',call_to_action:'a call-to-action block',qr_space:'space for a QR code',high_contrast:'high-contrast readable colors'}).filter(([k])=>e[k]).map(([,v])=>v).join(', ');
+let t=`Create a ${o.task==='dynamic_infographic'?'dynamic (animated) ':''}${o.infographic_type} infographic${o.title?` titled "${o.title}"`:''} for ${o.target_ai}.\n\nLayout: ${l.structure}, aspect ratio ${l.aspect_ratio}, ${l.information_density.toLowerCase()}${l.flow_guides?', with connectors/arrows guiding the eye':''}. Data visualization: ${o.data_visualization}.\nStyle: ${s.style}, ${s.color_palette}${s.brand_colors?` (brand colors: ${s.brand_colors})`:''}, ${s.typography}, ${s.icon_style}, ${s.background} background, ${s.mood.toLowerCase()} mood. Audience: ${o.audience}.\nText language on image: ${o.text_language}.\nInclude: ${el||'n/a'}.${o.footer_text?`\nFooter text: "${o.footer_text}"`:''}\n\nContent (render exactly):\n${c||'[no content provided]'}`;
+if(o.reference_images.length)t+=`\n\nReference images:\n`+o.reference_images.map((r,i)=>`${i+1}. [${r.role}] ${r.file_name||''} ${r.description}`).join('\n');
+if(o.animation){const a=o.animation;t+=`\n\nAnimation: ${a.style}, ${a.duration}, ${a.output_format}, ${a.easing}, ${a.playback}.\nStoryboard: ${a.storyboard.join(' | ')}`}
+if(o.composition_rules)t+=`\n\nComposition: ${Object.values(o.composition_rules).join('. ')}.\nTypography: ${Object.values(o.typography_rules).join('. ')}.\nData: ${Object.values(o.data_rules).join('. ')}.\nRender: ${Object.values(o.render_settings).join('. ')}.`;
+t+=`\n\nQuality: ${o.quality}.\nAvoid: ${o.negative_prompt}`;return t}
+let cur=null,mode='j';
+function run(enh){cur=clean(build(enh));show()}
+function show(){if(!cur)return;$('out').textContent=mode==='j'?JSON.stringify(cur,null,2):toText(cur)}
+$('gen').onclick=()=>{if(!val('content').trim())$('autoc').click();run(false)};$('enh').onclick=()=>{if(!val('content').trim())$('autoc').click();run(true);toast('เพิ่มกฎองค์ประกอบ ตัวอักษร และการเรนเดอร์แล้ว')};
+$('tj').onclick=()=>{mode='j';$('tj').classList.add('on');$('tt').classList.remove('on');show()};
+$('tt').onclick=()=>{mode='t';$('tt').classList.add('on');$('tj').classList.remove('on');show()};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('s');setTimeout(()=>t.classList.remove('s'),1800)}
+$('copy').onclick=async()=>{if(!cur)return toast('ยังไม่มี Prompt');const s=$('out').textContent;try{await navigator.clipboard.writeText(s);toast('คัดลอกแล้ว')}catch(e){const r=document.createRange();r.selectNodeContents($('out'));getSelection().removeAllRanges();getSelection().addRange(r);toast('เลือกข้อความแล้ว กด Ctrl+C')}};
+$('dl').onclick=()=>{if(!cur)return toast('ยังไม่มี Prompt');const b=new Blob([$('out').textContent],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='infographic-prompt.'+(mode==='j'?'json':'txt');a.click()};
+$('reset').onclick=()=>{if(!confirm('ล้างข้อมูลทั้งหมด?'))return;location.reload()};
+$('theme').onclick=()=>{const r=document.documentElement,d=matchMedia('(prefers-color-scheme:dark)').matches;const c=r.dataset.theme||(d?'dark':'light');r.dataset.theme=c==='dark'?'light':'dark'};
+</script>
+</body>
+</html>

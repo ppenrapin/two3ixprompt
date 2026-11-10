@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fashion Poster Prompt Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf1ee;--sf:#fff;--ink:#3a2530;--mut:#7b6670;--ln:#ecd6d2;--ac:#e8587a;--acl:#ffe3e9;--code:#2a1a22;--codet:#fbe9ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1217;--sf:#281b22;--ink:#f6e9ee;--mut:#b99ca8;--ln:#47303a;--ac:#ff7a98;--acl:#3d2029;--code:#140c10;--codet:#fbe9ee}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 'IBM Plex Sans Thai',system-ui,sans-serif}
+header,main{max-width:1150px;margin:auto;padding:20px}header{padding-bottom:4px}
+h1{margin:0;font-size:24px;font-weight:600}header p{margin:2px 0 0;color:var(--mut);font-size:14px}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start;padding-top:10px;padding-bottom:60px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 4px;font-weight:600}.hint{color:var(--mut);font-size:13px;margin:0 0 10px}
+label{display:block;font-size:13px;font-weight:500;margin:0 0 3px}
+input[type=text],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:8px 10px}
+textarea{min-height:200px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 12px}
+button{font:inherit;cursor:pointer;border:1px solid var(--ln);background:var(--sf);color:var(--ink);border-radius:8px;padding:8px 14px;font-weight:500}
+button:hover{border-color:var(--ac)}.pri{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600;font-size:16px;padding:11px 18px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ref{display:grid;grid-template-columns:72px 1fr;gap:10px;border:1px dashed var(--ln);border-radius:10px;padding:8px;margin-bottom:8px}
+.th{width:72px;height:72px;object-fit:cover;border-radius:8px}.f{display:grid;gap:5px}.rd{display:flex;gap:6px;align-items:center;font-weight:600;color:var(--ac);margin:0}
+.tip{background:var(--acl);border-radius:8px;padding:9px 12px;font-size:13px;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin:10px 0 8px}.tabs .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+pre{background:var(--code);color:var(--codet);border-radius:10px;padding:14px;margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;max-height:520px;overflow:auto;min-height:180px}
+.out{position:sticky;top:10px}.sum{font-size:13px;background:var(--acl);border-radius:8px;padding:8px 12px;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ac);color:#fff;padding:8px 16px;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none}#toast.s{opacity:1}
+</style>
+</head>
+<body>
+<header><h1>Fashion Poster Prompt Builder</h1><p>อัปโหลดรูปสินค้า แล้วกดปุ่มเดียว ได้ Prompt โปสเตอร์ขายของสไตล์ภาพตัวอย่าง (สุ่มเลย์เอาต์ โทนสี หัวข้อ ทุกครั้ง)</p></header>
+<main>
+<div>
+ <section class="card"><h2>1. รูปสินค้า</h2>
+  <p class="hint">อัปโหลดได้หลายรูป เลือก 1 รูปเป็นสินค้าหลัก รูปที่เหลือเป็นสินค้ารอง (ดูตัวอย่างในเครื่องเท่านั้น ต้องแนบไฟล์จริงในแชตของ AI ตอนใช้งาน)</p>
+  <input type="file" id="file" accept="image/*" multiple style="display:none">
+  <button id="add">+ เพิ่มรูปสินค้า</button><div id="thumbs" style="margin-top:10px"></div>
+ </section>
+ <section class="card"><h2>2. ข้อมูลสินค้า (ไม่กรอกก็ได้)</h2>
+  <div class="g">
+   <div><label for="cat">ประเภทสินค้า</label><select id="cat"><option>เสื้อผ้า</option><option>เสื้อ</option><option>เดรส</option><option>กางเกง</option><option>เซ็ตชุด</option><option>กระเป๋าและแอคเซสซอรี่</option></select></div>
+   <div><label for="pname">ชื่อสินค้า</label><input type="text" id="pname" placeholder="เช่น เสื้อเชิ้ตลินินสีขาว"></div>
+   <div><label for="price">ราคา / โปรโมชัน</label><input type="text" id="price" placeholder="เช่น 399 บาท ส่งฟรี"></div>
+   <div><label for="shop">ชื่อร้าน / ช่องทางติดต่อ</label><input type="text" id="shop" placeholder="เช่น @myshop"></div>
+   <div><label for="ai">ใช้กับ AI</label><select id="ai"><option>ChatGPT (GPT-image)</option><option>Gemini (Nano Banana)</option><option>Ideogram</option><option>Midjourney</option><option>Leonardo.ai</option><option>อื่น ๆ</option></select></div>
+   <div><label for="ratio">สัดส่วนภาพ</label><select id="ratio"><option>4:5</option><option>9:16</option><option>1:1</option><option>2:3</option></select></div>
+   <div><label for="model">นางแบบ / นายแบบ</label><select id="model"><option value="female">นางแบบหญิงไทย</option><option value="male">นายแบบชายไทย</option><option value="none">ไม่มีคน (จัดสินค้าอย่างเดียว)</option></select></div>
+  </div>
+ </section>
+ <section class="card"><h2>3. เนื้อหาบนโปสเตอร์ (สร้างให้อัตโนมัติ)</h2>
+  <div class="tip">ระบบสุ่มหัวข้อ คำโปรย สติกเกอร์ และจุดเด่นสินค้าให้ทุกครั้ง แก้ไขข้อความได้เอง ถ้าแก้แล้ว ระบบจะไม่เขียนทับจนกว่าจะกด “สุ่มใหม่ทั้งหมด” แนะนำให้ข้อความรวมไม่เกิน ~60 คำ เพื่อให้ AI สะกดถูก</div>
+  <textarea id="content" aria-label="เนื้อหา"></textarea>
+ </section>
+</div>
+<div class="out"><section class="card"><h2>ผลลัพธ์ Prompt</h2>
+ <div class="row"><button class="pri" id="gen">✨ สร้าง Prompt</button><button id="shuf">🎲 สุ่มใหม่ทั้งหมด</button></div>
+ <div class="sum" id="sum" hidden></div>
+ <div class="tabs"><button class="on" id="tj">JSON</button><button id="tt">ข้อความ</button></div>
+ <pre id="out">กดปุ่ม “สร้าง Prompt” ได้เลย แม้ยังไม่ได้อัปโหลดรูป</pre>
+ <div class="row" style="margin-top:10px"><button id="copy">คัดลอก</button><button id="dl">ดาวน์โหลด</button></div>
+</section></div>
+</main>
+<div id="toast"></div>
+<script>
+const $=id=>document.getElementById(id),val=id=>$(id).value;
+let imgs=[],mainI=0,edited=false,cur=null,mode='j';
+const decks={},last={};
+function pick(k,a){let d=decks[k];if(!d||!d.length){d=a.map((_,i)=>i).sort(()=>Math.random()-.5);if(d.length>1&&d[d.length-1]===last[k]){[d[0],d[d.length-1]]=[d[d.length-1],d[0]]}decks[k]=d}const i=d.pop();last[k]=i;return a[i]}
+// images
+$('add').onclick=()=>$('file').click();
+$('file').onchange=e=>{[...e.target.files].forEach(f=>{const r=new FileReader();r.onload=()=>{imgs.push({name:f.name,url:r.result,desc:''});draw()};r.readAsDataURL(f)});e.target.value=''};
+function draw(){const h=$('thumbs');h.innerHTML='';imgs.forEach((m,i)=>{const d=document.createElement('div');d.className='ref';d.innerHTML='<img class="th" alt=""><div class="f"><label class="rd"><input type="radio" name="mn"> สินค้าหลัก</label><input type="text" placeholder="บอกสั้น ๆ เช่น สีขาว ผ้าลินิน คอปก"><div><button>ลบ</button></div></div>';
+d.querySelector('img').src=m.url;const rd=d.querySelector('input[type=radio]');rd.checked=i===mainI;rd.onchange=()=>{mainI=i};const t=d.querySelector('input[type=text]');t.value=m.desc;t.oninput=()=>{m.desc=t.value};d.querySelector('button').onclick=()=>{imgs.splice(i,1);if(mainI>=imgs.length)mainI=0;draw()};h.appendChild(d)})}
+// pools
+const HD=[["แชร์ลุค","{t} สวยๆ ใส่แล้วปัง"],["ใหม่ล่าสุด","{t} ที่สาวๆ ต้องมี"],["ขายดีมาก","{t} ใส่สบาย ดูแพง"],["พร้อมส่ง","{t} ลุคเด็ด ราคาน่ารัก"],["Best Seller","{t} ใส่ได้ทุกวัน"],["คอลเลกชันใหม่","{t} ลุคมินิมอล สวยเรียบ"]];
+const SB=["สำหรับสาวออฟฟิศและสายคาเฟ่","ไซส์ครบ ใส่ได้ทุกรูปร่าง","เนื้อผ้าดี ตัดเย็บเรียบร้อย","คัดมาเพื่อคุณโดยเฉพาะ","แมตช์ง่าย ได้หลายลุค"];
+const BG=["ขั้นตอนง่ายๆ","ใหม่ล่าสุด","ขายดีอันดับ 1","ลดพิเศษ","จำนวนจำกัด","พร้อมส่ง"];
+const CD=[[["ผ้าดี ใส่สบาย","นุ่ม ระบายอากาศ ไม่ร้อน"],["ดีไซน์ทันสมัย","แมตช์ง่าย ใส่ได้ทุกโอกาส"],["ไซส์ครบ","S - XXL เลือกได้ตามใจ"]],
+[["เลือกไซส์","ดูตารางไซส์ก่อนสั่ง"],["ทักแชท","ส่งรูปที่ชอบ รับคำแนะนำ"],["รับของไว","จัดส่งภายใน 1-2 วัน"]],
+[["ใส่ได้หลายลุค","ทำงาน เที่ยว คาเฟ่"],["ซักง่าย ไม่ยับ","ดูแลรักษาสะดวก"],["คุ้มค่า","คุณภาพดี ราคาจับต้องได้"]],
+[["ถ่ายรูปสวย","สีสดตรงปก"],["ใส่แล้วหุ่นดี","ทรงสวย เก็บทรง"],["ของแท้ตรงปก","รีวิวจริงจากลูกค้า"]]];
+const CT=["สั่งซื้อวันนี้ ส่งฟรี","ทักแชทรับโค้ดส่วนลด","สต็อกจำกัด รีบจองก่อนหมด","กดสั่งเลย พร้อมส่งทันที"];
+const PAL=[{th:"พีชชมพูนุ่ม",d:"Soft peach, blush pink and cream with warm gold sparkles; rose-pink headline banner, white cards"},{th:"คอรัลครีม",d:"Coral red and cream; deep coral headline, ivory cards, warm orange accents"},{th:"เขียวเซจ",d:"Sage green and warm cream; forest green headline banner, white cards, soft olive accents"},{th:"ม่วงลาเวนเดอร์",d:"Lavender and baby pink; violet headline banner, white cards, silver sparkles"},{th:"ฟ้าพาสเทล",d:"Sky blue and white; navy headline with a sky-blue ribbon, white cards, light aqua accents"},{th:"มัสตาร์ดน้ำตาล",d:"Mustard yellow and chocolate brown on beige; brown headline, cream cards, golden accents"},{th:"แดงทองเซล",d:"Festive red and gold sale look; red headline banner with gold outline, white cards"},{th:"ดำทองหรู",d:"Black and champagne gold luxury; dark background panels, gold headline, ivory cards"},{th:"มิ้นต์พีช",d:"Fresh mint green and peach; teal headline banner, white cards, peach accents"},{th:"ชมพูบานเย็น",d:"Hot magenta pink and white; magenta headline banner, white cards, light pink hearts"}];
+const POSE=[{th:"เท้าคางยิ้ม",d:"one hand lightly touching the chin, soft smile, looking at the camera"},{th:"ถือสินค้า",d:"holding the product up, bright smile, looking at the camera"},{th:"ยืนมั่นใจ",d:"standing confidently with relaxed arms, friendly smile"},{th:"หมุนตัวเบา ๆ",d:"half turn with head turned toward the camera, playful smile"},{th:"มือเท้าสะเอว",d:"one hand on the hip, chic expression"}];
+const LAY=[
+{th:"หัวข้อซ้ายบน • นางแบบขวา • การ์ดซ้าย • สินค้าหลักมุมขวาล่าง",head:"top-left: small rounded tag banner above a very large bold Thai headline, ribbon subtitle below",model:"right half of the poster, upper body, slightly overlapping the cards' edge",cards:"three stacked rounded white cards in the left middle, with numbered circles and 3D icons",main:"large at the bottom right, overlapping the model's lower body and the poster edge, soft shadow",sec:"small, partly cropped and slightly blurred at the bottom left corner",badge:"round sticker at the top right",price:"price tag beside the main product"},
+{th:"นางแบบซ้าย • หัวข้อและการ์ดขวา • สินค้าหลักซ้ายล่าง",head:"top-right column: small tag banner above a very large bold Thai headline, ribbon subtitle below (text left-aligned)",model:"left half of the poster, upper body, facing slightly right toward the text",cards:"three stacked rounded white cards in the right middle, numbered with 3D icons",main:"large at the bottom left in front of the model's lower body, soft shadow",sec:"small, partly cropped at the bottom right corner",badge:"round sticker at the top left",price:"price tag at the lower right above the secondary products"},
+{th:"หัวข้อกลางบน • นางแบบกลาง • การ์ดสองข้าง • สินค้าหลักกลางล่าง",head:"top-center: wide ribbon banner and a very large centered Thai headline across the full width",model:"center of the poster, upper body, behind the product",cards:"three compact rounded white cards, two on the left and one on the right, with 3D icons, none covering the face",main:"large at the bottom center, floating with a soft shadow",sec:"small items flanking the main product on both sides, lower",badge:"round sticker at the top right corner",price:"price tag at the lower center under the main product"},
+{th:"หัวข้อซ้ายบน • นางแบบขวา • การ์ดแถวนอนล่าง • สินค้าหลักลอยซ้ายกลาง",head:"top-left: small tag banner above a very large bold Thai headline, ribbon subtitle below",model:"right half, upper body, standing tall",cards:"a horizontal row of three rounded white cards along the bottom edge, with 3D icons",main:"large floating at the left middle with sparkles, soft shadow",sec:"small items on the lower right, partly cropped",badge:"round sticker at the top right",price:"price tag attached to the main product's corner"}];
+const rep=(s,t)=>s.replace('{t}',t);
+function genContent(){const t=val('cat'),h=pick('hd',HD),c=pick('cd',CD);const L=[];
+L.push('ป้ายหัวข้อ: '+h[0],'หัวข้อหลัก: '+rep(h[1],t));if(val('pname').trim())L.push('ชื่อสินค้า: '+val('pname').trim());
+L.push('ริบบิ้นรอง: '+pick('sb',SB),'สติกเกอร์: '+pick('bg',BG));c.forEach((x,i)=>L.push(`${i+1}. ${x[0]} | ${x[1]}`));
+if(val('price').trim())L.push('ราคา: '+val('price').trim());L.push('ข้อความปิดท้าย: '+pick('ct',CT));if(val('shop').trim())L.push('ร้าน/ติดต่อ: '+val('shop').trim());
+$('content').value=L.join('\n');edited=false}
+$('content').oninput=()=>{edited=true};
+// build
+const STYLE="Bright, soft, modern Thai e-commerce lifestyle promo poster in the style of a social-media tutorial post: rounded white info cards with soft drop shadows and glossy 3D icons, bold Thai display headline with a rounded tag banner and ribbon subtitle, small round sticker, sparkles and hearts, softly blurred bright cozy interior background, polished high-end retouching";
+function build(){const L=pick('lay',LAY),P=pick('pal',PAL),pose=pick('pose',POSE),m=val('model');
+const nm=m==='none',who=m==='male'?'a handsome friendly Thai man':'a beautiful friendly Thai woman';
+const ms=imgs[mainI],sec=imgs.filter((_,i)=>i!==mainI);
+const o={task:"fashion_product_poster",target_ai:val('ai'),aspect_ratio:val('ratio'),
+product:{category:val('cat'),main_product:ms?{file:ms.name,description:ms.desc||null}:"main product photo (attach in chat)",secondary_products:sec.map(s=>({file:s.name,description:s.desc||null}))},
+style:STYLE,color_palette:P.d,
+layout:{preset:L.th,headline:L.head,model:nm?"No person; style the products flat-lay or on hangers in the model's place":`${who}, ${L.model}; pose: ${pose.d}`,info_cards:L.cards,main_product_position:L.main,secondary_products_position:L.sec,badge_position:L.badge,price_tag_position:L.price},
+content_text_exact:val('content').split('\n').map(s=>s.trim()).filter(Boolean),
+rules:["Use the attached product photos as the exact products: keep garment color, pattern, cut, logo and details unchanged; do not redesign or recolor","Render all Thai text exactly as given, spelled correctly, no extra or invented text","Keep text inside safe margins and never over the model's face","Consistent icon style and corner radius across all cards"],
+negative_prompt:"distorted or recolored garment, extra fingers, blurry or misspelled text, watermark, cluttered layout, cropped headline"};
+$('sum').hidden=false;$('sum').textContent=`🎲 เลย์เอาต์: ${L.th} | โทนสี: ${P.th} | ท่าทาง: ${nm?'-':pose.th}`;return o}
+function toText(o){const p=o.product,l=o.layout,f=x=>typeof x==='string'?x:`${x.file}${x.description?' ('+x.description+')':''}`;
+return `Create a ${o.aspect_ratio} promo poster for ${p.category} using ${o.target_ai}.\nStyle: ${o.style}.\nColor palette: ${o.color_palette}.\n\nLayout:\n- Headline: ${l.headline}\n- Person: ${l.model}\n- Info cards: ${l.info_cards}\n- Main product: ${f(p.main_product)}, shown ${l.main_product_position}\n- Secondary products${p.secondary_products.length?' ('+p.secondary_products.map(f).join(', ')+')':''}: ${l.secondary_products_position}\n- Sticker: ${l.badge_position}\n- Price tag: ${l.price_tag_position}\n\nText on the poster (render exactly):\n${o.content_text_exact.join('\n')}\n\nRules: ${o.rules.join('. ')}.\nAvoid: ${o.negative_prompt}`}
+function run(force){if(force||!edited||!val('content').trim())genContent();cur=build(force);show()}
+function show(){if(!cur)return;$('out').textContent=mode==='j'?JSON.stringify(cur,null,2):toText(cur)}
+$('gen').onclick=()=>run(false);$('shuf').onclick=()=>{run(true);toast('สุ่มใหม่ทั้งหมดแล้ว')};
+$('tj').onclick=()=>{mode='j';$('tj').classList.add('on');$('tt').classList.remove('on');show()};
+$('tt').onclick=()=>{mode='t';$('tt').classList.add('on');$('tj').classList.remove('on');show()};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('s');setTimeout(()=>t.classList.remove('s'),1800)}
+$('copy').onclick=async()=>{if(!cur)return toast('ยังไม่มี Prompt');try{await navigator.clipboard.writeText($('out').textContent);toast('คัดลอกแล้ว')}catch(e){const r=document.createRange();r.selectNodeContents($('out'));getSelection().removeAllRanges();getSelection().addRange(r);toast('เลือกข้อความแล้ว กด Ctrl+C')}};
+$('dl').onclick=()=>{if(!cur)return toast('ยังไม่มี Prompt');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('out').textContent],{type:'text/plain'}));a.download='fashion-poster-prompt.'+(mode==='j'?'json':'txt');a.click()};
+genContent();
+</script>
+</body>
+</html>

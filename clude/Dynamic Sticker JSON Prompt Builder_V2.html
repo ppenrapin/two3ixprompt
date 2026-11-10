@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dynamic Sticker JSON Prompt Builder</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#222;--mu:#6b6b66;--bd:#dcdad2;--ac:#e8590c;--ac2:#fff4ec;--code:#faf9f6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--card:#212125;--tx:#ececec;--mu:#9a9aa0;--bd:#3a3a40;--ac:#ff8a4c;--ac2:#33261d;--code:#1b1b1f}}
+:root[data-theme="dark"]{--bg:#17171a;--card:#212125;--tx:#ececec;--mu:#9a9aa0;--bd:#3a3a40;--ac:#ff8a4c;--ac2:#33261d;--code:#1b1b1f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Noto Sans Thai","Sarabun",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:0 0 10px}
+.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--mu);margin-bottom:3px}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+input[type=color]{padding:2px;height:36px}input[type=checkbox]{width:auto}
+input[type=range]{padding:0}
+.chk{display:flex;flex-wrap:wrap;gap:6px 16px}.chk label{display:flex;align-items:center;gap:6px;color:var(--tx);font-size:14px;margin:0}
+.hint{font-size:13px;color:var(--ac);background:var(--ac2);padding:8px 10px;border-radius:8px;margin-top:10px}
+.rows{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:28px 1fr 1fr 150px 120px 1.2fr 34px;gap:6px;align-items:center}
+.row .n{color:var(--mu);text-align:center;font-weight:600}
+.rh{font-size:12px;color:var(--mu)}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+textarea.o{min-height:260px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--code);white-space:pre}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pv{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-width:520px;margin:0 auto}
+.cell{aspect-ratio:1;position:relative;border:1px solid var(--bd);border-radius:4px;background:repeating-conic-gradient(var(--code) 0 25%,var(--card) 0 50%) 0 0/16px 16px}
+.safe{position:absolute;border:1.5px dashed var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;font-size:clamp(9px,1.6vw,13px);line-height:1.2}
+.safe b{font-size:1.15em}.safe i{font-style:normal;color:var(--mu);font-size:.85em}
+.tabs{display:flex;gap:6px;margin-bottom:8px}.tabs button.on{background:var(--ac2);border-color:var(--ac);color:var(--ac)}
+@media(max-width:820px){.row{grid-template-columns:24px 1fr 1fr 34px}.row .v,.row .nt{grid-column:2/4}.two{grid-template-columns:1fr}.rh{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🎨 Dynamic Sticker JSON Prompt Builder</h1>
+<p class="sub">ตั้งค่าตารางสติ๊กเกอร์ ช่องไฟ อารมณ์ และคำพูดทั้ง 16 แบบ แล้วคัดลอกพรอมต์ / JSON ไปใช้กับ AI สร้างภาพ</p>
+
+<div class="card">
+<h2>1) ตารางและขนาด</h2>
+<div class="g">
+<div><label>จำนวนคอลัมน์</label><input type="number" id="cols" value="4" min="1" max="8"></div>
+<div><label>จำนวนแถว</label><input type="number" id="rows" value="4" min="1" max="8"></div>
+<div><label>ขนาดแต่ละช่อง (px)</label><input type="number" id="cell" value="320" min="64"></div>
+<div><label>รูปแบบไฟล์</label><select id="fmt"><option>PNG (RGBA) พื้นหลังโปร่งใส</option><option>PNG (RGBA) พื้นหลังสีเทา</option><option>WebP (RGBA) พื้นหลังโปร่งใส</option></select></div>
+</div>
+<div class="hint" id="sizeInfo"></div>
+</div>
+
+<div class="card">
+<h2>2) ช่องไฟ (Safe Margin) – กันภาพและข้อความล้นเฟรม</h2>
+<div class="g">
+<div><label>ระยะเว้นขอบด้านใน</label><input type="number" id="pad" value="12" min="0" step="0.5"></div>
+<div><label>หน่วย</label><select id="unit"><option value="mm">มิลลิเมตร (mm)</option><option value="px">พิกเซล (px)</option></select></div>
+<div><label>ความละเอียด DPI (ใช้แปลง mm → px)</label><select id="dpi"><option value="72" selected>72</option><option value="96">96</option><option value="150">150</option><option value="300">300</option></select></div>
+<div><label>ระยะระหว่างรูปกับข้อความ (px)</label><input type="number" id="gap" value="8" min="0"></div>
+</div>
+<div class="hint" id="padInfo"></div>
+</div>
+
+<div class="card">
+<h2>3) ตัวละครและสไตล์</h2>
+<div class="g">
+<div><label>ภาพต้นแบบ / ตัวละคร</label><input id="ref" value="ใบหน้าและรูปลักษณ์ของภาพต้นแบบที่แนบมา"></div>
+<div><label>ส่วนของร่างกายที่แสดง</label><select id="body"><option>ครึ่งตัว</option><option>เต็มตัว</option><option>เฉพาะใบหน้า/หัว</option><option>ให้ AI เลือกตามท่าทาง</option></select></div>
+<div><label>สไตล์ภาพ</label><select id="art"><option>การ์ตูนสติ๊กเกอร์ LINE</option><option>ตัวการ์ตูนเส้นหนาน่ารัก</option><option>ภาพวาดดิจิทัลสีสด</option><option>มีมกวนๆ</option><option>ชิบิ (Chibi)</option><option>สมจริงกึ่งการ์ตูน</option></select></div>
+<div><label>อารมณ์หลัก (ใช้กับทุกช่อง)</label><select id="vibe"></select></div>
+<div><label>ความแรงของอารมณ์: <span id="intV">3</span>/5</label><input type="range" id="int" min="1" max="5" value="3"></div>
+<div><label>ขนาดตัวละครในช่อง (% ของพื้นที่ปลอดภัย)</label><input type="number" id="fill" value="70" min="30" max="100"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>4) ข้อความบนสติ๊กเกอร์</h2>
+<div class="g">
+<div><label>ตำแหน่งข้อความ</label><select id="tpos"><option>ใต้ภาพ</option><option>เหนือภาพ</option><option>ข้างภาพ</option><option>ให้ AI จัดตามท่าทาง (ต้องอยู่ในเฟรม)</option><option>สุ่มตำแหน่ง (ต้องอยู่ในเฟรม)</option></select></div>
+<div><label>ฟอนต์</label><select id="font"><option>ตัวหนาการ์ตูนอ่านง่าย</option><option>สุ่มแบบตามอารมณ์ ของคำ</option><option>ลายมือน่ารัก</option><option>หัวกลมมน</option><option>ตัวหนากวนๆ แบบมีม</option></select></div>
+<div><label>เอฟเฟ็กต์ข้อความ</label><select id="eff"><option>ขอบหนาสีตัดกัน</option><option>ขอบหนา + เงา</option><option>เงาเบาๆ</option><option>ไม่มีเอฟเฟ็กต์</option><option>ใส่เอฟเฟ็กต์ การ์ตูนญี่ปุ่น</option></select></div>
+<div><label>จำนวนบรรทัดสูงสุด</label><select id="lines"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+<div><label>โหมดสีข้อความ</label><select id="cm"><option value="mood">ตามอารมณ์ของคำ (แนะนำ)</option><option value="vary">หลากหลาย สลับสีทุกช่อง</option><option value="single">สีเดียวทุกช่อง</option><option value="ai">ให้ AI เลือกสีเอง</option></select></div>
+<div><label>ความหลากหลายของรูปแบบข้อความ</label><select id="tv"><option>เหมือนกันทุกช่อง</option><option selected>ปรับเล็กน้อยตามอารมณ์</option><option>หลากหลายเต็มที่ตามอารมณ์ของคำ</option></select></div>
+<div><label>สีตัวอักษร (ใช้เมื่อเลือก “สีเดียวทุกช่อง”)</label><input type="color" id="tc" value="#ffffff"></div>
+<div><label>สีขอบตัวอักษร (ใช้เมื่อเลือก “สีเดียวทุกช่อง”)</label><input type="color" id="oc" value="#3a2a1f"></div>
+<div><label>ขนาดตัวอักษร (px)</label><input type="number" id="fs" value="44" min="12"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>5) กฎบังคับ</h2>
+<div class="chk" id="rules"></div>
+<div style="margin-top:10px"><label>กฎเพิ่มเติม (บรรทัดละ 1 ข้อ)</label><textarea id="xr" rows="2" placeholder="เช่น ใช้โทนสีอบอุ่น"></textarea></div>
+</div>
+
+<div class="card">
+<h2>6) รายการท่าทางและข้อความ (แก้ไขได้ทุกช่อง)</h2>
+<p class="sub" style="margin-bottom:8px">ค่าที่เห็นคือคำแม่แบบ หากไม่แก้จะใช้ตามนั้น • ถ้าลบจนว่างจะกลับไปใช้คำแม่แบบอัตโนมัติ</p>
+<div class="row rh"><span></span><span>ท่าทาง/ความหมาย</span><span>ข้อความบนสติ๊กเกอร์</span><span>อารมณ์เฉพาะช่อง</span><span>สีข้อความ</span><span>หมายเหตุเพิ่มเติม</span><span></span></div>
+<div class="rows" id="items"></div>
+<div class="bar"><button id="resetAll">↺ คืนค่าแม่แบบทั้งหมด</button></div>
+</div>
+
+<div class="card">
+<h2>ตัวอย่างการจัดวางในตาราง</h2>
+<p class="sub" style="margin-bottom:8px">เส้นประส้ม = พื้นที่ปลอดภัย (รูปและข้อความต้องอยู่ในกรอบนี้)</p>
+<div class="pv" id="pv"></div>
+</div>
+
+<div class="card">
+<h2>ผลลัพธ์</h2>
+<div class="tabs"><button class="on" data-t="prompt">พรอมต์ข้อความ</button><button data-t="json">JSON</button></div>
+<textarea class="o" id="out" readonly></textarea>
+<div class="bar"><button class="p" id="copy">คัดลอก</button><button id="dl">ดาวน์โหลดไฟล์</button><span id="msg" class="sub" style="margin:0;align-self:center"></span></div>
+</div>
+</div>
+
+<script>
+const D=[["ทักทาย","สวัสดีครับ"],["ชื่นชม","เยี่ยมไปเลย!"],["ดีใจ","ดีใจที่สุด!"],["ขอบคุณ","ขอบคุณครับ"],["ตอบรับ","โอเคครับ"],["ความรัก","รักนะ"],["ให้กำลังใจ","สู้ๆนะ!"],["ตกใจ","ว้าว!"],["หัวเราะ","ฮ่าๆ"],["ขอโทษ","ขอโทษครับ"],["กำลังคิด","คิดก่อนนะ"],["มุ่งมั่น","ต้องทำได้!"],["ลา","บายบาย"],["ง่วงนอน","ฝันดีนะ"],["เขิน/แอบมอง","แอบมองอยู่น้า"],["ภูมิใจ","เก่งมากเลย!"]];
+const V=["ทะเล้น","ป่น","ฮา","ทะเล้น + ฮา","ป่น + ฮา","กวนๆ","โอเวอร์แอ็คติ้ง","หน้าตายแต่ฮา","น่ารักแบบตลก","จริงจังเล็กน้อย"];
+const R=[["ไดคัท (ตัดขอบตามรูปทรงตัวละคร)",1],["ไร้ขอบขาว",1],["ไม่มีเส้นตาราง",1],["ห้ามภาพและข้อความออกนอกเฟรม",1],["ข้อความและเอฟเฟ็กต์ข้อความห้ามล้ำไปช่องอื่นเด็ดขาด",1],["พื้นหลังโปร่งใส",1],["ทุกท่าทางต้องแตกต่างกัน",1]];
+const $=i=>document.getElementById(i);
+const CA=[["ฟ้าสดใส","#2ea8ff"],["เหลืองทอง","#ffc400"],["ส้มสด","#ff7a1a"],["เขียวมิ้นต์","#2ecf9a"],["เขียวสด","#3ccf4e"],["ชมพูหวาน","#ff5c93"],["ส้มแดง","#ff5a36"],["เหลืองจี๊ด","#ffe000"],["เหลืองส้ม","#ffb000"],["ฟ้าม่วงอ่อน","#8fa8ff"],["ม่วง","#a66bff"],["แดงเข้ม","#ff2d2d"],["ฟ้าอมเขียว","#2ec4d6"],["น้ำเงินม่วง","#7a7cff"],["ชมพูอ่อน","#ff8fb8"],["ทองอร่าม","#ffcf2e"]];
+const PAL=[CA[5],CA[0],CA[1],CA[4],CA[10],CA[2],CA[12],CA[11]];
+const NM=[["ขาว","#ffffff"],["ดำ","#222222"],["แดง","#ff3b30"],["ส้ม","#ff9500"],["เหลือง","#ffd60a"],["เขียว","#34c759"],["ฟ้า","#32ade6"],["น้ำเงิน","#3050ff"],["ม่วง","#af52de"],["ชมพู","#ff5c93"]];
+const dk=h=>'#'+[1,3,5].map(i=>Math.round(parseInt(h.substr(i,2),16)*.3).toString(16).padStart(2,'0')).join('');
+function tcol(it){const m=$('cm').value,i=it.index-1,ov=NM.find(x=>x[0]===it.cover);let n,f;
+ if(ov){n=ov[0];f=ov[1]}
+ else if(m==='mood'){[n,f]=CA[i%16]}
+ else if(m==='vary'){[n,f]=PAL[i%PAL.length]}
+ else if(m==='single')return{n:'',f:$('tc').value,o:$('oc').value}
+ else return{};
+ return{n,f,o:f==='#222222'?'#ffffff':dk(f)}}
+function colTxt(it){const c=tcol(it),m=$('cm').value;if(!c.f||(m==='single'&&!it.cover))return'';return` [สีข้อความ: ${c.n} ${c.f}, ขอบ ${c.o}]`}
+$('vibe').innerHTML=V.map(v=>`<option>${v}</option>`).join('');
+$('rules').innerHTML=R.map((r,i)=>`<label><input type="checkbox" class="rc" data-i="${i}" ${r[1]?'checked':''}>${r[0]}</label>`).join('');
+$('items').innerHTML=D.map((d,i)=>`<div class="row" data-i="${i}"><span class="n">${i+1}</span><input class="p1" value="${d[0]}" placeholder="${d[0]}"><input class="t1" value="${d[1]}" placeholder="${d[1]}"><select class="v v1"><option value="">ใช้ตามอารมณ์หลัก</option>${V.map(v=>`<option>${v}</option>`).join('')}</select><select class="v cl"><option value="">สีอัตโนมัติ</option>${NM.map(c=>`<option>${c[0]}</option>`).join('')}</select><input class="nt" placeholder="เช่น ยกนิ้วโป้ง ทำตาหยี"><button class="rs" title="คืนค่าแม่แบบ">↺</button></div>`).join('');
+
+let mode='prompt';
+function px(){const u=$('unit').value,p=+$('pad').value||0;return u==='px'?p:p*(+$('dpi').value)/25.4}
+function data(){
+ const c=+$('cols').value||4,r=+$('rows').value||4,s=+$('cell').value||320,pd=Math.round(px()*10)/10,safe=Math.max(0,s-2*pd);
+ const rules=[...document.querySelectorAll('.rc')].filter(x=>x.checked).map(x=>R[x.dataset.i][0]).concat($('xr').value.split('\n').map(x=>x.trim()).filter(Boolean));
+ const items=[...document.querySelectorAll('#items .row')].map((row,i)=>({index:i+1,pose:row.querySelector('.p1').value.trim()||D[i][0],text:row.querySelector('.t1').value.trim()||D[i][1],vibe:row.querySelector('.v1').value||$('vibe').value,note:row.querySelector('.nt').value.trim(),cover:row.querySelector('.cl').value})).slice(0,c*r);
+ return{c,r,s,pd,safe,rules,items};
+}
+function build(){
+ const{c,r,s,pd,safe,rules,items}=data(),f=$('fmt').value.split(' ')[0],e=$('fmt').value.split(' ')[2];
+ $('sizeInfo').textContent=`ภาพรวม ${c*s} × ${r*s} px • ${c}×${r} = ${c*r} ช่อง • ช่องละ ${s}×${s} px • รายการด้านล่างแสดง ${items.length} จาก ${c*r} ช่อง`+(c*r>16?' (ช่องที่เกินจากแม่แบบ 16 ให้ AI คิดท่าทางเพิ่มเอง)':'');
+ $('padInfo').textContent=`เว้นขอบ ${$('pad').value} ${$('unit').value} ≈ ${pd} px ต่อด้าน → พื้นที่ปลอดภัย ${safe}×${safe} px ต่อช่อง`+(safe<=0?' ⚠ ช่องไฟมากเกินไป':'');
+ $('intV').textContent=$('int').value;
+ const backgroundValue = (e === 'พื้นหลังโปร่งใส') ? 'transparent' : '#808080';
+ const obj={task:"sticker_sheet",canvas:{columns:c,rows:r,cell_px:[s,s],total_px:[c*s,r*s],format:f,color_mode:"RGBA",background:backgroundValue},
+  safe_margin:{value:+$('pad').value,unit:$('unit').value,dpi:+$('dpi').value,px_each_side:pd,safe_area_px:[safe,safe],safe_area_offset_px:[pd,pd],text_image_gap_px:+$('gap').value},
+  character:{reference:$('ref').value,body_shown:$('body').value,art_style:$('art').value,fill_of_safe_area_percent:+$('fill').value,must_look_like_reference:true},
+  mood:{default:$('vibe').value,intensity_1_to_5:+$('int').value},
+  text_style:{position:$('tpos').value,font:$('font').value,effect:$('eff').value,color_mode:$('cm').value,variety:$('tv').value,single_color:$('tc').value,single_outline:$('oc').value,size_px:+$('fs').value,max_lines:+$('lines').value,must_stay_inside_safe_area:true},
+  rules,
+  stickers:items.map(it=>({index:it.index,row:Math.floor((it.index-1)/c)+1,col:(it.index-1)%c+1,pose:it.pose,text:it.text,mood:it.vibe,text_color:tcol(it).f,text_color_name:tcol(it).n||undefined,text_outline_color:tcol(it).o,extra_note:it.note||undefined}))};
+ if(mode==='json')return JSON.stringify(obj,null,2);
+ let t=`สร้างภาพสติ๊กเกอร์จัดเรียงในตาราง ${c}x${r}, ขนาดแต่ละช่อง: ${s} × ${s} px, ขนาดภาพรวม: ${c*s} × ${r*s} px, รูปแบบ: ${f} (RGBA) ${e}\n`;
+ t+=`อ้างอิง${$('ref').value} สร้างทั้งหมด ${c*r} แบบที่แตกต่างกัน เปลี่ยนท่าทางและอารมณ์ใบหน้าให้เหมาะกับคำ เน้นความ "${$('vibe').value}" ระดับ ${$('int').value}/5 ในแต่ละแบบ\n`;
+ t+=`สไตล์: ${$('art').value}, แสดง${$('body').value}\n\n`;
+ t+=`ช่องไฟ (สำคัญมาก): ในแต่ละช่อง ${s}×${s} px ให้เว้นขอบด้านในทุกด้านอย่างน้อย ${pd} px (${$('pad').value} ${$('unit').value}) ตัวละคร ข้อความ และเอฟเฟ็กต์ทั้งหมดต้องอยู่ภายในพื้นที่ ${safe}×${safe} px ตรงกลางช่องเท่านั้น (เริ่มที่ x=${pd}, y=${pd}) ตัวละครใหญ่ไม่เกิน ${$('fill').value}% ของพื้นที่นี้ ห้ามขยายเกินเพื่อให้ตัดไดคัทได้สวย\n`;
+ const cl={mood:'สีตัวอักษรและสีขอบให้แตกต่างกันตามอารมณ์ของแต่ละคำ ใช้สีที่ระบุในแต่ละรายการ ห้ามใช้สีเดียวกันทุกช่อง',vary:'สลับสีข้อความให้หลากหลาย ช่องที่อยู่ติดกันห้ามใช้สีเดียวกัน ใช้สีที่ระบุในแต่ละรายการ',single:`ทุกช่องใช้สีตัวอักษร ${$('tc').value} สีขอบ ${$('oc').value}`,ai:'ให้เลือกสีตัวอักษรและสีขอบเองให้เหมาะกับอารมณ์ของแต่ละคำ แต่ละช่องสีต่างกันและตัดกับตัวละครชัดเจน'}[$('cm').value];
+ const vt=['จัดข้อความสไตล์เดียวกันทุกช่อง','ปรับขนาดและองศาเอียงของข้อความเล็กน้อยให้เข้ากับอารมณ์','ออกแบบข้อความให้ต่างกันตามอารมณ์ของคำ เช่น ตัวใหญ่สั่นตอนตกใจ ตัวเอียงเล็กตอนเขิน ตัวหนาตรงตอนมุ่งมั่น เพิ่มสัญลักษณ์เล็กๆ ประกอบได้ แต่ต้องอยู่ในพื้นที่ปลอดภัยเสมอ'][$('tv').selectedIndex];
+ t+=`ข้อความ: วาง${$('tpos').value}, ฟอนต์${$('font').value}, ขนาดประมาณ ${$('fs').value}px, เอฟเฟ็กต์ ${$('eff').value}, ไม่เกิน ${$('lines').value} บรรทัด, เว้นระยะจากตัวละคร ${$('gap').value}px\nสีข้อความ: ${cl}\nรูปแบบข้อความ: ${vt}\n\n`;
+ t+=`กฎบังคับ:\n`+rules.map(x=>'- '+x).join('\n')+`\n\nรายการท่าทางและข้อความ:\n`;
+ t+=items.map(it=>`${it.index}. ${it.pose} – "${it.text}"`+(it.vibe!==$('vibe').value?` [อารมณ์: ${it.vibe}]`:'')+(it.note?` (${it.note})`:'')+colTxt(it)).join('\n');
+ return t;
+}
+function preview(){
+ const{c,r,s,pd,items}=data(),p=Math.min(45,pd/s*100);
+ $('pv').style.gridTemplateColumns=`repeat(${c},1fr)`;
+ $('pv').innerHTML=Array.from({length:c*r},(_,i)=>{const it=items[i];return`<div class="cell"><div class="safe" style="inset:${p}%">${it?`<i>${it.index}. ${it.pose}</i><b${(()=>{const c=tcol(it);return c.f?` style="color:${c.f};text-shadow:0 0 2px ${c.o},0 0 2px ${c.o},0 0 3px ${c.o},0 0 3px ${c.o}"`:''})()}>${it.text.replace(/</g,'&lt;')}</b>`:''}</div></div>`}).join('');
+}
+function upd(){$('out').value=build();preview()}
+document.addEventListener('input',upd);document.addEventListener('change',upd);
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{mode=b.dataset.t;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));upd()});
+document.querySelectorAll('.rs').forEach(b=>b.onclick=()=>{const row=b.parentNode,i=+row.dataset.i;row.querySelector('.p1').value=D[i][0];row.querySelector('.t1').value=D[i][1];row.querySelector('.v1').value='';row.querySelector('.cl').value='';row.querySelector('.nt').value='';upd()});
+$('resetAll').onclick=()=>{document.querySelectorAll('.rs').forEach(b=>b.click())};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('out').value)}catch(e){$('out').select();document.execCommand('copy')}$('msg').textContent='คัดลอกแล้ว ✓';setTimeout(()=>$('msg').textContent='',1800)};
+$('dl').onclick=()=>{const j=mode==='json',a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('out').value],{type:'text/plain;charset=utf-8'}));a.download=j?'sticker-prompt.json':'sticker-prompt.txt';a.click()};
+upd();
+</script>
+</body>
+</html>

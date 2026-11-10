@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เมนูหลัก</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Prompt', sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+      background-size: 300% 300%;
+      animation: bgMove 12s ease infinite;
+    }
+
+    @keyframes bgMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      padding: clamp(24px, 5vw, 40px);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    h1 {
+      text-align: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: clamp(0.9rem, 3vw, 1rem);
+      margin-bottom: 22px;
+    }
+
+    /* ===== แท็บ (ขึ้นบรรทัดใหม่อัตโนมัติ) ===== */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;            /* เต็มบรรทัดแล้วขึ้นบรรทัดใหม่ */
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .tabs:empty {
+      display: none;
+    }
+
+    .tab {
+      min-width: 40px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    }
+
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .tab.active {
+      background: #fff;
+      color: #764ba2;
+      font-weight: 600;
+      border-color: #fff;
+    }
+
+    /* ===== รายการเมนู ===== */
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .menu a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #333;
+      text-decoration: none;
+      font-size: clamp(1rem, 3.5vw, 1.15rem);
+      font-weight: 500;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      animation: fadeUp 0.35s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .menu a .num {
+      flex-shrink: 0;
+      min-width: 38px;
+      height: 38px;
+      padding: 0 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .menu a .text {
+      overflow-wrap: anywhere;
+    }
+
+    .menu a::after {
+      content: "›";
+      margin-left: auto;
+      font-size: 1.6rem;
+      color: #999;
+      transition: transform 0.2s ease;
+    }
+
+    .menu a:hover,
+    .menu a:focus-visible {
+      background: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      outline: none;
+    }
+
+    .menu a:hover::after {
+      transform: translateX(5px);
+      color: #764ba2;
+    }
+
+    .menu a:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>เมนูหลัก</h1>
+    <p class="subtitle">เลือกรายการที่ต้องการ</p>
+
+    <div class="tabs" id="tabs"></div>
+    <nav class="menu" id="menu"></nav>
+  </div>
+
+  <script>
+    /* =====================================================
+       ส่วนตั้งค่า
+       ===================================================== */
+
+    // จำนวนข้อต่อ 1 แท็บ
+    const ITEMS_PER_PAGE = 5;
+
+    /* =====================================================
+       รายการเมนู  (แก้ตรงนี้ที่เดียว)
+       -----------------------------------------------------
+       - 1 บรรทัด = 1 ข้อ
+       - name = ข้อความที่แสดง
+       - url  = ลิงก์
+       - newTab: true = เปิดแท็บใหม่ (ไม่ใส่ก็ได้)
+       - เพิ่มข้อใหม่: ก๊อปบรรทัดไปวางต่อ อย่าลืมเครื่องหมาย ,
+       - เลขข้อและแท็บ สร้างให้อัตโนมัติ
+       ===================================================== */
+    const ITEMS = [
+	  { name: "ห้องเสกพรอมต์สำหรับสร้างภาพด้วย AI", url: "./aiprompt/promptspell-atelier.html" },
+	  { name: "JSON Prompt แก้ภาพ AI เฉพาะจุด", url: "./aiprompt/Image Edit JSON Prompt Builder.html" },
+      { name: "ทำโปรเตอร์ ขายของสินค้ารวม (Gemini Ago)", url: "Ago_index_V3.html" },
+      {name: "Sticker เคลื่อนไหว 2X2 320x270", url: "dynamic_sticker_json_prompt_builder.html" },
+      { name: "Sticker 4x4 ภาพนิ่ง 320x320", url: "./clude/Dynamic Sticker JSON Prompt Builder_V2.html" },
+
+      { name: "Infographic Prompt Builder", url: "./clude/Infographic Prompt BuilderV3.html"},
+      { name: "Fashion Poster Prompt Builder", url: "./clude/Fashion Poster Prompt Builder_V2.html" },
+      { name: "Product Poster Prompt Builder V3(Claude)", url: "./clude/Product Poster Prompt Builder_V3.html" },
+      { name: "Product Poster Prompt Builder V2", url: "Ago_index_V2.html" },
+      { name: "ตัวช่วยเขียน JSON Prompt สร้างคลิปวิดีโอ", url: "./aiprompt/Clip Prompt Builder · JSON.html" },
+
+
+      // ---- ข้อ 6 เป็นต้นไป จะไปอยู่แท็บ 2 ----
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" , newTab: true },
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+
+      // ---- ข้อ 11 เป็นต้นไป จะไปอยู่แท็บ 3 ----
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+      //{ name: "xxxxxxxxxxxxxxxxxxxxxx", url: "https://www.google.com" },
+
+      // เพิ่มข้อใหม่ต่อจากตรงนี้
+    ];
+
+    /* =====================================================
+       ส่วนการทำงาน (ไม่ต้องแก้)
+       ===================================================== */
+    const menuEl = document.getElementById("menu");
+    const tabsEl = document.getElementById("tabs");
+    const totalPages = Math.max(1, Math.ceil(ITEMS.length / ITEMS_PER_PAGE));
+    let currentPage = 1;
+
+    function getPageFromHash() {
+      const m = location.hash.match(/page=(\d+)/);
+      const p = m ? parseInt(m[1], 10) : 1;
+      return Math.min(Math.max(p, 1), totalPages);
+    }
+
+    function renderMenu() {
+      menuEl.innerHTML = "";
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const pageItems = ITEMS.slice(start, start + ITEMS_PER_PAGE);
+
+      pageItems.forEach((item, i) => {
+        const a = document.createElement("a");
+        a.href = item.url;
+        if (item.newTab) {
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+        }
+        a.style.animationDelay = (i * 0.05) + "s";
+
+        const num = document.createElement("span");
+        num.className = "num";
+        num.textContent = start + i + 1;   // เลขข้อต่อเนื่องข้ามแท็บ
+
+        const text = document.createElement("span");
+        text.className = "text";
+        text.textContent = item.name;
+
+        a.append(num, text);
+        menuEl.appendChild(a);
+      });
+    }
+
+    function renderTabs() {
+      tabsEl.innerHTML = "";
+      if (totalPages <= 1) return;        // ไม่เกิน 1 แท็บ = ไม่แสดง
+
+      for (let p = 1; p <= totalPages; p++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab" + (p === currentPage ? " active" : "");
+        btn.textContent = p;
+
+        const from = (p - 1) * ITEMS_PER_PAGE + 1;
+        const to = Math.min(p * ITEMS_PER_PAGE, ITEMS.length);
+        btn.title = "ข้อ " + from + " - " + to;
+
+        btn.addEventListener("click", () => goToPage(p));
+        tabsEl.appendChild(btn);
+      }
+    }
+
+    function goToPage(p) {
+      currentPage = p;
+      history.replaceState(null, "", "#page=" + p);
+      renderTabs();
+      renderMenu();
+    }
+
+    currentPage = getPageFromHash();
+    renderTabs();
+    renderMenu();
+  </script>
+
+</body>
+</html>

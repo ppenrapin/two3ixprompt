@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptSpell Atelier - ห้องเสกพรอมต์ภาพ AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f7;--card:#fff;--ink:#14202b;--mute:#5b6b78;--line:#d5dde3;--acc:#0f8b8d;--accInk:#fff;--hot:#e4572e;--out:#101c26;--outInk:#e8f1f5}
+@media (prefers-color-scheme:dark){:root{--bg:#0d151c;--card:#16212b;--ink:#e8eff4;--mute:#8da0ae;--line:#2a3a47;--acc:#3ec1c3;--accInk:#06222a;--hot:#ff7a4d;--out:#0a1118;--outInk:#e8f1f5}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Sarabun",system-ui,sans-serif}
+header{padding:28px 20px 8px;max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font:600 28px/1.2 "Kanit",sans-serif;margin:0}
+.sub{color:var(--mute);margin:2px 0 0;font-size:14px}
+main{max-width:1100px;margin:0 auto;padding:12px 20px 48px;display:grid;grid-template-columns:1.15fr 1fr;gap:20px}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+h2{font:500 17px "Kanit",sans-serif;margin:0 0 12px}
+label{display:block;font-size:14px;color:var(--mute);margin:0 0 3px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+textarea{resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:none;color:var(--ink);padding:6px 14px;font:inherit;cursor:pointer}
+.seg button.on{background:var(--acc);color:var(--accInk)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:9px 16px;font:inherit;cursor:pointer}
+.btn.hot{background:var(--hot);border-color:var(--hot);color:#fff;font-weight:600}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--accInk);font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+#out{background:var(--out);color:var(--outInk);border-color:var(--out);min-height:260px;font-size:15px;line-height:1.65}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin-top:6px}
+.hist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.hist li{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist li:hover{border-color:var(--acc)}
+.side{display:grid;gap:20px;align-content:start}
+.sticky{position:sticky;top:12px}
+.tip{font-size:14px;color:var(--mute);margin:10px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1 id="appName">PromptSpell Atelier</h1>
+    <p class="sub" id="appTag"></p>
+  </div>
+  <div class="seg" id="langSeg" role="group" aria-label="Language">
+    <button data-l="th" class="on">ไทย</button><button data-l="en">English</button>
+  </div>
+</header>
+<main>
+  <div>
+    <section>
+      <label for="title" id="lTitle"></label>
+      <input id="title" type="text" autocomplete="off">
+      <div class="grid">
+        <div><label id="lPlat"></label>
+          <select id="plat"><option value="gpt">ChatGPT</option><option value="flow">Google Flow</option></select></div>
+        <div id="gAspect"></div>
+      </div>
+    </section>
+    <section style="margin-top:20px">
+      <h2 id="hOpt"></h2>
+      <div class="grid" id="grid"></div>
+      <div class="grid" style="grid-template-columns:1fr">
+        <div><label id="lExtra" for="extra"></label><textarea id="extra" rows="3"></textarea></div>
+        <div><label id="lNeg" for="neg"></label><input id="neg" type="text"></div>
+      </div>
+      <div class="row">
+        <button class="btn hot" id="bAuto"></button>
+        <button class="btn" id="bRand"></button>
+        <button class="btn" id="bClear"></button>
+      </div>
+      <p class="tip" id="tipAuto"></p>
+    </section>
+  </div>
+  <div class="side">
+    <section class="sticky">
+      <h2 id="hOut"></h2>
+      <textarea id="out" rows="12" spellcheck="false"></textarea>
+      <div class="meta"><span id="count"></span><span id="status"></span></div>
+      <div class="row">
+        <button class="btn pri" id="bCopy"></button>
+        <button class="btn" id="bSave"></button>
+      </div>
+    </section>
+    <section>
+      <h2 id="hHist"></h2>
+      <ul class="hist" id="hist"></ul>
+    </section>
+  </div>
+</main>
+<script>
+/* ===== ชื่อโปรแกรมแสดงบนหน้าจอ แก้ที่ตัวแปรนี้ ===== */
+const APP_NAME = "PromptSpell Atelier";
+/* ============================================== */
+
+const UI = {
+ th:{tag:"ห้องเสกพรอมต์สำหรับสร้างภาพด้วย AI",title:"ชื่อภาพ / สิ่งที่ต้องการให้ AI วาด",ph:"เช่น แมวสีส้มนั่งริมหน้าต่างวันฝนตก / A fox in a misty forest",plat:"แพลตฟอร์ม",opt:"ตัวเลือกรายละเอียดภาพ",none:"— ไม่ระบุ —",extra:"รายละเอียดเพิ่มเติม (ไม่บังคับ)",extraPh:"เช่น สวมเสื้อสีแดง ถือร่ม มีนกบินอยู่ด้านหลัง",neg:"สิ่งที่ไม่ต้องการ (Negative)",negPh:"เช่น ข้อความ, ลายน้ำ, มือบิดเบี้ยว, ภาพเบลอ",auto:"✦ Generate Auto",rand:"สุ่มทั้งหมด",clear:"ล้างค่า",tip:"Auto จะเดาหมวดจากชื่อภาพ แล้วเติมช่องที่ยังว่างพร้อมเพิ่มรายละเอียดคุณภาพให้",out:"Prompt ที่ได้ (แก้ไขได้)",copy:"คัดลอก Prompt",copied:"คัดลอกแล้ว ✓",save:"บันทึกประวัติ",saved:"บันทึกแล้ว ✓",hist:"ประวัติ Prompt",empty:"ยังไม่มีประวัติ",chars:"ตัวอักษร",ar:"อัตราส่วนภาพ"},
+ en:{tag:"A prompt workshop for AI image generation",title:"Image title / what should the AI draw",ph:"e.g. An orange cat by a rainy window / แมวในป่าหมอก",plat:"Platform",opt:"Image details",none:"— Not set —",extra:"Extra details (optional)",extraPh:"e.g. wearing a red coat, holding an umbrella, birds in the background",neg:"Things to avoid (Negative)",negPh:"e.g. text, watermark, distorted hands, blur",auto:"✦ Generate Auto",rand:"Randomize all",clear:"Clear",tip:"Auto guesses the category from your title, fills empty fields and adds quality details.",out:"Your prompt (editable)",copy:"Copy prompt",copied:"Copied ✓",save:"Save to history",saved:"Saved ✓",hist:"Prompt history",empty:"No history yet",chars:"characters",ar:"Aspect ratio"}
+};
+
+/* [อังกฤษ, ไทย] */
+const F = {
+ subject:{th:"ประเภทภาพ",en:"Subject type",o:[["portrait","พอร์ตเทรต"],["product shot","ภาพสินค้า"],["food photography","ภาพอาหาร"],["landscape","ทิวทัศน์"],["architecture","สถาปัตยกรรม"],["animal","สัตว์"],["fantasy character","ตัวละครแฟนตาซี"],["fashion editorial","แฟชั่น"],["interior design","ตกแต่งภายใน"],["sci-fi scene","ฉากไซไฟ"],["abstract art","ศิลปะนามธรรม"],["logo / icon","โลโก้ / ไอคอน"]]},
+ style:{th:"สไตล์ภาพ",en:"Art style",o:[["photorealistic","ภาพถ่ายสมจริง"],["cinematic film still","ภาพนิ่งจากภาพยนตร์"],["3D render","3D เรนเดอร์"],["digital illustration","ภาพประกอบดิจิทัล"],["watercolor painting","สีน้ำ"],["oil painting","สีน้ำมัน"],["Japanese anime style","อนิเมะญี่ปุ่น"],["pixel art","พิกเซลอาร์ต"],["isometric illustration","ไอโซเมตริก"],["flat vector art","เวกเตอร์แบน"],["minimalist line art","ลายเส้นมินิมอล"],["cyberpunk","ไซเบอร์พังก์"],["vintage poster","โปสเตอร์วินเทจ"],["clay animation","ดินปั้นสต็อปโมชัน"]]},
+ shot:{th:"ขนาดช็อต",en:"Shot size",o:[["extreme close-up","ใกล้มาก"],["close-up","ใกล้"],["medium shot","ระยะกลาง"],["full-body shot","เต็มตัว"],["wide shot","มุมกว้าง"],["extreme wide establishing shot","กว้างมาก เห็นฉากทั้งหมด"]]},
+ angle:{th:"มุมกล้อง",en:"Camera angle",o:[["eye-level","ระดับสายตา"],["low angle","มุมต่ำ"],["high angle","มุมสูง"],["bird’s-eye view","มุมนกมอง"],["worm’s-eye view","มุมหนอนมอง"],["Dutch angle","มุมเอียง"],["over-the-shoulder","ข้ามไหล่"],["top-down flat lay","มองตรงจากด้านบน"],["side profile","มุมข้าง"]]},
+ lens:{th:"เลนส์",en:"Lens",o:[["24mm wide-angle lens","เลนส์ไวด์ 24mm"],["35mm lens","เลนส์ 35mm"],["50mm lens","เลนส์ 50mm"],["85mm portrait lens","เลนส์พอร์ตเทรต 85mm"],["200mm telephoto lens","เลนส์เทเล 200mm"],["100mm macro lens","เลนส์มาโคร"],["fisheye lens","เลนส์ฟิชอาย"],["tilt-shift lens","เลนส์ทิลต์ชิฟต์"]]},
+ light:{th:"แสง",en:"Lighting",o:[["soft natural daylight","แสงธรรมชาติอ่อน"],["golden hour light","แสงทองยามเย็น"],["blue hour","แสงสีน้ำเงินก่อนค่ำ"],["soft studio lighting","แสงสตูดิโอนุ่ม"],["dramatic rim lighting","แสงขอบตัวดราม่า"],["neon glow","แสงนีออน"],["candlelight","แสงเทียน"],["overcast diffused light","แสงกระจายวันครึ้ม"],["backlit silhouette","ย้อนแสงเป็นเงา"],["volumetric god rays","ลำแสงทะลุหมอก"]]},
+ tone:{th:"โทนสี",en:"Color tone",o:[["warm tones","โทนอุ่น"],["cool tones","โทนเย็น"],["pastel palette","พาสเทล"],["vibrant saturated colors","สีสด"],["black and white","ขาวดำ"],["muted earth tones","โทนเอิร์ธ"],["teal and orange","เขียวน้ำเงิน-ส้ม"],["neon colors","สีนีออน"],["vintage faded colors","สีเก่าซีด"],["high contrast","คอนทราสต์สูง"]]},
+ mood:{th:"อารมณ์",en:"Mood",o:[["peaceful","สงบ"],["dramatic","ดราม่า"],["joyful","สนุกสดใส"],["mysterious","ลึกลับ"],["romantic","โรแมนติก"],["epic","ยิ่งใหญ่"],["nostalgic","คิดถึงอดีต"],["melancholic","เศร้าเหงา"],["energetic","มีพลัง"],["luxurious","หรูหรา"]]},
+ place:{th:"ฉาก / พื้นหลัง",en:"Setting",o:[["clean white studio background","พื้นหลังสตูดิโอสีขาว"],["lush nature","ธรรมชาติเขียวขจี"],["busy city street","ถนนในเมือง"],["cozy indoor room","ห้องอบอุ่น"],["tropical beach","ชายหาดเขตร้อน"],["misty forest","ป่าหมอก"],["outer space","อวกาศ"],["underwater","ใต้ทะเล"],["mountain range","เทือกเขา"],["Thai local market","ตลาดไทย"],["futuristic city at night","เมืองอนาคตยามค่ำคืน"]]},
+ time:{th:"ช่วงเวลา / สภาพอากาศ",en:"Time / weather",o:[["sunrise","พระอาทิตย์ขึ้น"],["midday","เที่ยงวัน"],["sunset","พระอาทิตย์ตก"],["night","กลางคืน"],["rainy day","วันฝนตก"],["foggy morning","เช้าหมอกลง"],["snowy","หิมะตก"]]},
+ comp:{th:"การจัดองค์ประกอบ",en:"Composition",o:[["rule of thirds","กฎสามส่วน"],["centered symmetrical composition","กึ่งกลางสมมาตร"],["leading lines","เส้นนำสายตา"],["generous negative space","เว้นพื้นที่ว่าง"],["shallow depth of field with bokeh","ฉากหลังเบลอ (โบเก้)"],["natural framing","กรอบธรรมชาติล้อมวัตถุ"],["golden ratio","อัตราส่วนทอง"]]},
+ qual:{th:"คุณภาพ",en:"Quality",o:[["ultra detailed, 8K resolution","รายละเอียดสูงมาก 8K"],["sharp focus, professional photography","โฟกัสคมชัด ระดับมืออาชีพ"],["award-winning, masterpiece","ระดับรางวัล ผลงานชิ้นเอก"],["HDR, high dynamic range","HDR"],["clean, crisp, print quality","คมชัด คุณภาพพิมพ์"]]}
+};
+const AR=["1:1","16:9","9:16","4:3","3:4","3:2","2:3","21:9"];
+const AR_TH={"1:1":"จัตุรัส","16:9":"แนวนอนจอกว้าง","9:16":"แนวตั้งมือถือ","4:3":"แนวนอน","3:4":"แนวตั้ง","3:2":"แนวนอนกล้อง","2:3":"แนวตั้งโปสเตอร์","21:9":"ซีนีมาสโคป"};
+
+/* Auto: เดาหมวดจากคำในชื่อ -> ตั้งค่าเริ่มต้น (ตำแหน่งในลิสต์) */
+const PRE=[
+ [/คน|ผู้หญิง|ผู้ชาย|เด็ก|portrait|girl|boy|man|woman|face|หน้า/i,{subject:0,style:0,shot:1,lens:3,light:3,comp:4,ar:"3:4"}],
+ [/อาหาร|กิน|กาแฟ|ขนม|food|coffee|cake|dish|noodle|ก๋วยเตี๋ยว/i,{subject:2,style:0,angle:7,lens:5,light:0,tone:0,comp:4,ar:"4:3"}],
+ [/สินค้า|ขวด|product|bottle|watch|phone|perfume/i,{subject:1,style:0,light:3,place:0,lens:5,ar:"1:1"}],
+ [/วิว|ภูเขา|ทะเล|ป่า|landscape|mountain|sea|forest|sky|ทุ่ง/i,{subject:3,style:0,shot:4,lens:0,light:1,comp:2,ar:"16:9"}],
+ [/บ้าน|ตึก|วัด|เมือง|building|city|house|temple|architecture/i,{subject:4,style:0,shot:4,lens:0,angle:2,light:1,ar:"16:9"}],
+ [/แมว|หมา|สุนัข|นก|ช้าง|cat|dog|bird|fox|animal|elephant/i,{subject:5,style:0,shot:1,lens:4,comp:4,ar:"3:2"}],
+ [/มังกร|เวทมนตร์|อัศวิน|dragon|wizard|knight|elf|fantasy|magic/i,{subject:6,style:3,mood:5,light:4,ar:"2:3"}],
+ [/อวกาศ|หุ่นยนต์|อนาคต|space|robot|future|sci-fi|cyber/i,{subject:9,style:11,light:5,tone:7,place:10,ar:"21:9"}],
+ [/โลโก้|ไอคอน|logo|icon/i,{subject:11,style:9,tone:2,place:0,ar:"1:1"}]
+];
+const ENH={en:["intricate details","natural textures","balanced exposure","clean edges","no text or watermark"],th:["รายละเอียดประณีต","พื้นผิวสมจริง","แสงสมดุล","ขอบคมสะอาด","ไม่มีข้อความและลายน้ำ"]};
+
+let lang="th";
+const $=id=>document.getElementById(id);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+function buildSelects(){
+  const keep={};
+  Object.keys(F).forEach(k=>{const s=$("s_"+k);if(s)keep[k]=s.value});
+  const ar=$("ar");const arKeep=ar?ar.value:"";
+  $("grid").innerHTML=Object.keys(F).map(k=>{
+    const f=F[k];
+    return `<div><label for="s_${k}">${f[lang]}</label><select id="s_${k}" data-k="${k}"><option value="">${UI[lang].none}</option>${f.o.map((o,i)=>`<option value="${i}">${o[lang==="en"?0:1]}</option>`).join("")}</select></div>`;
+  }).join("");
+  $("gAspect").innerHTML=`<label for="ar">${UI[lang].ar}</label><select id="ar"><option value="">${UI[lang].none}</option>${AR.map(a=>`<option value="${a}">${a}${lang==="th"?" · "+AR_TH[a]:""}</option>`).join("")}</select>`;
+  Object.keys(keep).forEach(k=>$("s_"+k).value=keep[k]);
+  $("ar").value=arKeep;
+  document.querySelectorAll("#grid select,#ar").forEach(s=>s.addEventListener("change",build));
+}
+
+function applyLang(){
+  const u=UI[lang];
+  document.documentElement.lang=lang;
+  $("appName").textContent=APP_NAME;
+  $("appTag").textContent=u.tag;
+  $("lTitle").textContent=u.title;$("title").placeholder=u.ph;
+  $("lPlat").textContent=u.plat;$("hOpt").textContent=u.opt;
+  $("lExtra").textContent=u.extra;$("extra").placeholder=u.extraPh;
+  $("lNeg").textContent=u.neg;$("neg").placeholder=u.negPh;
+  $("bAuto").textContent=u.auto;$("bRand").textContent=u.rand;$("bClear").textContent=u.clear;
+  $("tipAuto").textContent=u.tip;$("hOut").textContent=u.out;
+  $("bCopy").textContent=u.copy;$("bSave").textContent=u.save;$("hHist").textContent=u.hist;
+  document.querySelectorAll("#langSeg button").forEach(b=>b.classList.toggle("on",b.dataset.l===lang));
+  buildSelects();renderHist();build();
+}
+
+function val(k){const v=$("s_"+k).value;return v===""?null:F[k].o[+v][lang==="en"?0:1]}
+
+function build(){
+  const t=$("title").value.trim()||(lang==="en"?"[your subject]":"[หัวข้อภาพ]");
+  const g=$("plat").value==="gpt",en=lang==="en";
+  const v={};Object.keys(F).forEach(k=>v[k]=val(k));
+  const ar=$("ar").value,ex=$("extra").value.trim(),ng=$("neg").value.trim();
+  const L=en?{style:"Style",shot:"Shot",angle:"Camera angle",lens:"Lens",light:"Lighting",tone:"Color tone",mood:"Mood",place:"Setting",time:"Time/weather",comp:"Composition",qual:"Quality",ar:"Aspect ratio",neg:"Avoid",sub:"Type"}
+            :{style:"สไตล์",shot:"ช็อต",angle:"มุมกล้อง",lens:"เลนส์",light:"แสง",tone:"โทนสี",mood:"อารมณ์",place:"ฉาก",time:"ช่วงเวลา",comp:"องค์ประกอบ",qual:"คุณภาพ",ar:"อัตราส่วนภาพ",neg:"ไม่ต้องการ",sub:"ประเภท"};
+  const order=["style","shot","angle","lens","light","tone","mood","place","time","comp","qual"];
+  let s="";
+  if(g){
+    s=(en?"Create an image: ":"สร้างภาพ: ")+t+(v.subject?(en?` (${v.subject})`:` (${v.subject})`):"")+".";
+    if(ex)s+=" "+ex+(/[.!?。]$/.test(ex)?"":".");
+    order.forEach(k=>{if(v[k])s+=`\n${L[k]}: ${v[k]}.`});
+    if(ar)s+=`\n${L.ar}: ${ar}.`;
+    if(ng)s+=`\n${L.neg}: ${ng}.`;
+  }else{
+    const parts=[t];if(v.subject)parts.push(v.subject);if(ex)parts.push(ex);
+    order.forEach(k=>{if(v[k])parts.push(v[k])});
+    s=parts.join(", ");
+    if(ng)s+=`\n\n${en?"Negative prompt":"Negative prompt (ช่องสิ่งที่ไม่ต้องการ)"}: ${ng}`;
+    if(ar)s+=`\n${en?"Set aspect ratio in Flow":"ตั้งอัตราส่วนภาพใน Flow"}: ${ar}`;
+  }
+  $("out").value=s;count();
+}
+function count(){$("count").textContent=$("out").value.length+" "+UI[lang].chars}
+
+function autoGen(){
+  const t=$("title").value;
+  let p={};
+  for(const [re,pr] of PRE){if(re.test(t)){p=pr;break}}
+  const setIf=(k,i)=>{const s=$("s_"+k);if(s.value===""&&i!==undefined)s.value=i};
+  Object.keys(p).forEach(k=>{if(k==="ar"){if(!$("ar").value)$("ar").value=p.ar}else setIf(k,p[k])});
+  Object.keys(F).forEach(k=>{const s=$("s_"+k);if(s.value==="")s.value=Math.floor(Math.random()*F[k].o.length)});
+  if(!$("ar").value)$("ar").value=pick(["16:9","3:2","4:3","1:1"]);
+  if(!$("neg").value)$("neg").value=lang==="en"?"blurry, low quality, watermark, text, distorted anatomy, extra fingers":"ภาพเบลอ, คุณภาพต่ำ, ลายน้ำ, ข้อความ, สัดส่วนเพี้ยน, นิ้วเกิน";
+  build();
+  const e=ENH[lang].join(", ");
+  $("out").value+=(($("plat").value==="gpt")?`\n${lang==="en"?"Extra polish":"เพิ่มความละเอียด"}: ${e}.`:`, ${e}`);
+  count();
+}
+function randAll(){Object.keys(F).forEach(k=>$("s_"+k).value=Math.floor(Math.random()*F[k].o.length));$("ar").value=pick(AR);build()}
+function clearAll(){document.querySelectorAll("#grid select,#ar").forEach(s=>s.value="");["title","extra","neg"].forEach(i=>$(i).value="");build()}
+
+function flash(btn,key,back){btn.textContent=UI[lang][key];setTimeout(()=>btn.textContent=UI[lang][back],1400)}
+async function copy(){
+  const o=$("out");
+  try{await navigator.clipboard.writeText(o.value)}catch(e){o.select();document.execCommand("copy")}
+  flash($("bCopy"),"copied","copy");
+}
+function saveHist(){
+  const v=$("out").value.trim();if(!v)return;
+  const h=(store.get("psa_hist")||[]).filter(x=>x!==v);h.unshift(v);store.set("psa_hist",h.slice(0,10));
+  renderHist();flash($("bSave"),"saved","save");
+}
+function renderHist(){
+  const h=store.get("psa_hist")||[];
+  $("hist").innerHTML=h.length?h.map((x,i)=>`<li data-i="${i}" title="${x.replace(/"/g,"&quot;")}">${x.replace(/</g,"&lt;").replace(/\n/g," ")}</li>`).join(""):`<li style="cursor:default;color:var(--mute)">${UI[lang].empty}</li>`;
+}
+
+document.querySelectorAll("#langSeg button").forEach(b=>b.onclick=()=>{lang=b.dataset.l;store.set("psa_lang",lang);applyLang()});
+["title","extra","neg"].forEach(i=>$(i).addEventListener("input",build));
+$("plat").addEventListener("change",build);
+$("out").addEventListener("input",count);
+$("bAuto").onclick=autoGen;$("bRand").onclick=randAll;$("bClear").onclick=clearAll;
+$("bCopy").onclick=copy;$("bSave").onclick=saveHist;
+$("hist").addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(li){$("out").value=(store.get("psa_hist")||[])[+li.dataset.i]||"";count()}});
+lang=store.get("psa_lang")||"th";
+applyLang();
+</script>
+</body>
+</html>
