@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Sticker JSON Prompt Builder (APNG Edition)</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#10131a;--panel:#191f2b;--panel2:#202838;--panel3:#131924;
+  --line:#303b4e;--text:#edf2fa;--muted:#aab6c8;
+  --accent:#79b8ff;--accent-bg:#1b3252;
+  --warn:#ffb86c;--warn-bg:#332417;
+  --good:#9ce0b1;--good-bg:#163024;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 "Noto Sans Thai","Sarabun",system-ui,"Segoe UI",sans-serif}
+header{padding:24px max(20px,calc((100% - 1240px)/2));background:linear-gradient(120deg,#17263a,#1a1d2b);border-bottom:1px solid var(--line)}
+.hdr-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:clamp(21px,2.8vw,30px);margin:0 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accent-bg);color:var(--accent);border:1px solid #3979b9}
+.badge.hot{background:var(--warn-bg);color:var(--warn);border-color:#a86420}
+header p{margin:0;color:var(--muted)}
+main{max-width:1240px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(380px,.92fr);gap:18px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.sticky-panel{position:sticky;top:16px}
+h2{font-size:18px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+h3{font-size:15px;margin:20px 0 10px;color:#cfe2ff;display:flex;align-items:center;gap:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+label{font-weight:600;font-size:13px;color:#d5deeb}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#0f1520;color:var(--text);padding:9px 10px;font:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px #79b8ff22}
+textarea{resize:vertical;min-height:70px}
+small,.hint{font-size:12px;color:var(--muted)}
+.upload{border:1px dashed #52647e;border-radius:10px;padding:14px;background:#111925}
+.preview{display:flex;gap:12px;align-items:center;margin-top:10px}
+.preview img{max-width:150px;max-height:130px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid var(--line)}
+.preview span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.preset-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.preset-btn{border:1px solid var(--line);background:var(--panel3);color:var(--text);padding:10px;border-radius:10px;cursor:pointer;text-align:left;transition:all .15s}
+.preset-btn strong{display:block;font-size:13.5px;margin-bottom:2px;color:var(--accent)}
+.preset-btn span{display:block;font-size:11.5px;color:var(--muted);line-height:1.35}
+.preset-btn.active{background:var(--accent-bg);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mode-banner{padding:11px 13px;border-radius:10px;font-size:13px;margin:10px 0 14px;border:1px solid var(--line);line-height:1.45}
+.mode-banner.over{background:var(--warn-bg);border-color:#a86420;color:#ffe2c2}
+.mode-banner.smooth{background:var(--good-bg);border-color:#2c7a4b;color:#d2f7df}
+.frame-cards{display:grid;gap:9px;margin-top:10px}
+.fcard{background:var(--panel3);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.fcard-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:13px;font-weight:700}
+.fcard-hdr .ftag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--panel2);color:var(--accent);font-weight:600}
+.fcard-hdr .ftag.anchor{background:#163024;color:var(--good)}
+.fcard-hdr .ftag.over{background:#3a2218;color:var(--warn)}
+.fcard input{font-size:13px;padding:7px 9px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 14px;border-radius:9px;font:inherit;font-size:13.5px;font-weight:650;cursor:pointer;transition:filter .15s,border-color .15s}
+button.primary{background:#24558a;border-color:#3979b9}
+button:hover{filter:brightness(1.15)}
+.out-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.out-tabs button{padding:7px 12px;font-size:13px}
+.out-tabs button.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+pre{white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:64vh;background:#0b1018;border:1px solid var(--line);border-radius:10px;padding:14px;font:12.5px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;margin:0}
+.status{color:var(--good);font-size:12.5px;min-height:18px;font-weight:600}
+.note{background:#111925;border-left:3px solid var(--accent);padding:10px 12px;border-radius:6px;color:var(--muted);font-size:13px}
+.note.strict{border-left-color:var(--warn);background:#1c1714;color:#f0d8c0}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.checks label{font-weight:400;display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13.5px}
+.checks input{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.apng-sim{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.sim-step{background:#0f1520;border:1px solid var(--line);border-radius:8px;padding:7px 6px;text-align:center;font-size:11.5px}
+.sim-step b{display:block;color:var(--accent);font-size:12px;margin-bottom:2px}
+.sim-step.loop b{color:var(--good)}
+footer{max-width:1240px;margin:0 auto;padding:0 18px 28px;color:var(--muted);font-size:12px}
+@media(max-width:920px){main{grid-template-columns:1fr}.sticky-panel{position:static}}
+@media(max-width:600px){.grid,.preset-bar,.checks{grid-template-columns:1fr}.field.full{grid-column:auto}.apng-sim{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr-top">
+    <div>
+      <h1>
+        Dynamic Sticker JSON Prompt Builder
+        <span class="badge">LINE APNG 320×270</span>
+        <span class="badge hot">ดุ๊กดิ๊ก Over-Action + ล็อกหน้าเดิม 100%</span>
+      </h1>
+      <p>นำ 1 ภาพที่ตัดจากชุด 16 ตัว มาขยายเป็นเฟรมแอนิเมชัน APNG (เริ่มต้น 5 เฟรม: สร้าง 2×2 โดยเฟรม 1 เหมือนต้นฉบับ เฟรม 2–4 โอเวอร์แอ็กชัน+ตัวหนังสือเด้งดึ๋ง หรือปรับเป็น 10/20 เฟรมแบบสมูท)</p>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="panel">
+  <h2>1. ภาพต้นแบบ (1 ภาพที่ตัดมา) และข้อความสติกเกอร์</h2>
+  <div class="upload">
+    <div class="field">
+      <label for="imageFile">อัปโหลดภาพต้นแบบ (1 ตัวละครที่ตัดแยกมาแล้ว)</label>
+      <input id="imageFile" type="file" accept="image/*">
+      <small>ภาพจะแสดงตัวอย่างในหน้านี้ เวลาใช้งานจริงให้แนบภาพต้นแบบนี้คู่กับ Prompt/JSON ที่ได้</small>
+    </div>
+    <div class="preview" id="previewWrap" hidden>
+      <img id="preview" alt="ภาพต้นแบบ">
+      <span id="fileInfo"></span>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <div class="field full">
+      <label for="stickerText">ข้อความต้นฉบับบนสติกเกอร์ (สำคัญมากสำหรับการทำตัวหนังสือเด้ง)</label>
+      <textarea id="stickerText" placeholder="พิมพ์คำตามภาพต้นแบบให้ตรงทุกตัวอักษร เช่น เร่งให้อยู่ จร้าาา / ทนไม่ไหวแล้วโว้ย / สุดยอด..."></textarea>
+      <small>AI จะคงตัวสะกดเดิมเป๊ะทุกเฟรม แต่ทำให้ตัวหนังสือเด้ง ขยาย หด เอียงซ้าย-ขวา ตามจังหวะเฟรม 2–4</small>
+    </div>
+    <div class="field">
+      <label for="language">ภาษาของ Prompt</label>
+      <select id="language">
+        <option value="Bilingual" selected>ไทย + English (แนะนำ: แม่นยำทั้งท่าทางและภาษาไทย)</option>
+        <option value="English">English (แนะนำสำหรับโมเดลภาพสากล)</option>
+        <option value="Thai">ภาษาไทยล้วน</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="textPolicy">การจัดการข้อความต้นฉบับ</label>
+      <select id="textPolicy">
+        <option value="preserve_and_bounce" selected>คงคำเดิมเป๊ะ + บังคับตัวหนังสือเด้งไปมาในเฟรม 2–4</option>
+        <option value="read_and_bounce">ให้ AI อ่านคำจากภาพเอง + ทำตัวหนังสือเด้งดึ๋ง</option>
+        <option value="preserve_exactly">คงคำเดิมและตำแหน่งใกล้เคียงเดิม</option>
+      </select>
+    </div>
+  </div>
+
+  <h3>2. เลือกโหมดจำนวนภาพ APNG เป้าหมาย (5 ภาพ โอเวอร์แอ็กชัน vs 10–20 ภาพ สมูท)</h3>
+  <div class="preset-bar" id="apngPresets">
+    <button type="button" class="preset-btn active" data-preset="5">
+      <strong>🔥 5 ภาพ APNG (แนะนำเริ่มต้น)</strong>
+      <span>สร้างตาราง 2×2 (4 ภาพ) • ภาพ 1 เหมือนต้นฉบับ, ภาพ 2–4 โอเวอร์แอ็กชันสุดขีด (นำภาพ 1 ไปซ้ำเป็นภาพ 5 เอง)</span>
+    </button>
+    <button type="button" class="preset-btn" data-preset="10">
+      <strong>⚡ 10 ภาพ APNG (ขยันทำ/สมูท)</strong>
+      <span>สร้าง 9 เฟรม (3×3) หรือ 10 เฟรม (5×2) • ปรับการขยับเป็น Smooth In-between ไหลลื่นต่อเนื่อง</span>
+    </button>
+    <button type="button" class="preset-btn" data-preset="20">
+      <strong>🎬 20 ภาพ APNG (สมูทจัดเต็ม)</strong>
+      <span>สร้าง 20 เฟรม (5×4) • ไล่เฟรมละเอียดระดับอนิเมะ ตั้งแต่เริ่มง้าง จนสุดแอ็กชันและวนกลับเนียนกริบ</span>
+    </button>
+  </div>
+
+  <div id="modeBanner" class="mode-banner over"></div>
+
+  <div class="grid">
+    <div class="field">
+      <label for="apngTarget">จำนวนภาพรวมที่ใช้ทำ APNG</label>
+      <select id="apngTarget">
+        <option value="5" selected>5 ภาพ (สร้าง 4 เฟรม 2×2 + ใช้เฟรม 1 ซ้ำเป็นเฟรม 5) — โหมดโอเวอร์แอ็กชัน!</option>
+        <option value="10_9">10 ภาพ (สร้าง 9 เฟรม 3×3 + ใช้เฟรม 1 ซ้ำเป็นเฟรม 10) — โหมด Smooth</option>
+        <option value="10_10">10 ภาพ (สร้างครบ 10 เฟรม 5×2 ในแผ่นเดียว) — โหมด Smooth</option>
+        <option value="20_16">17–20 ภาพ (สร้าง 16 เฟรม 4×4 + เฟรมวนกลับ) — โหมด Smooth</option>
+        <option value="20_20">20 ภาพ (สร้างครบ 20 เฟรม 5×4 ในแผ่นเดียว) — โหมด Smooth พิเศษ</option>
+        <option value="custom">กำหนดคอลัมน์ × แถว เองด้านล่าง</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="pacingMode">สไตล์การกระจายแอ็กชันระหว่างเฟรม</label>
+      <select id="pacingMode">
+        <option value="auto" selected>อัตโนมัติ (≤5 ภาพ = โอเวอร์แอ็กชันจัดเต็ม / >5 ภาพ = สมูทลื่นไหล)</option>
+        <option value="over_action">บังคับ โอเวอร์แอ็กชันสุดขีด (Exaggerated Keyframes ดุ๊กดิ๊กแรงๆ)</option>
+        <option value="smooth_flow">บังคับ สมูทลื่นไหล (Smooth In-Between ไล่จังหวะนุ่มนวล)</option>
+      </select>
+    </div>
+    <div class="field"><label for="columns">จำนวนคอลัมน์ (Columns)</label><input id="columns" type="number" min="1" max="8" value="2"></div>
+    <div class="field"><label for="rows">จำนวนแถว (Rows)</label><input id="rows" type="number" min="1" max="8" value="2"></div>
+    <div class="field"><label for="frameW">ความกว้างต่อเฟรม (LINE = 320 px)</label><input id="frameW" type="number" min="64" max="2048" value="320"></div>
+    <div class="field"><label for="frameH">ความสูงต่อเฟรม (LINE = 270 px)</label><input id="frameH" type="number" min="64" max="2048" value="270"></div>
+    <div class="field"><label for="format">รูปแบบไฟล์</label><select id="format"><option>PNG</option><option>WebP</option></select></div>
+    <div class="field"><label for="background">พื้นหลัง</label>
+      <select id="background">
+        <option value="solid white, clean and uniform" selected>สีขาวเรียบ ตัดพื้นหลังง่าย</option>
+        <option value="transparent background (RGBA)">โปร่งใส (ถ้าโมเดลรองรับ)</option>
+        <option value="solid bright green chroma key (#00FF00)">เขียว Chroma Key</option>
+        <option value="solid magenta chroma key (#FF00FF)">ม่วงแดง Chroma Key</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="apng-sim" id="apngSim"></div>
+
+  <h3>3. ออกแบบความดุ๊กดิ๊กของเฟรม 2–4 และตัวหนังสือเด้งไปมา</h3>
+  <div class="grid">
+    <div class="field full">
+      <label for="actionArchetype">รูปแบบการโอเวอร์แอ็กชันของตัวละคร (ใช้ขยายท่าทางเดิมจากภาพที่ 1 ให้สุดขีด)</label>
+      <select id="actionArchetype">
+        <option value="amplify_original" selected>ขยายกริยาท่าทางเดิมในภาพต้นฉบับให้โอเวอร์ขึ้น 300% (ย่อ-พุ่งใส่กล้อง-เด้งสะบัด)</option>
+        <option value="zoom_pop_bounce">พุ่งหน้า/ยื่นท่าเข้ามาใกล้กล้องแบบ Pop-up เด้งเข้า-ออก + โบกมือ/ขยับแขนสุดแรง</option>
+        <option value="left_right_whip">โยกตัวสะบัดซ้าย-ขวา-กระโดดเด้งดึ๋ง (เห็นความต่างตำแหน่งหัวและแขนชัดเจนทุกเฟรม)</option>
+        <option value="explosive_emotion">ระเบิดอารมณ์สุดขีด (อ้าปากกว้าง/ตาโต/สั่นทั้งตัว/เอฟเฟกต์พุ่งกระจาย)</option>
+        <option value="bouncy_dance">ขยับตัวดุ๊กดิ๊กเข้าจังหวะ ย่อเข่า-ดีดตัวลอย-โพสท่าใหญ่</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="motion">ระดับความแรงของการขยับ (Motion Intensity)</label>
+      <select id="motion">
+        <option value="extreme exaggerated cartoon keyframes (40-60% pose silhouette shift per frame while keeping exact character identity)" selected>โอเวอร์แอ็กติ้งขั้นสุด (ขยับต่างกันชัดเจน 40–60% ทุกช่อง)</option>
+        <option value="expressive energetic cartoon movement">การ์ตูนชัดเจน มีพลัง ดุ๊กดิ๊กกำลังดี</option>
+        <option value="dynamic action impact movement">แอ็กชันรวดเร็ว มีแรงปะทะและเส้นความเร็ว</option>
+        <option value="cute ultra-bouncy squash and stretch movement">น่ารัก เด้งดึ๋ง ยืด-หดชัดเจน</option>
+        <option value="smooth sequential in-between animation">สมูทต่อเนื่อง (เหมาะกับ 10–20 เฟรม)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="emotion">อารมณ์หลักที่จะขยี้ให้สุดในเฟรม 2–4</label>
+      <select id="emotion">
+        <option value="infer from original image & text and amplify 3x in frames 2-4" selected>วิเคราะห์จากภาพต้นฉบับแล้วขยี้ให้แรงขึ้น 3 เท่า</option>
+        <option value="overjoyed / super excited / thumbs up">ดีใจสุดขีด / ชื่นชมสุดพลัง</option>
+        <option value="furious / exploding temper / comical rage">โมโหเดือด / ทนไม่ไหวแล้วโว้ย</option>
+        <option value="frantic rushing / working at turbo speed">เร่งรีบสุดชีวิต / ปั่นงานไฟลุก</option>
+        <option value="shocked jaw-drop / eyes popping">ตกใจตาค้าง / จริงเหรอ!?</option>
+        <option value="hilarious belly laugh / ROFL">ขำท้องแข็ง / น้ำตาเล็ด</option>
+        <option value="pleading / bowing / dramatic apology">ไหว้ย่อขอโทษ / สาธุแรงๆ</option>
+        <option value="teasing / playful sassy stop gesture">กวนๆ ทะเล้น / เบาได้เบา</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="textEffect">จังหวะตัวหนังสือเด้งไปเด้งมา (Bouncy Text)</label>
+      <select id="textEffect">
+        <option value="lively ping-pong bounce: Frame 1 original pos -> Frame 2 squash down & tilt left (-10deg) -> Frame 3 big pop scale (125%) & tilt right (+10deg) -> Frame 4 rebound wave & overshoot" selected>เด้งไปเด้งมาครบสูตร (ย่อเอียงซ้าย → ขยายป๊อปเอียงขวา → เด้งลอย)</option>
+        <option value="giant impact pop, zoom in-out and radial shake">ขยายใหญ่กระแทกตา (Pop Zoom) + สั่นสะเทือน</option>
+        <option value="jelly squash-and-stretch wave across frames">ยืด-หด เด้งดึ๋งเหมือนเยลลี่สลับจังหวะทุกช่อง</option>
+        <option value="floating arc motion (left-up-right pendulum)">ลอยโค้งสลับซ้าย-ขวา-บน เหมือนป้ายไฟดุ๊กดิ๊ก</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="effects">ลูกเล่นและเอฟเฟกต์เสริมในเฟรม 2–4</label>
+      <select id="effects">
+        <option value="dynamic action lines, comic impact bursts, sweat drops, sparkles or anger veins matching the emotion in frames 2-4" selected>จัดเต็มตามอารมณ์ในเฟรม 2–4 (เส้นความเร็ว/ประกาย/เหงื่อ/ไฟลุก)</option>
+        <option value="motion lines and bold comic impact marks">เส้นแสดงการเคลื่อนไหวและแรงกระแทกชัดเจน</option>
+        <option value="expressive emotion symbols (hearts, stars, shock bolts, steam)">สัญลักษณ์อารมณ์เด่นชัดรอบตัวละคร</option>
+        <option value="clean character and bouncy text only, minimal extra effects">เน้นท่าทางตัวละครและตัวหนังสือเด้ง (เอฟเฟกต์น้อย)</option>
+      </select>
+    </div>
+  </div>
+
+  <h3>4. กำกับแอ็กชันรายเฟรม (ปรับแต่งเองได้ หรือใช้ค่าที่ระบบออกแบบให้)</h3>
+  <small>เฟรมที่ 1 ล็อกให้เหมือนภาพต้นฉบับเพื่อใช้เปิดและปิดลูป (เฟรม 1 = เฟรม 5) ส่วนเฟรม 2–4 บังคับขยับท่าทางและตัวหนังสือให้แตกต่างชัดเจน</small>
+  <div class="frame-cards" id="frameCards"></div>
+
+  <div class="field full" style="margin-top:12px">
+    <label for="extra">คำสั่งเพิ่มเติมเฉพาะจุด (ถ้ามี)</label>
+    <textarea id="extra" placeholder="เช่น ให้ถ้วยกาแฟกระฉอกในเฟรม 3, ให้มือโบกไปมาซ้ายขวาชัดเจน, ห้ามเปลี่ยนทรงผมเด็ดขาด..."></textarea>
+  </div>
+
+  <h3>5. กฎเหล็ก: ล็อกหน้าตาทรงผมและชุดให้เหมือนต้นฉบับ 100% (ห้ามเพี้ยนเป็นคนละคน!)</h3>
+  <div class="note strict" style="margin-bottom:10px">
+    <b>สำคัญที่สุด:</b> ระบบได้ฝังคำสั่ง <code>IDENTITY_LOCK_100%</code> เพื่อบังคับให้ AI วาดคนเดิม ใบหน้าเดิม ทรงผมเดิม เสื้อผ้าเดิม และลายเส้น 3D/Pop Art เดิมจากภาพที่ 1 เท่านั้น ห้ามเปลี่ยนเป็นคนละคนในเฟรม 2–4 โดยเปลี่ยนเฉพาะ <b>กริยาท่าทาง มุมเอียงศีรษะ/แขนขา ความแรงของสีหน้า และตัวหนังสือเด้งดึ๋ง</b>
+  </div>
+  <div class="checks">
+    <label><input id="keepFace" type="checkbox" checked> ล็อกใบหน้า/โครงหน้า/ทรงผมเหมือนต้นฉบับ 100%</label>
+    <label><input id="keepClothes" type="checkbox" checked> ล็อกเสื้อผ้า สีชุด และเครื่องประดับเดิมเป๊ะ</label>
+    <label><input id="keepStyle" type="checkbox" checked> ล็อกสไตล์ภาพ 3D/การ์ตูนและแสงสีตามต้นฉบับ</label>
+    <label><input id="keepFrame1Exact" type="checkbox" checked> บังคับช่องที่ 1 เหมือนภาพต้นฉบับเป๊ะ (ไว้ทำภาพ 1 และ 5)</label>
+    <label><input id="forcePoseDiff" type="checkbox" checked> ห้ามเฟรม 2–4 ซ้ำท่าเดิม (ต้องขยับต่างกันเกิน 40%)</label>
+    <label><input id="whiteDiecut" type="checkbox" checked> มีขอบไดคัท/ขอบคมชัด ตัดพื้นหลังทำ APNG ง่าย</label>
+  </div>
+</section>
+
+<section class="panel sticky-panel">
+  <h2>
+    <span>ผลลัพธ์ Prompt สำหรับสร้างภาพ</span>
+    <span class="badge" id="outModeBadge">โหมด 5 ภาพ (โอเวอร์แอ็กชัน)</span>
+  </h2>
+  <div class="out-tabs">
+    <button type="button" class="active" data-tab="json">JSON Prompt (โครงสร้างละเอียด)</button>
+    <button type="button" data-tab="hybrid">Prompt ข้อความ + กฎเหล็ก (แนะนำคู่ภาพ)</button>
+  </div>
+  <div class="actions">
+    <button class="primary" id="copyBtn">📋 คัดลอกผลลัพธ์</button>
+    <button id="downloadBtn">💾 ดาวน์โหลดไฟล์</button>
+    <button id="resetBtn">↺ คืนค่าเริ่มต้น</button>
+  </div>
+  <div class="status" id="status" aria-live="polite"></div>
+  <pre id="output" aria-label="Generated Prompt"></pre>
+
+  <h3>เทคนิคนำไปทำ APNG 5 ภาพให้ดุ๊กดิ๊กสวยคม</h3>
+  <ol class="hint" style="padding-left:18px;margin:6px 0 0">
+    <li>แนบ <b>ภาพต้นแบบ 1 ภาพ</b> (ที่ตัดมาจากชุด 16 ภาพ) พร้อมวาง Prompt นี้ใน ChatGPT / Gemini / Flow</li>
+    <li>เมื่อได้ภาพตาราง 2×2 (4 ช่อง) มาแล้ว ให้ตัดแยกเป็นเฟรมที่ 1, 2, 3, 4 ขนาดช่องละ <b>320×270 px</b></li>
+    <li>นำ <b>เฟรมที่ 1</b> (หรือภาพต้นฉบับเดิม) มาวางซ้ำเป็น <b>เฟรมที่ 5</b> → จะได้ลำดับ <code>1 → 2 → 3 → 4 → 5(1)</code> ที่วนลูป APNG ได้สมูทและดุ๊กดิ๊กสะดุดตา</li>
+    <li>วันไหนต้องการทำ <b>10 หรือ 20 ภาพต่อ 1 APNG</b> ให้กดปุ่มโหมด 10 หรือ 20 ภาพด้านบน ระบบจะสลับคำสั่งเป็น <b>Smooth In-Between</b> ให้อัตโนมัติ</li>
+  </ol>
+</section>
+</main>
+<footer>ทำงานภายในเบราว์เซอร์ ไม่อัปโหลดภาพไปยังเซิร์ฟเวอร์ • ออกแบบสำหรับ LINE Animated Sticker (320×270 px APNG)</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+let imageName = "";
+let imageUrl = "";
+let outputTab = "json";
+
+// Default custom frame overrides for 4-frame (5-image APNG loop)
+const default4Frames = {
+  amplify_original: [
+    "Frame 1 [ANCHOR = ภาพที่ 1 และ 5]: วาดเหมือนภาพต้นฉบับที่แนบมาเป๊ะ 100% ทั้งท่าทาง มุมหน้า และตำแหน่งข้อความ เพื่อใช้เป็นเฟรมตั้งต้นและเฟรมที่ 5 สำหรับวนลูป",
+    "Frame 2 [ANTICIPATION / ง้างท่าสุดตัว]: ตัวละครคนเดิมเป๊ะ แต่ย่อตัว/เอียงศีรษะและง้างแขนเตรียมออกแอ็กชันแบบโอเวอร์แอ็กติ้ง สีหน้าเริ่มเร่งอารมณ์ + ตัวหนังสือย่อแบน (Squash) และเอียงซ้าย -10 องศา",
+    "Frame 3 [CLIMAX OVER-ACTION / แอ็กชันระเบิดสุดขีด]: ตัวละครคนเดิมเป๊ะ ขยายกริยาท่าทางหลักให้โอเวอร์ขึ้น 300% (เช่น ชูมือสุดแขน/พุ่งหน้าเข้าใกล้กล้อง/อ้าปากกว้าง/ตาโตหรือขำสุดขีด) ตำแหน่งแขนและหัวต่างจากเฟรม 1 ชัดเจน + ตัวหนังสือเด้งขยายใหญ่ (Pop 125%) เอียงขวา +10 องศา พร้อมเอฟเฟกต์เส้นความเร็ว/ประกายจัดเต็ม",
+    "Frame 4 [OVERSHOOT & REBOUND / เด้งสะบัดต่อเนื่อง]: ตัวละครคนเดิมเป๊ะ เด้งสะบัดต่อเนื่องไปอีกฝั่ง (Follow-through/Overshoot) มีลูกเล่นมือ/ไหล่ขยับค้างก่อนดีดกลับเฟรม 1 + ตัวหนังสือเด้งลอยขึ้นพร้อมคลื่นพริ้ว (Wobble/Wave) ให้เห็นการขยับดุ๊กดิ๊กชัดเจน"
+  ],
+  zoom_pop_bounce: [
+    "Frame 1 [ANCHOR]: เหมือนภาพต้นฉบับเป๊ะ 100% ทั้งตัวละครและข้อความ",
+    "Frame 2 [CROUCH & SQUASH]: ตัวละครคนเดิมย่อตัวลงต่ำ เตรียมพุ่งเข้าหากล้อง ตัวหนังสือบีบแบนเตรียมดีดตัว",
+    "Frame 3 [GIANT POP-UP CLOSE TO CAMERA]: ตัวละครคนเดิมพุ่งซูมเข้ามาใกล้กล้อง (ขนาดใหญ่ขึ้นในกรอบปลอดภัย) ออกท่าทางเต็มที่สองมือ สีหน้าจัดเต็ม + ตัวหนังสือเด้งป๊อปขนาดใหญ่ด้านบน/ข้าง",
+    "Frame 4 [BOUNCE BACK & TILT]: ตัวละครคนเดิมเด้งถอยกลับพร้อมเอียงตัวโบกมือ/สะบัดท่าสุดพริ้ว + ตัวหนังสือเด้งสลับมุมก่อนวนกลับเฟรม 1"
+  ],
+  left_right_whip: [
+    "Frame 1 [ANCHOR]: เหมือนภาพต้นฉบับเป๊ะ 100% อยู่กึ่งกลางเฟรม",
+    "Frame 2 [SWING LEFT OVER-POSE]: ตัวละครคนเดิมโยกตัวและเอียงหัวไปทางซ้ายสุดตัว ออกท่าทางแขนซ้ายนำ + ตัวหนังสือเด้งเอียงไปทางขวา",
+    "Frame 3 [SWING RIGHT CLIMAX POSE]: ตัวละครคนเดิมสะบัดตัวและออกท่าทางสุดพลังไปทางขวา สีหน้าโอเวอร์แอ็กติ้งสุดขีด + ตัวหนังสือเด้งป๊อปสลับมาทางซ้ายพร้อมเอฟเฟกต์",
+    "Frame 4 [JUMP & SETTLE]: ตัวละครคนเดิมกระโดดดึ๋งตรงกลางพร้อมกางแขน/ขยับมือรัวๆ + ตัวหนังสือเด้งลอยตัวก่อนกลับสู่เฟรม 1"
+  ],
+  explosive_emotion: [
+    "Frame 1 [ANCHOR]: เหมือนภาพต้นฉบับเป๊ะ 100%",
+    "Frame 2 [BUILD-UP TENSION]: ตัวละครคนเดิมสูดหายใจ/เกร็งตัว/ตาเบิกกว้างขึ้น แก้มป่องหรือคิ้วขมวดจัด + ตัวหนังสือสั่นและบีบตัว",
+    "Frame 3 [MAXIMUM EMOTION BURST]: ตัวละครคนเดิมระเบิดอารมณ์ตามคำพูดสุดขีด (หัวเราะท้องแข็ง/โมโหควันออกหู/ดีใจกระโดดตัวลอย) ท่าทางเปลี่ยนชัดเจนมาก + ตัวหนังสือขยายใหญ่สุดและเด้งพุ่งพร้อมเอฟเฟกต์เต็มพิกัด",
+    "Frame 4 [AFTERSHOCK WOBBLE]: ตัวละครคนเดิมยังสั่น/หอบแฮ่ก/ยิ้มค้าง/ปาดเหงื่อแบบตลกๆ + ตัวหนังสือเด้งดึ๋งคล้ายเยลลี่ก่อนวนลูป"
+  ],
+  bouncy_dance: [
+    "Frame 1 [ANCHOR]: เหมือนภาพต้นฉบับเป๊ะ 100%",
+    "Frame 2 [BOUNCE DOWN & TILT]: ตัวละครคนเดิมย่อเข่าเด้งลงจังหวะที่ 1 เอียงหัวและยกมือขึ้น + ตัวหนังสือเด้งลง",
+    "Frame 3 [JUMP UP & BIG POSE]: ตัวละครคนเดิมดีดตัวลอยขึ้นโพสท่าใหญ่สุดแขน สีหน้าสดใสโอเวอร์แอ็กติ้ง + ตัวหนังสือเด้งลอยสูงและขยายใหญ่",
+    "Frame 4 [SWAY & TWIRL]: ตัวละครคนเดิมบิดเอว/ขยับมือดุ๊กดิ๊กจังหวะลงพื้น + ตัวหนังสือเอียงพริ้วสลับข้าง"
+  ]
+};
+
+function isOverActionMode() {
+  const pm = $("pacingMode").value;
+  if (pm === "over_action") return true;
+  if (pm === "smooth_flow") return false;
+  const cols = Math.max(1, Number($("columns").value) || 2);
+  const rows = Math.max(1, Number($("rows").value) || 2);
+  const totalGenerated = cols * rows;
+  return totalGenerated <= 5 && $("apngTarget").value === "5";
+}
+
+function renderFrameInputs() {
+  const cols = Math.max(1, Number($("columns").value) || 2);
+  const rows = Math.max(1, Number($("rows").value) || 2);
+  const count = cols * rows;
+  const over = isOverActionMode();
+  const arch = $("actionArchetype").value;
+  const preset4 = default4Frames[arch] || default4Frames.amplify_original;
+  const container = $("frameCards");
+
+  if (count <= 6) {
+    container.innerHTML = Array.from({length: count}, (_, i) => {
+      const fNum = i + 1;
+      const defVal = (count === 4 && preset4[i]) ? preset4[i] : (
+        i === 0
+          ? "Frame 1 [ANCHOR]: วาดเหมือนภาพต้นฉบับเป๊ะ 100% เพื่อใช้เป็นเฟรมที่ 1 และซ้ำในเฟรมสุดท้ายของลูป"
+          : `Frame ${fNum} [${over ? 'OVER-ACTION KEYFRAME' : 'SMOOTH STEP'}]: ตัวละครคนเดิมเป๊ะ ขยับท่าทางและเด้งตัวหนังสือต่อเนื่องในจังหวะที่ ${fNum}`
+      );
+      const isAnchor = i === 0;
+      return `
+        <div class="fcard">
+          <div class="fcard-hdr">
+            <span>ช่องที่ ${fNum} (แถว ${Math.floor(i/cols)+1}, คอลัมน์ ${(i%cols)+1})</span>
+            <span class="ftag ${isAnchor ? 'anchor' : (over ? 'over' : '')}">${isAnchor ? 'ภาพหลัก (ใช้เป็นภาพ 1 & ภาพปิดลูป)' : (over ? 'โอเวอร์แอ็กชัน + ตัวหนังสือเด้ง!' : 'Smooth Step')}</span>
+          </div>
+          <input type="text" class="frame-custom-input" data-idx="${i}" value="${defVal.replace(/"/g, '&quot;')}">
+        </div>
+      `;
+    }).join("");
+    container.querySelectorAll(".frame-custom-input").forEach(inp => {
+      inp.addEventListener("input", build);
+    });
+  } else {
+    container.innerHTML = `
+      <div class="fcard">
+        <div class="fcard-hdr">
+          <span>โหมดหลายเฟรม (${count} เฟรมในตาราง ${cols}×${rows})</span>
+          <span class="ftag">Smooth In-Between Interpolation (${count} Frames)</span>
+        </div>
+        <small style="display:block;color:var(--text)">
+          ระบบจะสร้างคำสั่งไล่เฟรมสมูทอัตโนมัติครบทั้ง ${count} ช่อง:
+          <b>ช่องที่ 1</b> เหมือนภาพต้นฉบับเป๊ะ →
+          <b>ช่องที่ 2 ถึง ${Math.floor(count*0.35)}</b> ค่อยๆ ง้างท่าและย่อตัว (Ease-in & Anticipation) →
+          <b>ช่องที่ ${Math.floor(count*0.35)+1} ถึง ${Math.floor(count*0.7)}</b> ไล่จังหวะสู่จุดพีคของแอ็กชันและตัวหนังสือเด้งสูงสุด (Peak Climax Arc) →
+          <b>ช่องที่ ${Math.floor(count*0.7)+1} ถึง ${count}</b> ค่อยๆ ผ่อนแรงและเด้งกลับเข้าใกล้ท่าที่ 1 เพื่อให้วนลูป APNG เนียนสนิท
+        </small>
+      </div>
+    `;
+  }
+}
+
+function getFrameSequenceData(cols, rows, count, over) {
+  const customInputs = [...document.querySelectorAll(".frame-custom-input")];
+  if (customInputs.length === count) {
+    return customInputs.map((inp, i) => ({
+      frame: i + 1,
+      grid_position: `row ${Math.floor(i/cols)+1}, col ${(i%cols)+1}`,
+      sequence_role: i === 0
+        ? "Frame 1 (Exact Reference Anchor - used for both Frame 1 and Loop-Closing Frame 5)"
+        : (count === 4
+            ? ["Anchor","Extreme Anticipation + Text Squash/Tilt","Peak Over-Action Climax (300% Energy) + Giant Bouncy Text Pop","Dynamic Overshoot/Rebound + Wobbly Text"][i]
+            : `Keyframe ${i+1}`),
+      pose_delta_from_frame_1: i === 0 ? "0% (Exact match to attached reference image)" : (over ? "40%–65% bold silhouette/limb/head angle change (SAME person/character!)" : "15%–25% smooth progressive movement"),
+      text_bounce_state: i === 0
+        ? "Original text position and scale as in reference"
+        : (i === 1
+            ? "Squash vertically (85% height, 115% width), tilt -10 deg left, shift slightly down"
+            : (i === 2
+                ? "Pop scale up 125%–135%, tilt +10 deg right, jump upward with impact burst"
+                : "Rebound wave/wobble, tilt -6 deg, settle halfway back toward Frame 1 position")),
+      instruction: inp.value.trim()
+    }));
+  }
+
+  // Smooth multi-frame generator (> 6 frames, e.g., 9, 10, 16, 20 frames)
+  return Array.from({length: count}, (_, i) => {
+    const f = i + 1;
+    const progress = Math.round((i / (count - 1)) * 100);
+    let phase = "";
+    let textState = "";
+    if (i === 0) {
+      phase = "Anchor Frame (100% identical to reference image for seamless loop start)";
+      textState = "Baseline original text position and scale (100%)";
+    } else if (progress <= 30) {
+      phase = `Smooth Anticipation & Wind-up (${progress}% of cycle) - gradually crouch/lean and prepare gesture`;
+      textState = `Gradual squash & slight left tilt (${100 - Math.round(progress/3)}% vertical squash)`;
+    } else if (progress <= 65) {
+      phase = `Smooth Acceleration to Peak Action (${progress}% of cycle) - expressive full gesture & peak facial emotion`;
+      textState = `Smoothly pop and bounce upward to peak scale (115%–125%) with lively tilt`;
+    } else {
+      phase = `Smooth Follow-through & Settle Back toward Frame 1 (${progress}% of cycle) for seamless APNG loop`;
+      textState = `Gentle elastic rebound settling smoothly back toward baseline position`;
+    }
+    return {
+      frame: f,
+      grid_position: `row ${Math.floor(i/cols)+1}, col ${(i%cols)+1}`,
+      sequence_role: phase,
+      pose_delta_from_previous_frame: "Smooth 10-15% incremental in-between motion (strictly preserving exact character identity)",
+      text_bounce_state: textState,
+      instruction: `Frame ${f}/${count}: ${phase}. Keep exact same character face, hair, and outfit as Frame 1. Do not print frame numbers.`
+    };
+  });
+}
+
+function updateBannerAndSim() {
+  const cols = Math.max(1, Number($("columns").value) || 2);
+  const rows = Math.max(1, Number($("rows").value) || 2);
+  const count = cols * rows;
+  const over = isOverActionMode();
+  const targetVal = $("apngTarget").value;
+
+  const banner = $("modeBanner");
+  const badge = $("outModeBadge");
+  if (over) {
+    banner.className = "mode-banner over";
+    banner.innerHTML = `<b>🔥 โหมด 5 ภาพ ดุ๊กดิ๊กจัดเต็ม (Over-Action Mode):</b> ระบบสั่งล็อก <b>ช่องที่ 1</b> ให้เหมือนภาพต้นฉบับเป๊ะ (เพื่อที่คุณจะนำไปก๊อปปี้เป็นภาพที่ 5 เอง) และบังคับให้ <b>ช่องที่ 2, 3, 4</b> ขยับกริยาท่าทางแบบโอเวอร์แอ็กติ้ง (ต่างจากภาพแรก 40–60%) พร้อมสั่ง <b>ตัวหนังสือเด้งไปเด้งมา (ย่อ-ป๊อปขยายใหญ่-เอียงสลับซ้ายขวา)</b> โดยห้ามเปลี่ยนหน้าตาหรือชุดของตัวละครเด็ดขาด!`;
+    badge.textContent = `โหมด 5 ภาพ (2×2 โอเวอร์แอ็กชัน)`;
+  } else {
+    banner.className = "mode-banner smooth";
+    banner.innerHTML = `<b>⚡ โหมดหลายเฟรม สมูทลื่นไหล (${count} เฟรมในตาราง ${cols}×${rows}):</b> เมื่อใช้จำนวนภาพเกิน 5 ภาพ ระบบจะสั่งให้ AI กระจายจังหวะการขยับแบบ <b>Smooth In-Between Animation</b> ไล่ตั้งแต่เริ่มง้างท่า → พุ่งสู่จุดพีค → ผ่อนจังหวะวนกลับหาเฟรมที่ 1 อย่างนุ่มนวล โดยยังล็อกหน้าตาและชุดเดิม 100% ทุกช่อง`;
+    badge.textContent = `โหมด Smooth (${count} เฟรม ${cols}×${rows})`;
+  }
+
+  const sim = $("apngSim");
+  if (count === 4 && targetVal === "5") {
+    sim.innerHTML = `
+      <div class="sim-step"><b>APNG ภาพที่ 1</b>ใช้ช่องที่ 1<br>(เหมือนต้นฉบับเป๊ะ)</div>
+      <div class="sim-step"><b>APNG ภาพที่ 2</b>ใช้ช่องที่ 2<br>(ง้างท่าโอเวอร์ + คำย่อเอียง)</div>
+      <div class="sim-step"><b>APNG ภาพที่ 3</b>ใช้ช่องที่ 3<br>(ระเบิดแอ็กชันสุดขีด + คำป๊อปใหญ่!)</div>
+      <div class="sim-step"><b>APNG ภาพที่ 4</b>ใช้ช่องที่ 4<br>(เด้งสะบัดต่อเนื่อง + คำพริ้ว)</div>
+      <div class="sim-step loop"><b>APNG ภาพที่ 5 (วนลูป)</b>นำช่องที่ 1 มาซ้ำเอง<br>(ลูปเนียน 100%)</div>
+    `;
+  } else {
+    sim.innerHTML = `
+      <div class="sim-step"><b>เฟรม 1</b>ต้นฉบับตั้งต้น</div>
+      <div class="sim-step"><b>เฟรม 2..${Math.max(2,Math.floor(count*0.35))}</b>Smooth Wind-up</div>
+      <div class="sim-step"><b>เฟรมกลาง</b>Peak Action + Text Pop</div>
+      <div class="sim-step"><b>เฟรมท้าย..${count}</b>Smooth Follow-through</div>
+      <div class="sim-step loop"><b>ปิดลูป APNG</b>วนกลับเฟรม 1 เนียนกริบ</div>
+    `;
+  }
+}
+
+function buildDataObject() {
+  const cols = Math.max(1, Number($("columns").value) || 2);
+  const rows = Math.max(1, Number($("rows").value) || 2);
+  const fw = Math.max(64, Number($("frameW").value) || 320);
+  const fh = Math.max(64, Number($("frameH").value) || 270);
+  const count = cols * rows;
+  const over = isOverActionMode();
+  const frames = getFrameSequenceData(cols, rows, count, over);
+  const exactText = $("stickerText").value.trim();
+
+  return {
+    task: "line_apng_animated_sticker_sprite_sheet_from_single_sticker",
+    prompt_language: $("language").value,
+    apng_workflow_mode: over
+      ? "5_FRAME_BOUNCY_LOOP (Generate 4 distinct frames in 2x2 grid; User duplicates Frame 1 as Frame 5 for a punchy 5-frame APNG loop)"
+      : `MULTI_FRAME_SMOOTH_APNG (Generate ${count} sequential smooth frames in ${cols}x${rows} grid)`,
+    critical_priority_rules: [
+      "1. CHARACTER IDENTITY LOCK (100% SAME PERSON): Frames 2 to " + count + " MUST depict the EXACT SAME character/person from the attached reference image. Keep identical facial features, eye shape, nose, mouth style, hairstyle, hair color, outfit, accessories, proportions, and 3D/cartoon rendering style. NEVER morph into a different person!",
+      "2. FRAME 1 = EXACT REFERENCE ANCHOR: Frame 1 (top-left) must faithfully match the attached reference sticker so it serves as both Frame 1 and the loop-closing Frame 5.",
+      over
+        ? "3. FRAMES 2–4 OVER-THE-TOP ACTION (NO STATIC REPEATS!): Do NOT make Frames 2, 3, and 4 look almost the same as Frame 1! Exaggerate the gesture, head tilt, arm/hand movement, torso bounce, and facial intensity by 40%–60% between frames so the 5-frame APNG looks super lively and 'ดุ๊กดิ๊ก'."
+        : "3. SMOOTH SEQUENTIAL IN-BETWEENS: Distribute the motion smoothly across all " + count + " frames with clear progression from anticipation to peak climax and settle.",
+      "4. BOUNCY MOVING THAI TEXT: Keep the exact original Thai spelling in every frame, but ANIMATE the text dynamically across Frames 2–" + count + " (squash, stretch, big scale pop, left/right tilt, up/down bounce) so the text visibly dances and bounces in the APNG!"
+    ],
+    reference_image: {
+      instruction: "Use the attached single sticker image (cut from the 16-sticker sheet) as the absolute visual source of truth for character face, outfit, art style, and wording.",
+      uploaded_file_name: imageName || null,
+      image_is_attached_separately: true
+    },
+    source_text: {
+      exact_original_text: exactText || "READ_EXACT_THAI_TEXT_FROM_ATTACHED_IMAGE",
+      text_handling: $("textPolicy").value,
+      rule: "Preserve every Thai character, vowel, tone mark, and punctuation mark 100% identically in all frames. NEVER change spelling, never omit words, never invent new text."
+    },
+    canvas: {
+      line_apng_standard: "LINE Animated Sticker (320x270 px per frame)",
+      layout: "sprite_sheet_grid",
+      columns: cols,
+      rows: rows,
+      total_generated_frames: count,
+      intended_apng_loop_frames: (count === 4 && $("apngTarget").value === "5") ? "5 frames (1 -> 2 -> 3 -> 4 -> 1)" : `${count} frames`,
+      frame_size_px: {width: fw, height: fh},
+      output_size_px: {width: cols * fw, height: rows * fh},
+      file_format: $("format").value,
+      color_mode: "RGBA",
+      background: $("background").value
+    },
+    dynamic_art_direction: {
+      animation_philosophy: over
+        ? "HIGH-CONTRAST EXAGGERATED KEYFRAMES (โอเวอร์แอ็กชัน ดุ๊กดิ๊กชัดเจนสำหรับ 5 ภาพ): Make each frame visibly different in posture, hand gesture, head angle, and text bounce while staying inside the same action theme."
+        : "SMOOTH MULTI-FRAME INTERPOLATION (แอ็กชันสมูทต่อเนื่องสำหรับ 10–20 ภาพ): Smoothly transition poses across the full arc.",
+      action_choreography_archetype: $("actionArchetype").value,
+      movement_style: $("motion").value,
+      primary_emotion: $("emotion").value,
+      text_animation_effect: $("textEffect").value,
+      supporting_effects: $("effects").value,
+      frame_by_frame_breakdown: frames
+    },
+    character_consistency_lock: {
+      preserve_facial_identity: $("keepFace").checked,
+      preserve_clothing_and_colors: $("keepClothes").checked,
+      preserve_original_art_style: $("keepStyle").checked,
+      frame_1_matches_reference: $("keepFrame1Exact").checked,
+      enforce_visible_pose_difference_in_frames_2_to_4: $("forcePoseDiff").checked,
+      strict_warning: "DO NOT redraw a different person in frames 2-4. It must be the exact same character performing bigger, livelier stages of the same action."
+    },
+    text_bounce_choreography: {
+      preserve_exact_wording: true,
+      must_bounce_and_move_across_frames: true,
+      effect_description: $("textEffect").value,
+      per_frame_text_guide: count === 4 ? [
+        "Frame 1: Original text size & placement matching reference.",
+        "Frame 2: Text squashes down slightly & tilts left (-8° to -12°) in anticipation.",
+        "Frame 3: Text POPS larger (120%–130% scale), tilts right (+8° to +12°), jumps slightly higher with impact lines.",
+        "Frame 4: Text rebounds with jelly wave/wobble before returning to Frame 1."
+      ] : "Progressively animate text scale, tilt, and bounce arc across all frames so text feels alive."
+    },
+    composition_and_cutout: {
+      independent_cells: true,
+      no_grid_lines_drawn: true,
+      prevent_cross_cell_overlap: true,
+      keep_all_content_inside_safe_margin: true,
+      white_diecut_sticker_outline: $("whiteDiecut").checked,
+      clean_defined_edges: true
+    },
+    custom_instructions: $("extra").value.trim() || null,
+    negative_prompt: [
+      "CRITICAL: Do NOT make Frames 2, 3, and 4 nearly identical or static copies of Frame 1.",
+      "CRITICAL: Do NOT change the person's face, identity, age, hair, or clothes in Frames 2–4 (must be 100% the same person).",
+      "Do NOT change, misspell, or omit the Thai text.",
+      "Do NOT keep the text completely frozen in the exact same scale/angle across all frames — make the text bounce!",
+      "Do NOT draw grid lines, borders, frame numbers (1, 2, 3, 4), or labels inside the image.",
+      "Do NOT let character limbs, text, or effects bleed outside each 320x270 cell."
+    ]
+  };
+}
+
+function buildHybridTextPrompt(data) {
+  const cols = data.canvas.columns;
+  const rows = data.canvas.rows;
+  const count = data.canvas.total_generated_frames;
+  const fw = data.canvas.frame_size_px.width;
+  const fh = data.canvas.frame_size_px.height;
+  const over = isOverActionMode();
+  const txt = $("stickerText").value.trim() || "[อ่านข้อความภาษาไทยจากภาพต้นแบบ และคงคำเดิมเป๊ะทุกตัวอักษร]";
+
+  let p = `คุณคือผู้เชี่ยวชาญการทำ LINE Animated Sticker (APNG) และ Character Animator ระดับมืออาชีพ\n\n`;
+  p += `ภารกิจ: นำภาพสติกเกอร์ต้นแบบ 1 ภาพที่แนบมานี้ มาสร้างเป็นภาพ Sprite Sheet ตาราง ${cols} คอลัมน์ × ${rows} แถว (รวม ${count} เฟรม, ขนาดเฟรมละ ${fw}×${fh} px, ขนาดรวม ${cols*fw}×${rows*fh} px, พื้นหลัง ${data.canvas.background})\n`;
+  if (count === 4 && $("apngTarget").value === "5") {
+    p += `เป้าหมายสำคัญ: นำไปทำสติกเกอร์ดุ๊กดิ๊ก 5 เฟรม (1 → 2 → 3 → 4 → 5 โดยผู้ใช้นำเฟรมที่ 1 ไปวางซ้ำเป็นเฟรมที่ 5 เอง)\n\n`;
+  } else {
+    p += `เป้าหมายสำคัญ: นำไปทำสติกเกอร์แอนิเมชันแบบสมูท ${count} เฟรมต่อเนื่อง\n\n`;
+  }
+
+  p += `🚨 กฎเหล็ก 3 ข้อที่ต้องทำตามอย่างเคร่งครัดที่สุด:\n`;
+  p += `1. [ล็อกใบหน้าและตัวตนเดิม 100% ห้ามกลายเป็นคนละคน!] ทั้ง ${count} ช่องต้องเป็นตัวละครคนเดียวกันเป๊ะจากภาพต้นแบบ รักษาโครงหน้า ดวงตา ทรงผม เสื้อผ้า สีชุด และสไตล์ภาพ 3D/Pop Art เดิมไว้ 100% ห้ามวาดเพี้ยนเป็นคนอื่นเด็ดขาด!\n`;
+  if (over) {
+    p += `2. [ช่องที่ 1 เหมือนต้นฉบับ แต่ช่องที่ 2–4 ต้องโอเวอร์แอ็กชัน ดุ๊กดิ๊กจัดเต็ม!] ห้ามวาดช่อง 2, 3, 4 ให้ดูนิ่งหรือคล้ายช่องที่ 1 เกินไป! ให้ขยี้กริยาท่าทางเดิมให้โอเวอร์แอ็กติ้งสุดขีด (เปลี่ยนมุมเอียงหัว ตำแหน่งแขนขา การย่อ-ยืดตัว และความแรงของสีหน้าให้แตกต่างจากช่องแรก 40%–60%)\n`;
+  } else {
+    p += `2. [ไล่จังหวะ Smooth In-Between ทั้ง ${count} ช่อง] ให้ตัวละครขยับต่อเนื่องอย่างลื่นไหลตั้งแต่เริ่มง้างท่า พุ่งสู่จุดพีค และผ่อนกลับสู่ท่าที่ 1\n`;
+  }
+  p += `3. [ตัวหนังสือต้องเด้งไปเด้งมา + สะกดเหมือนเดิมเป๊ะ!] ข้อความบนสติกเกอร์คือ "${txt}" ห้ามเปลี่ยนคำหรือสะกดผิดเด็ดขาด แต่ในช่องที่ 2–${count} ต้องขยับตัวหนังสือให้เด้งดึ๋ง (${$("textEffect").options[$("textEffect").selectedIndex].text}) เช่น ย่อ-ขยายป๊อปใหญ่-เอียงซ้ายสลับขวา เพื่อให้เห็นข้อความเด้งไปมาชัดเจนเมื่อรวมเป็น APNG\n\n`;
+
+  p += `🎬 กำกับแอ็กชันและลูกเล่นรายช่อง (เรียงจากซ้ายไปขวา บนลงล่าง):\n`;
+  data.dynamic_art_direction.frame_by_frame_breakdown.forEach(f => {
+    p += `- ช่องที่ ${f.frame} (${f.grid_position}): ${f.instruction}\n  • จังหวะตัวหนังสือ: ${f.text_bounce_state}\n`;
+  });
+
+  p += `\n✨ ลูกเล่นและเอฟเฟกต์เสริมในช่อง 2–${count}: ${$("effects").options[$("effects").selectedIndex].text}\n`;
+  if ($("extra").value.trim()) {
+    p += `📌 คำสั่งเน้นย้ำเพิ่มเติม: ${$("extra").value.trim()}\n`;
+  }
+  p += `\nข้อห้ามเด็ดขาด: ห้ามตีเส้นตารางกั้นช่อง ห้ามเขียนตัวเลขเฟรม 1,2,3,4 ลงในภาพ ห้ามตัวละครหรือข้อความล้นออกนอกเขตแต่ละช่อง และต้องมีขอบคมชัดพร้อมไดคัททำ APNG ทันที`;
+  return p;
+}
+
+function build() {
+  updateBannerAndSim();
+  const data = buildDataObject();
+  if (outputTab === "json") {
+    $("output").textContent = JSON.stringify(data, null, 2);
+  } else {
+    $("output").textContent = buildHybridTextPrompt(data);
+  }
+}
+
+// Preset buttons (5, 10, 20 APNG frames)
+document.querySelectorAll("#apngPresets .preset-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#apngPresets .preset-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const p = btn.dataset.preset;
+    if (p === "5") {
+      $("apngTarget").value = "5";
+      $("columns").value = 2;
+      $("rows").value = 2;
+      $("pacingMode").value = "over_action";
+      $("motion").selectedIndex = 0;
+    } else if (p === "10") {
+      $("apngTarget").value = "10_9";
+      $("columns").value = 3;
+      $("rows").value = 3;
+      $("pacingMode").value = "smooth_flow";
+      $("motion").value = "smooth sequential in-between animation";
+    } else if (p === "20") {
+      $("apngTarget").value = "20_20";
+      $("columns").value = 5;
+      $("rows").value = 4;
+      $("pacingMode").value = "smooth_flow";
+      $("motion").value = "smooth sequential in-between animation";
+    }
+    renderFrameInputs();
+    build();
+  });
+});
+
+$("apngTarget").addEventListener("change", () => {
+  const v = $("apngTarget").value;
+  if (v === "5") { $("columns").value = 2; $("rows").value = 2; $("pacingMode").value = "over_action"; }
+  else if (v === "10_9") { $("columns").value = 3; $("rows").value = 3; $("pacingMode").value = "smooth_flow"; }
+  else if (v === "10_10") { $("columns").value = 5; $("rows").value = 2; $("pacingMode").value = "smooth_flow"; }
+  else if (v === "20_16") { $("columns").value = 4; $("rows").value = 4; $("pacingMode").value = "smooth_flow"; }
+  else if (v === "20_20") { $("columns").value = 5; $("rows").value = 4; $("pacingMode").value = "smooth_flow"; }
+
+  document.querySelectorAll("#apngPresets .preset-btn").forEach(b => {
+    b.classList.toggle("active", (v === "5" && b.dataset.preset === "5") || (v.startsWith("10") && b.dataset.preset === "10") || (v.startsWith("20") && b.dataset.preset === "20"));
+  });
+  renderFrameInputs();
+  build();
+});
+
+["columns", "rows", "pacingMode", "actionArchetype"].forEach(id => {
+  $(id).addEventListener("change", () => {
+    renderFrameInputs();
+    build();
+  });
+});
+
+["stickerText","language","textPolicy","frameW","frameH","format","background","motion","emotion","textEffect","effects","extra","keepFace","keepClothes","keepStyle","keepFrame1Exact","forcePoseDiff","whiteDiecut"].forEach(id => {
+  $(id).addEventListener("input", build);
+  $(id).addEventListener("change", build);
+});
+
+document.querySelectorAll(".out-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".out-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    outputTab = btn.dataset.tab;
+    build();
+  });
+});
+
+$("imageFile").addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (imageUrl) URL.revokeObjectURL(imageUrl);
+  imageUrl = URL.createObjectURL(file);
+  imageName = file.name;
+  $("preview").src = imageUrl;
+  $("fileInfo").textContent = `${file.name} · ${(file.size/1024).toFixed(1)} KB`;
+  $("previewWrap").hidden = false;
+  build();
+});
+
+$("copyBtn").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText($("output").textContent);
+    $("status").textContent = "คัดลอกผลลัพธ์เรียบร้อยแล้ว ✓";
+  } catch (e) {
+    $("status").textContent = "คัดลอกอัตโนมัติไม่ได้ กรุณาเลือกข้อความในกรอบแล้วคัดลอก";
+  }
+  setTimeout(() => { $("status").textContent = ""; }, 2200);
+});
+
+$("downloadBtn").addEventListener("click", () => {
+  const isJson = outputTab === "json";
+  const blob = new Blob([$("output").textContent], {type: isJson ? "application/json;charset=utf-8" : "text/plain;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = isJson ? "dynamic_sticker_apng_prompt.json" : "dynamic_sticker_apng_prompt.txt";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  $("status").textContent = isJson ? "ดาวน์โหลดไฟล์ .json แล้ว" : "ดาวน์โหลดไฟล์ .txt แล้ว";
+});
+
+$("resetBtn").addEventListener("click", () => {
+  $("stickerText").value = "";
+  $("language").value = "Bilingual";
+  $("textPolicy").value = "preserve_and_bounce";
+  $("apngTarget").value = "5";
+  $("pacingMode").value = "auto";
+  $("columns").value = 2;
+  $("rows").value = 2;
+  $("frameW").value = 320;
+  $("frameH").value = 270;
+  $("format").value = "PNG";
+  $("background").value = "solid white, clean and uniform";
+  $("actionArchetype").value = "amplify_original";
+  $("motion").selectedIndex = 0;
+  $("emotion").selectedIndex = 0;
+  $("textEffect").selectedIndex = 0;
+  $("effects").selectedIndex = 0;
+  $("extra").value = "";
+  ["keepFace","keepClothes","keepStyle","keepFrame1Exact","forcePoseDiff","whiteDiecut"].forEach(id => $(id).checked = true);
+  document.querySelectorAll("#apngPresets .preset-btn").forEach(b => b.classList.toggle("active", b.dataset.preset === "5"));
+  $("imageFile").value = "";
+  imageName = "";
+  if (imageUrl) URL.revokeObjectURL(imageUrl);
+  imageUrl = "";
+  $("previewWrap").hidden = true;
+  renderFrameInputs();
+  build();
+  $("status").textContent = "คืนค่าเริ่มต้นเรียบร้อยแล้ว";
+});
+
+renderFrameInputs();
+build();
+</script>
+</body>
+</html>
