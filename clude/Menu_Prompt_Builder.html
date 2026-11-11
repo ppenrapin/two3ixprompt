@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Menu Prompt Builder – ตัวช่วยเขียนพรอมต์เมนูร้าน</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--tx:#2b2118;--mu:#7a6a5c;--ac:#d9622b;--bd:#e6dccf;--wa:#b7791f;--ok:#2f8f5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171310;--card:#221c17;--tx:#f3ebe2;--mu:#a89888;--ac:#ff8a4c;--bd:#3a3028;--wa:#e5b455;--ok:#5cc58a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171310;--card:#221c17;--tx:#f3ebe2;--mu:#a89888;--ac:#ff8a4c;--bd:#3a3028;--wa:#e5b455;--ok:#5cc58a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 "Sarabun","Noto Sans Thai",system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+h1{font-size:18px;margin:0}h1 small{color:var(--mu);font-weight:400;font-size:12px;display:block}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:16px;max-width:1300px;margin:auto}
+@media(max-width:860px){main{grid-template-columns:1fr}.out{position:static!important;max-height:none!important}}
+section,.out{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.out{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;margin:0}
+h2{font-size:15px;margin:0 0 10px}h2 span{background:var(--ac);color:#fff;border-radius:50%;display:inline-block;width:22px;height:22px;text-align:center;line-height:22px;font-size:12px;margin-right:6px}
+label{display:block;font-size:12.5px;color:var(--mu);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:130px;resize:vertical}input[type=color]{padding:2px;height:34px}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.r4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:8px;padding:7px 12px}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:13px}
+.chip.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac) inset}.sw{width:14px;height:14px;border-radius:50%;border:1px solid #8886}
+.tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}.tabs .on{background:var(--ac);color:#fff;border-color:var(--ac)}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font:12.5px/1.5 ui-monospace,Menlo,monospace;margin:0;max-height:48vh;overflow:auto}
+.info{font-size:13px;background:var(--bg);border:1px dashed var(--bd);border-radius:8px;padding:8px 10px;margin-top:8px}
+.w{color:var(--wa)}.g{color:var(--ok)}.mu{color:var(--mu);font-size:12px}
+</style></head><body>
+<header><h1>🍜 Menu Prompt Builder<small>ตัวช่วยเขียนพรอมต์สร้างเมนูร้านอาหาร คาเฟ่ เครื่องดื่ม ขนม</small></h1>
+<div class="chips"><button onclick="loadTpl('street')">ตัวอย่าง: ตามสั่ง</button><button onclick="loadTpl('cafe')">ตัวอย่าง: คาเฟ่</button><button onclick="loadTpl('bakery')">ตัวอย่าง: ขนมปังปิ้ง</button><button onclick="resetAll()">ล้างทั้งหมด</button><button onclick="toggleTheme()">☀/🌙</button></div></header>
+<main>
+<div>
+<section><h2><span>1</span>ข้อมูลร้าน</h2>
+<div class="r2"><div><label>ชื่อร้าน</label><input data-k="sn" placeholder="เช่น ครัวสยาม"></div><div><label>สโลแกน (ถ้ามี)</label><input data-k="tg"></div></div>
+<div class="r2"><div><label>เวลาเปิด-ปิด</label><input data-k="hrs" placeholder="เปิดทุกวัน 8:00-18:00 น."></div><div><label>เบอร์โทร / LINE / IG</label><input data-k="ph" placeholder="โทร 081-234-5678 | @shop"></div></div>
+<div class="r2"><div><label>ภาษาบนเมนู</label><select data-k="lang"><option value="th">ไทยล้วน</option><option value="th+en" selected>ไทย + อังกฤษผสมเพื่อความสวย</option><option value="bi">สองภาษาเต็ม (ไทยบน/อังกฤษล่าง)</option></select></div>
+<div><label>โลโก้</label><select data-k="logo"><option value="none">ไม่มีโลโก้ (AI ทำเครื่องหมายร้านง่ายๆ)</option><option value="upload">มี แนบเป็นรูป (วางมุมบนซ้าย)</option><option value="space">เว้นที่ว่างไว้ใส่โลโก้เอง</option></select></div></div>
+<label>ข้อความท้ายเมนู (ถ้ามี)</label><input data-k="foot" placeholder="ราคานี้ยังไม่รวมค่าบริการ / รับสั่งทำพิเศษ"></section>
+
+<section><h2><span>2</span>ประเภทเมนู (ระบบจะแนะนำสไตล์ เลย์เอาต์ ช่องราคา)</h2>
+<select data-k="type" id="type"></select><div class="info" id="typeinfo"></div></section>
+
+<section><h2><span>3</span>รายการเมนู</h2>
+<label>วางรายการ 1 บรรทัดต่อ 1 เมนู: <b>ชื่อ | ราคา | คำอธิบาย</b> หรือ <b>ชื่อ ราคา</b> / บรรทัดขึ้นต้น # = หัวข้อหมวด / ขึ้นต้น * = เมนูแนะนำ</label>
+<textarea data-k="items" id="items" placeholder="#อาหารจานเดียว&#10;*กะเพราหมูกรอบ 50&#10;ข้าวผัดกุ้ง | 60 | ใส่ไข่ดาว&#10;#เครื่องดื่ม&#10;ชาไทย | 30/35/40"></textarea>
+<div class="r4"><div><label>ช่องราคา (คั่น /)</label><input data-k="cols" id="cols" placeholder="ร้อน/เย็น/ปั่น"></div>
+<div><label>ต่อท้ายราคา</label><select data-k="suf"><option value="บาท">บาท</option><option value="฿">฿</option><option value=".-">.-</option><option value="$">$</option><option value="THB">THB</option><option value="">ไม่มี</option></select></div>
+<div><label>ถ้าไม่ใส่ราคา</label><select data-k="nopr"><option value="blank">เว้นช่องว่างให้เขียนเอง</option><option value="hide">ซ่อนราคา</option></select></div>
+<div><label>ตำแหน่งราคา</label><select data-k="ppos"><option value="auto">ให้ระบบเลือก</option><option value="dots">ท้ายบรรทัดมีจุดไข่ปลา</option><option value="badge">ป้ายกลมบนรูป</option><option value="col">คอลัมน์ขวา</option></select></div></div>
+<div class="chips" style="margin-top:8px"><button onclick="rndMenu(1)">🎲 สุ่มตัวอย่าง 40 รายการ (อาหาร+เครื่องดื่ม)</button><button onclick="rndMenu(0)">🎲 สุ่ม 5-10 รายการ</button><button onclick="setv('items','');render()">ล้างรายการ</button></div>
+<div class="chips" style="margin-top:8px;align-items:center"><span class="mu">หลายหน้า: คั่นหน้าด้วยบรรทัด --- หรือ</span><input id="perpg" value="16" style="width:64px"><span class="mu">รายการ/หน้า</span><button onclick="autoSplit()">✂ แบ่งหน้าอัตโนมัติ</button><label style="margin:0"><input type="checkbox" data-k="llock" checked style="width:auto"> ใช้เลย์เอาต์เดียวกันทุกหน้า</label></div>
+<div class="r2" style="margin-top:8px"><div><label>💾 บันทึกเนื้อหา (ร้าน+รายการ+ราคา ไม่รวมสไตล์)</label><div class="chips"><input id="slotn" placeholder="ชื่อชุด เช่น เมนูหลัก" style="flex:1"><button onclick="saveC()">บันทึก</button></div></div><div><label>📂 โหลดเนื้อหาที่บันทึกไว้</label><div class="chips"><select id="slots" style="flex:1"></select><button onclick="loadC()">โหลด</button><button onclick="delC()">ลบ</button></div></div></div>
+<div class="mu" style="margin-top:4px">การสุ่มสไตล์ไม่แตะเนื้อหารายการ จึงลองหลายแบบโดยเนื้อหาเดิมได้</div>
+<div class="info" id="count"></div></section>
+
+<section><h2><span>4</span>สไตล์ความคิดสร้างสรรค์</h2>
+<div class="chips" id="styles"></div>
+<div class="r2"><div><label>ลูกเล่นพิเศษ (Creative twist)</label><select data-k="twist" id="twist"></select></div><div><label>&nbsp;</label><button onclick="surprise()">🎲 สุ่มสไตล์ + ลูกเล่น</button></div></div>
+<div class="r4"><div><label>พื้นหลัง</label><input type="color" data-k="c1" value="#1a1a1a"></div><div><label>หัวข้อ</label><input type="color" data-k="c2" value="#ff6a00"></div><div><label>ตัวอักษร</label><input type="color" data-k="c3" value="#ffffff"></div><div><label>ราคา/ป้าย</label><input type="color" data-k="c4" value="#ff5a1f"></div></div>
+<label>ฟอนต์ (บรรยายลักษณะ)</label><input data-k="font" id="font">
+<label>ลายประกอบ / ของตกแต่ง</label><input data-k="decor" id="decor"></section>
+
+<section><h2><span>5</span>ภาพประกอบ</h2>
+<div class="r2"><div><label>โหมดภาพ</label><select data-k="imode" id="imode"><option value="ai">A. ให้ AI สร้างภาพอาหารเอง</option><option value="sheet">B. อัปรูปรวมแผ่นเดียว (มีเลขกำกับ)</option><option value="few">C. อัปรูปแยก 2-3 รูป (อาหาร/เครื่องดื่ม/ตกแต่ง)</option><option value="ref">D. อัปเมนูต้นแบบให้เลียนสไตล์</option><option value="free">E. รูปไม่ต้องตรงรายการ AI จับคู่เอง</option></select></div>
+<div><label>รูปทรงภาพ</label><select data-k="ishape"><option value="circle plates on white round dish">วงกลมจานขาว</option><option value="rounded squares">สี่เหลี่ยมมน</option><option value="cutout dishes with soft shadow">ตัดขอบลอยมีเงา</option><option value="polaroid frames">กรอบโพลารอยด์</option><option value="large full-bleed photos">ภาพเต็มกว้าง</option></select></div></div>
+<div class="info" id="imgtip"></div></section>
+
+<section><h2><span>+</span>ตัวเลือกเสริม (เปิดเมื่อต้องการ)</h2>
+<label><input type="checkbox" data-k="promoOn" style="width:auto"> ป้ายโปรโมชั่น / Happy Hour</label>
+<div class="r2"><input data-k="promo" placeholder="Happy Hour 15:00-18:00 เครื่องดื่มลด 20%"><select data-k="pstyle"><option value="a round starburst badge at the top corner">ป้ายกลมมุมบน</option><option value="a diagonal ribbon banner">ริบบิ้นเฉียง</option><option value="a bottom promo strip">แถบล่าง</option><option value="a hand-drawn sticker">สติกเกอร์</option></select></div>
+<label style="margin-top:12px"><input type="checkbox" data-k="curOn" style="width:auto"> แสดงราคาหลายสกุลเงิน (แปลงให้อัตโนมัติ)</label>
+<div class="r2"><select data-k="cur2" id="cur2"></select><input data-k="rate" id="rate" placeholder="1 หน่วยสกุลนั้น = กี่บาท"></div></section>
+<section><h2><span>6</span>ขนาด / ปลายทาง</h2>
+<div class="r4"><div><label>สัดส่วน</label><select data-k="ratio" id="ratio"><option value="3:4">A4/ตั้ง (3:4)</option><option value="1:1">IG 1:1</option><option value="4:5">IG 4:5</option><option value="9:16">Story 9:16</option><option value="16:9">จอทีวี 16:9</option><option value="4:3">แนวนอน 4:3</option><option value="3:1">แบนเนอร์ Delivery</option></select></div>
+<div><label>ใช้งาน</label><select data-k="usage"><option value="print">พิมพ์</option><option value="social">โซเชียล</option><option value="digital">จอดิจิทัล</option><option value="table">ตั้งโต๊ะ</option></select></div>
+<div><label>ความหนาแน่น</label><select data-k="dens"><option value="airy">โปร่ง</option><option value="medium" selected>ปกติ</option><option value="dense">แน่น</option></select></div>
+<div><label>โมเดลปลายทาง</label><select data-k="model"><option value="gen">ทั่วไป</option><option value="gpt">ChatGPT / GPT-Image</option><option value="gem">Gemini</option><option value="mj">Midjourney</option><option value="flux">Flux / SD</option><option value="ide">Ideogram</option></select></div></div>
+<label>รูปแบบเลย์เอาต์ (ปกติให้ระบบเลือกตามจำนวนรายการ)</label><select data-k="layo" id="layo"></select><label>หมายเหตุเพิ่มเติม (ถ้ามี)</label><input data-k="note" placeholder="เช่น อยากได้โทนอบอุ่นแบบบ้านๆ">
+<label><input type="checkbox" data-k="safe" checked style="width:auto"> โหมดป้องกันภาษาไทยเพี้ยน (แนะนำ)</label></section>
+</div>
+
+<div class="out">
+<div class="chips" id="pgbar" style="margin-bottom:8px"></div><div class="tabs" id="tabs"></div>
+<pre id="outp"></pre>
+<div class="chips" style="margin-top:8px"><button class="p" onclick="copyOut()">คัดลอกพรอมต์</button><button onclick="copyProj()">คัดลอกโปรเจกต์</button><button onclick="loadProj()">โหลดโปรเจกต์</button></div>
+<textarea id="pj" style="display:none;min-height:70px;margin-top:8px" placeholder="วางโปรเจกต์ JSON ที่นี่ แล้วกดโหลดโปรเจกต์อีกครั้ง"></textarea>
+<div class="info" id="lint"></div><div class="mu" style="margin-top:6px" id="msg">ข้อมูลบันทึกอัตโนมัติในเบราว์เซอร์นี้</div>
+</div></main>
+<script>
+const $=id=>document.getElementById(id);
+const TYPES={
+street:{th:"อาหารตามสั่ง",en:"Thai made-to-order street-food restaurant",sug:["chalk","street","rustic"],cols:"",ratio:"3:4",lay:null,tip:"รายการมักเยอะ ใช้ตารางหลายคอลัมน์ รูปเล็ก"},
+thai:{th:"ร้านอาหารไทย / ภัตตาคาร",en:"Thai restaurant",sug:["rustic","vintage","luxury"],cols:"",ratio:"3:4",lay:null,tip:"เน้นเมนูแนะนำจานใหญ่ + เมนูรอง"},
+noodle:{th:"ก๋วยเตี๋ยว / ร้านเส้น",en:"noodle shop",sug:["street","vintage","chalk"],cols:"ธรรมดา/พิเศษ",ratio:"3:4",lay:null,tip:"ราคา 2 ช่อง ธรรมดา/พิเศษ"},
+cafe:{th:"คาเฟ่ / กาแฟ",en:"coffee shop",sug:["cream","minimal","vintage"],cols:"ร้อน/เย็น/ปั่น",ratio:"3:4",lay:"drinks",tip:"2 คอลัมน์ ร้อน/เย็น/ปั่น มีภาพเครื่องดื่มเด่น 1-2 แก้ว"},
+tea:{th:"ชา / มัทฉะ / เครื่องดื่มสด",en:"tea and matcha drink shop",sug:["fresh","pastel","korean"],cols:"",ratio:"4:5",lay:"grid3",tip:"กริดภาพแก้ว + ท็อปปิ้ง"},
+bakery:{th:"เบเกอรี่ / ขนม / ขนมปังปิ้ง",en:"bakery, dessert and toast shop",sug:["pastel","cream","boho"],cols:"",ratio:"4:5",lay:"grid3",tip:"กริดภาพ ราคาเดียวต่อกลุ่ม"},
+bar:{th:"บาร์ / ค็อกเทล",en:"bar and cocktail lounge",sug:["luxury","neon","vintage"],cols:"",ratio:"3:4",lay:"list2",tip:"โทนมืดหรู ฟอนต์ Serif ไม่ต้องรูปเยอะ"},
+promo:{th:"เมนูแนะนำ / โปรโมชั่น",en:"recommended-dishes promotional poster",sug:["chalk","street","pastel"],cols:"",ratio:"4:5",lay:"hero",tip:"โปสเตอร์ 3-4 จานใหญ่ ป้ายราคาสะดุดตา"},
+delivery:{th:"Delivery (Grab/LINE MAN)",en:"delivery-app menu banner",sug:["street","fresh","minimal"],cols:"",ratio:"3:1",lay:"banner",tip:"แนวนอน ข้อความน้อย ภาพเด่น"},
+grill:{th:"ปิ้งย่าง / หมูกระทะ / ชาบู",en:"grill, hotpot and shabu restaurant",sug:["street","neon","japanese"],cols:"",ratio:"3:4",lay:null,tip:"เซ็ตราคา + ตารางเนื้อ/ผัก/น้ำจิ้ม"},
+other:{th:"อื่นๆ (กำหนดเอง)",en:"food and beverage shop",sug:["minimal","boho","cream"],cols:"",ratio:"3:4",lay:null,tip:"เลือกสไตล์เอง"}};
+const STY=[
+["chalk","กระดานดำ","chalkboard black with chalk-like white and orange hand lettering, circular white plates",["#1a1a1a","#ff6a00","#ffffff","#ff5a1f"],"bold Thai brush-script headline, clean rounded sans body","hand-drawn kitchen utensils, floating herbs and chili"],
+["rustic","ไม้เข้ม Rustic","dark rustic wood table texture with warm spotlights and yellow label tags","#2a1a10|#ffc21a|#fff4e0|#ffc21a".split("|"),"Thai display headline, sturdy sans body","scattered ingredients, wooden board shadows"],
+["cream","ครีมคาเฟ่","warm cream and brown cafe look, soft paper texture, cozy","#f3e3c8|#5a3a22|#4a3020|#c0602a".split("|"),"retro Thai serif headline, tidy rounded body","coffee beans, small hand-drawn cups, steam"],
+["pastel","พาสเทลน่ารัก","cute pastel kawaii style, soft rounded shapes, playful","#fff1d6|#e0502a|#5a3a2a|#ff7a45".split("|"),"bubbly rounded Thai headline, friendly body","doodle stars, sparkles, mascot sketch"],
+["minimal","มินิมอลโมเดิร์น","modern minimal, generous white space, thin lines, monochrome with one accent","#fafafa|#222222|#444444|#d9622b".split("|"),"thin geometric sans headline, light sans body","single line illustration, thin dividers"],
+["luxury","ดำทองหรู","luxury dark with gold foil accents, elegant, moody lighting","#0e0e0e|#d4af37|#f2ead8|#d4af37".split("|"),"elegant high-contrast serif headline, small caps body","gold hairline frames, subtle marble"],
+["vintage","วินเทจ / โบราณ","vintage retro Thai nostalgia, aged paper, old signage lettering","#ead6b0|#7a2e1a|#3a2a1a|#b5471f".split("|"),"retro Thai signboard lettering, old-style serif body","ornate borders, stamps, faded halftone"],
+["street","สตรีทฟู้ด","vibrant street-food poster, bold orange and yellow blocks, energetic","#ff8a00|#ffffff|#2a1500|#ffe14a".split("|"),"heavy condensed Thai headline, bold sans body","sticker-style badges, brush splashes"],
+["japanese","ญี่ปุ่น","Japanese izakaya style, indigo and red, ink brush, vertical accents","#1c2540|#e8d8b0|#f5f0e6|#d6403a".split("|"),"ink brush headline, clean gothic body","seigaiha waves, paper lantern, hanko stamp"],
+["korean","เกาหลีคิวท์","Korean cafe aesthetic, soft neutral with handwritten notes, polaroid vibe","#f4efe9|#3b3b3b|#4a4a4a|#9bb48a".split("|"),"handwritten script headline, light sans body","tape, stickers, tiny doodles"],
+["boho","โบโฮ / ธรรมชาติ","boho natural earthy tones, botanical line art, linen texture","#efe4d2|#a0522d|#4a3a2a|#6b8e4e".split("|"),"organic serif headline, soft sans body","dried leaves, pampas, terracotta shapes"],
+["neon","นีออนกลางคืน","neon night bar, dark navy with glowing pink and cyan signs","#0b0b1a|#ff3ea5|#e8f6ff|#00e5ff".split("|"),"neon tube script headline, sans body","neon outlines, light reflections"],
+["fresh","เขียวสดชื่น / มัทฉะ","fresh matcha green, clean and healthy, water droplets","#e9f2dc|#2f6b2f|#2a3a22|#5aa63a".split("|"),"modern bold Latin headline with Thai sub, rounded body","leaves, ice cubes, droplets, glass cups"],
+["diner","ไดเนอร์อเมริกัน 50s","retro 1950s American diner, checkerboard, chrome and neon accents",["#f6ecd9","#c8202f","#1d3a4a","#1fa6a0"],"retro script headline with bold sans body","jukebox, stars, checkerboard stripes"],
+["chinese","จีนแดง-ทอง / ติ่มซำ","traditional Chinese red and gold, festive, steamer baskets",["#8e1b17","#f2c14e","#fff3dc","#f2c14e"],"Chinese calligraphy brush headline, clear sans body","lanterns, clouds, steam, bamboo baskets"],
+["isan","อีสานบ้านๆ","Isaan rustic village feel, woven rattan, chili red and leaf green",["#f4e2b8","#b3261e","#3b2a14","#3f7d3a"],"hand-painted Thai signboard lettering","rattan baskets, chilies, sticky-rice basket, banana leaf"],
+["kraft","กระดาษคราฟต์ Eco","kraft brown paper, rubber-stamp ink, handmade eco feel",["#c9a577","#3a2a1a","#2e2216","#b5472a"],"typewriter and stamp lettering","rubber stamps, twine, small doodles"],
+["memphis","ป๊อปอาร์ต Memphis","playful Memphis pop-art with colorful geometric shapes",["#fff5f0","#2b2bd9","#1c1c1c","#ff4f9a"],"chunky geometric headline, simple sans body","squiggles, triangles, dots"],
+["cartoon","การ์ตูนมาสคอต","cartoon mascot illustration, thick outlines, flat bright colors",["#ffe9a8","#e63946","#1d1d1d","#2a9d8f"],"bubbly comic headline, rounded body","mascot character, speech bubbles, steam clouds"],
+["grunge","สตรีทกราฟฟิตี","urban graffiti wall, spray paint, concrete texture",["#2a2a2e","#c6ff3d","#f4f4f4","#ff3d71"],"spray-paint stencil headline, bold sans body","paint drips, tags, tape"],
+["med","เมดิเตอร์เรเนียน","Mediterranean sunny tile look, blue and white, olive and lemon",["#f7f3e8","#1f5fa8","#2b3a4a","#e0a526"],"elegant serif headline, light sans body","azulejo tiles, olive branches, lemons"],
+["scandi","สแกนดิเนเวียน คาเฟ่","Scandinavian cafe, light wood, muted sage and blush, calm",["#f2eee8","#4a5d4a","#3a3a3a","#d98c7a"],"thin rounded sans headline","small plants, simple line icons"],
+["sunset","ซันเซ็ตทรอปิคอล","tropical sunset beach bar, warm gradient, palm leaves",["#ff7a59","#fff1c9","#fffaf0","#ffd23f"],"surf-style script headline, clean sans body","palm leaves, sun disc, waves"],
+["film","โปสเตอร์หนังไทยโบราณ","vintage hand-painted Thai movie poster, dramatic and bold",["#f1d38a","#b0171f","#1d1d1d","#1b4f8a"],"hand-painted Thai poster lettering","starburst rays, painted shadows, bold outlines"]];
+const TW=[["","ไม่ใช้"],["paper-cut collage layers","กระดาษตัดปะ"],["hand-drawn doodle illustrations","ลายเส้นวาดมือ"],["retro 70s poster with halftone","โปสเตอร์ยุค 70"],["sticker-sheet layout","สติกเกอร์"],["torn paper and tape scrapbook","สมุดสแครปบุ๊ก"],["isometric mini-illustrations","ไอโซเมตริก"],["watercolor wash backgrounds","สีน้ำ"],["blackboard sign hanging in front of the shop","ป้ายแขวนหน้าร้าน"],["overhead flat-lay photo background","ถ่ายมุมบนวางบนโต๊ะ"],["comic-book panels","แพนเนลการ์ตูน"],["risograph two-color print texture","ริโซกราฟ 2 สี"],["linocut block-print illustrations","ภาพพิมพ์แกะบล็อก"],["3D clay-style food icons","ไอคอนอาหารดินปั้น 3D"],["embroidered patch badges","ป้ายปักผ้า"],["neon sign cutouts","ป้ายนีออนตัดปะ"]];
+const LAY={hero:["Hero จานใหญ่","large hero dish photos in 1-2 columns, big circular price badges"],grid2:["การ์ดกริด 2 คอลัมน์","2-column card grid with medium photos"],grid3:["กริด 3 คอลัมน์","3-column grid, each cell a small photo with name and price"],list2:["รายการ 2 คอลัมน์ + รูปเด่น","two-column text list with 3-5 featured photos"],dense:["ตารางแน่น","dense multi-column compact table, tiny thumbnails or none"],drinks:["เครื่องดื่ม ร้อน/เย็น/ปั่น","two-column drink list with multiple price columns and 1-2 hero drink photos"],banner:["แบนเนอร์แนวนอน","wide horizontal banner with a few hero items"],poster:["โปสเตอร์ภาพใหญ่กลางหน้า","one giant centerpiece dish photo in the middle with menu items arranged around it"],split:["แบ่งซ้าย-ขวา","split into two halves, food list on one side and drinks list on the other, divided by a decorative vertical band"],polaroid:["กำแพงโพลารอยด์","menu items on tilted polaroid-style photo cards with handwritten captions"],editorial:["แมกกาซีน","editorial magazine spread: one big photo, large headline, tidy text columns"],board:["ป้ายบอร์ดเป็นแถบ","horizontal banded rows like a shop menu board, each row a section with a colored label tab"]};
+const MODELS={gen:"",gpt:"Render all Thai text in a clear, correctly spelled font. Follow the text exactly.",gem:"Generate the final image directly. Keep every Thai word exactly as written.",mj:"",flux:"",ide:"Use the quoted Thai strings as the only text in the image."};
+let st="chalk",tab="full",pi=0,cats=[],lay=null;
+const g=()=>{const o={};document.querySelectorAll("[data-k]").forEach(e=>o[e.dataset.k]=e.type=="checkbox"?e.checked:e.value);o.style=st;return o};
+const setv=(k,v)=>{const e=document.querySelector('[data-k="'+k+'"]');if(e){e.type=="checkbox"?e.checked=!!v:e.value=v}};
+function init(){
+$("type").innerHTML=Object.entries(TYPES).map(([k,v])=>'<option value="'+k+'">'+v.th+'</option>').join("");
+$("twist").innerHTML=TW.map(t=>'<option value="'+t[0]+'">'+t[1]+'</option>').join("");
+$("tabs").innerHTML=[["full","Full Text (แนะนำ)"],["th","ฉบับไทย"],["compact","เข้มข้น"],["json","JSON"],["pages","ทุกหน้า (ล็อกสไตล์)"],["three","3 เวอร์ชัน"]].map(t=>'<button data-t="'+t[0]+'" onclick="tab=this.dataset.t;render()">'+t[1]+'</button>').join("");
+try{const s=localStorage.getItem("mpb");if(s)apply(JSON.parse(s))}catch(e){}
+if(!g().font)applyStyle(st,true);else{drawChips();}
+onType(false);render();
+document.addEventListener("input",e=>{if(e.target.id=="type")onType(true);render()});
+document.addEventListener("change",render)}
+function drawChips(){const sg=TYPES[g().type].sug;$("styles").innerHTML=STY.map(s=>'<button class="chip'+(s[0]==st?" on":"")+'" onclick="applyStyle(\''+s[0]+'\')"><i class="sw" style="background:'+s[3][0]+'"></i><i class="sw" style="background:'+s[3][1]+'"></i>'+s[1]+(sg.includes(s[0])?" ★":"")+'</button>').join("")}
+function applyStyle(id,quiet){const s=STY.find(x=>x[0]==id);st=id;["c1","c2","c3","c4"].forEach((k,i)=>setv(k,s[3][i]));setv("font",s[4]);setv("decor",s[5]);drawChips();if(!quiet)render()}
+function onType(set){const t=TYPES[g().type];$("typeinfo").innerHTML="★ สไตล์แนะนำ: "+t.sug.map(i=>STY.find(s=>s[0]==i)[1]).join(", ")+"<br>💡 "+t.tip;if(set){setv("cols",t.cols);setv("ratio",t.ratio);applyStyle(t.sug[0],true)}drawChips()}
+function surprise(){applyStyle(STY[Math.floor(Math.random()*STY.length)][0],true);setv("twist",TW[1+Math.floor(Math.random()*(TW.length-1))][0]);if(g().type!="delivery"){const n=lay?lay[1]:0,pool=n<=8?["hero","grid2","poster","polaroid","editorial"]:n<=16?["grid3","split","polaroid","editorial","board"]:["list2","split","board","dense"];setv("layo",pool[Math.floor(Math.random()*pool.length)])}render()}
+function parse(txt){const out=[];let cur=null;txt.split("\n").forEach(l=>{let t=l.trim();if(!t)return;if(/^#/.test(t)||/[:：]$/.test(t)){cur={title:t.replace(/^#+\s*|[:：]$/g,"").trim(),items:[]};out.push(cur);return}
+if(!cur){cur={title:"",items:[]};out.push(cur)}let rec=false;if(t[0]=="*"){rec=true;t=t.slice(1).trim()}
+let p=t.split("|").map(s=>s.trim()),name=p[0],price="",desc=p[2]||"";if(p.length>1)price=p[1];else{const m=t.match(/^(.*?)\s+(\d+(?:\s*\/\s*\d+)*)\s*(?:บาท|฿|\.-|-)?$/);if(m){name=m[1];price=m[2].replace(/\s/g,"")}}
+cur.items.push({name:name,price:price,desc:desc,recommended:rec})});return out}
+function pickLayout(n,s){const t=TYPES[s.type];if(t.lay=="banner")return"banner";if(t.lay=="drinks")return n>8?"drinks":"grid2";if(t.lay&&n>8&&t.lay!="hero")return n>30?"dense":t.lay;if(n<=4)return"hero";if(n<=8)return"grid2";if(n<=16)return"grid3";if(n<=30)return"list2";return"dense"}
+function fmtPrice(p,s){if(!p)return s.nopr=="blank"?"(leave a blank price slot)":"";const cl=s.cols?s.cols.split("/").map(x=>x.trim()):[];const ps=p.split("/");const c2=s.curOn&&CUR[s.cur2];return ps.map((x,i)=>(ps.length>1&&cl[i]?cl[i]+" ":"")+x+(s.suf&&ps.length==1?" "+s.suf:"")+(c2&&+s.rate>0&&+x?" ("+c2[0]+(+x/+s.rate).toFixed(c2[1])+")":"")).join(" / ")+(ps.length>1&&s.suf?" "+s.suf:"")}
+function build(s,pgi){
+const T=TYPES[s.type],S=STY.find(x=>x[0]==s.style);const PG=pagesOf(s.items),NP=PG.length;pgi=Math.min(pgi||0,NP-1);const pcs=PG.map(parse),cnt=pcs.map(c=>c.reduce((a,b)=>a+b.items.length,0));cats=pcs[pgi];const n=cnt[pgi];const mx=Math.max.apply(null,cnt);const lk=s.layo&&s.layo!="auto"&&LAY[s.layo]?s.layo:pickLayout(s.llock?mx:n,s);lay=[lk,n];
+const menu=cats.map(c=>(c.title?"SECTION (title only, never print the # symbol): "+c.title+"\n":"")+c.items.map(it=>(it.recommended?"(featured dish) ":"")+it.name+(it.price||s.nopr=="blank"?" | price: "+fmtPrice(it.price,s):"")+(it.desc?" | note: "+it.desc:"")).join("\n")).join("\n\n");
+const pos={auto:"",dots:"prices at end of line with dot leaders",badge:"prices in round badges on photos",col:"prices in a right-aligned column"}[s.ppos];
+const imgs={ai:"No photos supplied: generate appetizing, realistic food/drink photos matching each item name.",sheet:"One attached collage with numbered cells: each number matches the item order in the menu list. Cut out each dish and place it beside its item.\nMapping: "+cats.flatMap(c=>c.items).slice(0,24).map((x,i)=>(i+1)+"="+x.name).join(", "),few:"A few attached photos (food / drinks / decor): use them as the main visuals, generate any missing images in the same style.",ref:"Attached reference menu: imitate its layout feel and mood, but use the new content, colors and text given here.",free:"Attached photos need not match items; place the most suitable image beside each menu item by recognizing the dish."}[s.imode];
+const head=[s.sn&&"Shop name: "+s.sn,s.tg&&"Tagline: "+s.tg,s.hrs&&"Hours: "+s.hrs,s.ph&&"Contact: "+s.ph,s.foot&&"Footer note: "+s.foot].filter(Boolean);const promoEN=s.promoOn&&s.promo?"\nPROMO: show "+s.pstyle+' reading exactly "'+s.promo+'".':"";const curEN=s.curOn&&CUR[s.cur2]?"\nCURRENCY: show each price also converted to "+s.cur2+" in parentheses, exactly as listed.":"";
+const J={menu_type:s.type,shop:{name:s.sn,tagline:s.tg,hours:s.hrs,contact:s.ph,language:s.lang,logo:s.logo},canvas:{ratio:s.ratio,usage:s.usage,density:s.dens},style:{preset:S[0],description:S[2],twist:s.twist||null,palette:{background:s.c1,headline:s.c2,text:s.c3,price:s.c4},typography:s.font,decor:s.decor},layout:{auto:lk,item_count:n,category_count:cats.length,price_position:s.ppos},categories:cats.map(c=>({title:c.title,items:c.items.map(i=>({name:i.name,price:i.price||null,description:i.desc||null,recommended:i.recommended}))})),price_rules:{suffix:s.suf,columns:s.cols||null,if_missing:s.nopr},images:{mode:s.imode,shape:s.ishape},text_rules:s.safe?{render_thai_exactly:true,no_extra_text:true,no_invented_items:true}:null,footer:head,page:NP>1?{index:pgi+1,total:NP,rule:pgi?"copy the design system of the previous page exactly; only content changes":"establish the design system for the whole set"}:null,note:s.note||null,promo:s.promoOn&&s.promo?{text:s.promo,style:s.pstyle}:null,second_currency:s.curOn?{code:s.cur2,rate_thb:s.rate}:null,negative:["misspelled Thai","garbled letters","extra or missing items","blurry","cropped text"]};
+const gemEN=s.model=="gem"||s.model=="gen"?"IMPORTANT: output ONE finished menu IMAGE (a picture), not a website, not HTML, not code.\n":"";const lockEN=NP>1?(pgi==0?"MULTI-PAGE SET: this is PAGE 1 of "+NP+". Establish a strong, reusable design system (background, fonts, palette, badge and photo styles, header and footer); the next pages will copy it exactly.\n":"MULTI-PAGE SET: this is PAGE "+(pgi+1)+" of "+NP+". Use the previously generated menu image in this conversation (or the attached page 1) as the exact style reference. KEEP IDENTICAL: background and texture, color palette, fonts, decorations, header, footer, price badge shape, photo shape and layout grid. ONLY the menu content changes.\n"):"";
+const full=gemEN+lockEN+"Design a "+(s.usage=="social"?"social-media":s.usage=="digital"?"digital-screen":"printable")+" menu for a "+T.en+(s.sn?' called "'+s.sn+'"':"")+". Canvas ratio "+s.ratio+", "+s.dens+" density. Main language: Thai"+(s.lang=="th"?" only":s.lang=="th+en"?", with a little English mixed in for decoration":" with English subtitle under each name")+".\n\nSTYLE: "+S[2]+(s.twist?"; creative twist: "+s.twist:"")+".\nPALETTE: background "+s.c1+", headline "+s.c2+", body text "+s.c3+", price accents "+s.c4+".\nTYPOGRAPHY: "+s.font+".\nDECOR: "+s.decor+".\nLAYOUT: "+LAY[lk][1]+(pos?"; "+pos:"")+".\n\nHEADER/FOOTER:\n"+(head.join("\n")||"(none)")+"\nLogo: "+({none:"no logo, simple emblem only",upload:"use attached logo top-left",space:"leave an empty space for a logo"}[s.logo])+"\n\nMENU CONTENT (copy Thai text exactly, character by character. Labels and symbols such as SECTION, |, price:, note:, (featured dish), # and bullets are structure for you only: never print them on the image):\n"+menu+promoEN+curEN+"\n\nIMAGES: "+imgs+" Photo shape: "+s.ishape+".\n"+(s.safe?"TEXT RULES: use only the text above, no invented dishes or prices, no translation, keep spelling exact.\n":"")+(MODELS[s.model]?MODELS[s.model]+"\n":"")+(s.note?"NOTE: "+s.note+"\n":"")+"AVOID: "+J.negative.join(", ")+".";
+const names=cats.flatMap(c=>c.items).slice(0,6).map(i=>i.name).join(", ");
+let comp=S[2]+(s.twist?", "+s.twist:"")+", "+T.en+" menu"+(s.sn?' "'+s.sn+'"':"")+", "+LAY[lk][1]+", palette "+s.c1+" "+s.c2+" "+s.c3+", "+s.font+", "+n+" items"+(names?" incl. "+names:"")+", appetizing food photos, clean readable Thai text"+(s.promoOn&&s.promo?', promo badge "'+s.promo+'"':"");
+if(NP>1)comp=(pgi?"Page "+(pgi+1)+"/"+NP+": exactly the same design system as the previous page image, new content only. ":"Page 1/"+NP+": establish the design system. ")+comp;if(s.model=="gem")comp="Create a menu image (not a website): "+comp;if(s.model=="mj")comp+=" --ar "+s.ratio+" --style raw";if(s.model=="ide")comp='menu design, text: "'+(s.sn||"MENU")+'", '+comp;
+const IT={ai:"ไม่มีภาพแนบ ให้สร้างภาพอาหาร/เครื่องดื่มสมจริงตามชื่อเมนู",sheet:"แนบรูปรวมที่มีเลขกำกับ เลขตรงกับลำดับรายการ ให้ตัดภาพแต่ละจานไปวางข้างรายการ",few:"แนบรูปไม่กี่รูป (อาหาร/เครื่องดื่ม/ตกแต่ง) ใช้เป็นภาพหลัก ส่วนที่ขาดให้สร้างในสไตล์เดียวกัน",ref:"แนบเมนูต้นแบบ ให้เลียนลุคและอารมณ์ แต่ใช้เนื้อหา สี ข้อความตามที่ให้",free:"รูปที่แนบไม่ต้องตรงรายการ ให้จับคู่ภาพที่เหมาะกับแต่ละรายการเอง"}[s.imode];
+const tw=TW.find(t=>t[0]==s.twist);
+const lockTH=NP>1?(pgi==0?"ชุดเมนูหลายหน้า: นี่คือหน้า 1 จาก "+NP+" สร้างระบบดีไซน์ที่นำไปใช้ซ้ำได้ (พื้นหลัง ฟอนต์ สี ป้ายราคา รูปทรงภาพ หัว-ท้าย) หน้าถัดไปจะใช้แบบเดียวกันเป๊ะ\n":"ชุดเมนูหลายหน้า: นี่คือหน้า "+(pgi+1)+" จาก "+NP+" ให้ใช้ภาพเมนูที่สร้างไว้ก่อนหน้าในแชทนี้ (หรือภาพหน้า 1 ที่แนบ) เป็นต้นแบบสไตล์ ต้องเหมือนเดิมทุกอย่าง: พื้นหลัง สี ฟอนต์ ลายตกแต่ง หัว-ท้าย ป้ายราคา รูปทรงภาพ และโครงเลย์เอาต์ เปลี่ยนเฉพาะเนื้อหาเมนู\n"):"";const gemTH="สำคัญ: ให้สร้างเป็นรูปภาพเมนูสำเร็จ 1 ภาพ ไม่ใช่เว็บไซต์ ไม่ใช่ HTML ไม่ใช่โค้ด\n";
+const th=gemTH+lockTH+"ออกแบบเมนู"+T.th+(s.sn?' ชื่อร้าน "'+s.sn+'"':"")+" สัดส่วนภาพ "+s.ratio+" ใช้สำหรับ"+({print:"พิมพ์",social:"โซเชียล",digital:"จอดิจิทัล",table:"ตั้งโต๊ะ"}[s.usage])+" ความหนาแน่น"+({airy:"โปร่ง",medium:"ปกติ",dense:"แน่น"}[s.dens])+"\n\nสไตล์: "+S[1]+" ("+S[2]+")"+(tw&&tw[0]?" ลูกเล่น: "+tw[1]:"")+"\nสี: พื้น "+s.c1+" หัวข้อ "+s.c2+" ตัวอักษร "+s.c3+" ราคา "+s.c4+"\nฟอนต์: "+s.font+"\nลายประกอบ: "+s.decor+"\nเลย์เอาต์: "+LAY[lk][0]+" ("+LAY[lk][1]+")\n\nข้อมูลร้าน:\n"+(head.join("\n")||"(ไม่มี)")+"\n\nรายการเมนู (คัดลอกข้อความไทยตามนี้ทุกตัวอักษร เครื่องหมาย/ป้ายกำกับ เช่น หมวด, |, ราคา:, หมายเหตุ:, เมนูแนะนำ, # เป็นโครงสร้างเท่านั้น ห้ามพิมพ์ลงในภาพ):\n"+menu.replace(/\(leave a blank price slot\)/g,"(เว้นช่องราคาว่างไว้)").replace(/\(featured dish\)/g,"(เมนูแนะนำ)").replace(/SECTION \(title only, never print the # symbol\):/g,"หมวด:").replace(/ \| price: /g," | ราคา: ").replace(/ \| note: /g," | หมายเหตุ: ")+(s.promoOn&&s.promo?'\n\nโปรโมชั่น: ใส่ป้ายข้อความว่า "'+s.promo+'"':"")+(s.curOn&&CUR[s.cur2]?"\nแสดงราคาเป็นสกุล "+s.cur2+" ในวงเล็บตามที่ระบุ":"")+"\n\nภาพ: "+IT+" รูปทรงภาพ: "+s.ishape+"\n"+(s.safe?"กฎตัวอักษร: ใช้เฉพาะข้อความที่ให้ ห้ามเพิ่มเมนูหรือราคาเอง ห้ามแปล สะกดให้ถูกเป๊ะ\n":"")+"ห้ามมี: ตัวอักษรไทยเพี้ยน เมนูเกิน/ขาด ภาพเบลอ ข้อความถูกตัด";
+return{J:J,full:full,comp:comp,th:th,n:n,lk:lk,NP:NP,cnt:cnt}}
+function render(){
+const s=g();try{localStorage.setItem("mpb",JSON.stringify(s))}catch(e){}
+const b=build(s,pi);if(pi>=b.NP){pi=0;return render()}$("pgbar").innerHTML=b.NP>1?'<span class="mu">หน้า:</span>'+b.cnt.map((c,i)=>'<button class="'+(i==pi?"p":"")+'" onclick="pi='+i+';render()">'+(i+1)+" ("+c+")</button>").join(""):"";document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.t==tab));
+let o;if(tab=="json")o="TASK: Create ONE finished menu IMAGE (a picture). This is NOT a website, NOT HTML and NOT code. Treat the JSON below only as a design brief and render it as an image. Print Thai text exactly as given; never print JSON keys or symbols.\n\n"+JSON.stringify(b.J,null,2)+"\n\nOUTPUT: the final menu image only.";else if(tab=="full")o=b.full;else if(tab=="compact")o=b.comp;else if(tab=="th")o=b.th;else if(tab=="pages")o=allPages(s);
+else{const sg=TYPES[s.type].sug,rnd=STY[(STY.findIndex(x=>x[0]==s.style)+5)%STY.length][0];o=[["เวอร์ชัน 1 ปลอดภัย",sg[0],""],["เวอร์ชัน 2 ทางเลือก",sg[1]||sg[0],TW[1][0]],["เวอร์ชัน 3 กล้าลอง",rnd,TW[2+Math.floor(Math.random()*(TW.length-2))][0]]].map(v=>{const S=STY.find(x=>x[0]==v[1]),t=Object.assign({},s,{style:v[1],twist:v[2],c1:S[3][0],c2:S[3][1],c3:S[3][2],c4:S[3][3],font:S[4],decor:S[5]});return"### "+v[0]+" ("+S[1]+")\n"+build(t,pi).comp}).join("\n\n")}
+$("outp").textContent=o;
+const L=LAY[b.lk];$("count").innerHTML="พบ <b>"+b.n+"</b> รายการ"+(b.NP>1?" (หน้า "+(pi+1)+" จาก "+b.NP+")":"")+" / "+cats.length+" หมวด → เลย์เอาต์"+(b.NP>1&&s.llock?" (ล็อกทุกหน้า)":"")+": <b>"+L[0]+"</b>"+(b.n>30?'<br><span class="w">⚠ รายการเยอะมาก AI อาจเขียนไทยผิด แนะนำแบ่งเป็น 2 ภาพ หรือทำเลย์เอาต์แล้วใส่ตัวอักษรใน Canva</span>':b.n>16?'<br><span class="w">รายการค่อนข้างเยอะ ควรใช้ภาพขนาดใหญ่ 2K+ และตรวจตัวอักษรหลังสร้าง</span>':"");
+$("imgtip").innerHTML={ai:"AI วาดภาพเองตามชื่อเมนู เหมาะทดลองเร็ว",sheet:"💡 วางภาพอาหารเป็นกริด 2×2 หรือ 3×3 พื้นขาว ใส่เลขมุมภาพ 1,2,3 ตามลำดับรายการ พรอมต์จะใส่ Mapping ให้อัตโนมัติ (ใช้ได้กับโมเดลที่รับรูปได้ 1-2 รูป)",few:"💡 แบ่งรูปเป็น: 1) รวมอาหาร 2) รวมเครื่องดื่ม 3) ตกแต่ง/โลโก้",ref:"💡 อัปเมนูที่ชอบ แล้วเขียนในหมายเหตุว่าชอบอะไร เช่น ป้ายราคา สี มุมจาน",free:"💡 อัปรูปที่มี AI จะเลือกตำแหน่งให้เหมาะ ไม่ต้องตรงรายการเป๊ะ"}[s.imode];
+const w=[];if(!s.sn)w.push("ยังไม่ใส่ชื่อร้าน");if(tab=="json"&&s.model=="gem")w.push("Gemini บางครั้งเข้าใจ JSON เป็นงานเขียนเว็บ แนะนำแท็บ Full Text (ถ้าใช้ JSON ต้องวางบรรทัด TASK ด้านบนไปด้วย)");if(!b.n)w.push("ยังไม่มีรายการเมนู");const np=cats.flatMap(c=>c.items).filter(i=>!i.price).length;if(b.n&&np)w.push(np+" รายการไม่มีราคา → "+(s.nopr=="blank"?"จะเว้นช่องว่าง":"จะซ่อนราคา"));if(s.model=="mj"&&b.n>8)w.push("Midjourney เขียนไทยไม่แม่น ควรสร้างพื้นหลังแล้วใส่ตัวอักษรเอง");if(s.imode=="sheet"&&b.n>24)w.push("รูปรวมเกิน 24 ช่อง AI อาจสับสน");if(s.cols&&cats.some(c=>c.items.some(i=>i.price&&i.price.split("/").length!=s.cols.split("/").length)))w.push("จำนวนราคาบางรายการไม่ตรงกับช่องราคา");
+$("lint").innerHTML=w.length?'<span class="w">ตรวจพรอมต์:</span><br>• '+w.join("<br>• "):'<span class="g">✓ ข้อมูลครบ พร้อมสร้างพรอมต์</span>'}
+async function cp(t){try{await navigator.clipboard.writeText(t);msg("คัดลอกแล้ว ✓")}catch(e){const a=$("pj");a.style.display="block";a.value=t;a.select();try{document.execCommand("copy");msg("คัดลอกแล้ว ✓")}catch(x){msg("เลือกข้อความด้านบนแล้วคัดลอกเอง")}}}
+const msg=t=>{$("msg").textContent=t};
+const copyOut=()=>cp($("outp").textContent);
+const copyProj=()=>cp(JSON.stringify(g()));
+function apply(o){Object.keys(o).forEach(k=>k=="style"?st=o[k]:setv(k,o[k]))}
+function loadProj(){const a=$("pj");if(a.style.display=="none"){a.style.display="block";a.value="";msg("วางโปรเจกต์ JSON แล้วกดโหลดอีกครั้ง");return}try{apply(JSON.parse(a.value));drawChips();onType(false);render();a.style.display="none";msg("โหลดแล้ว ✓")}catch(e){msg("โปรเจกต์ไม่ถูกต้อง")}}
+const TPL={street:{type:"street",sn:"ครัวสยาม",hrs:"เปิดทุกวัน 8:00-18:00 น.",items:"#อาหารจานเดียว\n*กะเพราหมูกรอบ 50\n*ข้าวผัดกุ้ง 60\nผัดซีอิ๊วหมู 50\nข้าวคลุกกะปิ 50\nไข่เจียวหมูสับ 40\n#ต้ม/ยำ\nต้มยำกุ้ง 120\nยำวุ้นเส้น 80",cols:"",style:"chalk"},
+cafe:{type:"cafe",sn:"Mellow Cafe",items:"#กาแฟ\nอเมริกาโน่ | 40/45/55\nลาเต้ | 50/55/65\nคาปูชิโน่ | 50/55/65\n#ชา\nชาไทย | 45/50/60\nมัทฉะลาเต้ | 55/60/70",cols:"ร้อน/เย็น/ปั่น",style:"cream"},
+bakery:{type:"bakery",sn:"Toast Time",items:"#ขนมปังปิ้ง\nสังขยาใบเตย 30\nช็อกโกแลตกล้วย 30\nนมสดบัตเตอร์ 20\nชีสเยิ้ม 30\nสตรอว์เบอร์รีครีม 30\nมะพร้าวอ่อน 25",cols:"",style:"pastel"}};
+function loadTpl(k){const t=TPL[k];setv("type",t.type);Object.keys(t).forEach(x=>x!="style"&&setv(x,t[x]));onType(false);applyStyle(t.style,true);render()}
+function resetAll(){if(!confirm("ล้างข้อมูลทั้งหมด?"))return;try{localStorage.removeItem("mpb")}catch(e){}location.reload()}
+function toggleTheme(){const r=document.documentElement;r.dataset.theme=(r.dataset.theme=="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches))?"light":"dark"}
+const CUR={USD:["$",2,35],EUR:["€",2,38],CNY:["¥",1,5],JPY:["¥",0,0.24],KRW:["₩",0,0.026]};
+$("cur2").innerHTML=Object.keys(CUR).map(k=>'<option>'+k+'</option>').join("");setv("rate",35);
+$("cur2").addEventListener("change",()=>{setv("rate",CUR[$("cur2").value][2]);render()});
+const POOL={"อาหารจานเดียว":"กะเพราหมูสับ|50,กะเพราหมูกรอบ|60,ข้าวผัดกุ้ง|70,ข้าวผัดปู|80,ผัดซีอิ๊วหมู|55,ราดหน้าทะเล|70,ข้าวหมูทอดกระเทียม|55,ไข่เจียวหมูสับ|45,คะน้าหมูกรอบ|65,ข้าวมันไก่|50,ข้าวขาหมู|60,ผัดไทยกุ้งสด|70","ต้ม/ยำ/แกง":"ต้มยำกุ้ง|120,ต้มข่าไก่|90,แกงเขียวหวานไก่|80,ยำวุ้นเส้นทะเล|90,ส้มตำไทย|50,ตำปูปลาร้า|60,ลาบหมู|70,น้ำตกหมู|80","ของทอด/ทานเล่น":"ไก่ทอดสมุนไพร|70,ปีกไก่ทอดน้ำปลา|80,เฟรนช์ฟรายส์|50,ปอเปี๊ยะทอด|60,หมูสามชั้นทอดกรอบ|90,ทอดมันปลากราย|80","ของหวาน":"ขนมปังปิ้งสังขยา|30,ไอศกรีมกะทิ|40,บัวลอยไข่หวาน|45,ข้าวเหนียวมะม่วง|80,เค้กช็อกโกแลต|75,วาฟเฟิลไอศกรีม|89","กาแฟ":"อเมริกาโน่|45,ลาเต้|55,คาปูชิโน่|55,เอสเปรสโซ่|45,มอคค่า|60,กาแฟโบราณ|30,ลาเต้ส้ม|65","ชา / โกโก้ / นม":"ชาไทยเย็น|40,ชาเขียวนมสด|50,มัทฉะลาเต้|60,โกโก้เย็น|50,นมสดปั่น|45,ชามะนาว|40,ชาพีช|50","โซดา / น้ำผลไม้":"น้ำมะนาวโซดา|35,สตรอว์เบอร์รีโซดา|45,น้ำส้มคั้นสด|50,แตงโมปั่น|45,อัญชันมะนาว|40,น้ำเปล่า|10"};
+const FOODC=["อาหารจานเดียว","ต้ม/ยำ/แกง","ของทอด/ทานเล่น","ของหวาน"],DRINKC=["กาแฟ","ชา / โกโก้ / นม","โซดา / น้ำผลไม้"];
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+const pl=c=>POOL[c].split(",").map(x=>x.split("|"));
+const ln=x=>(Math.random()<0.15?"*":"")+x[0]+" | "+x[1];
+function rndMenu(big){const out=[];if(big){[[0,6],[1,5],[2,5],[3,4]].forEach(p=>{out.push("#"+FOODC[p[0]]);shuf(pl(FOODC[p[0]])).slice(0,p[1]).forEach(x=>out.push(ln(x)))});[[0,7],[1,7],[2,6]].forEach(p=>{out.push("#"+DRINKC[p[0]]);shuf(pl(DRINKC[p[0]])).slice(0,p[1]).forEach(x=>out.push(ln(x)))})}
+else{const n=5+Math.floor(Math.random()*6),nf=Math.ceil(n*0.6);out.push("#อาหาร");shuf(FOODC.flatMap(c=>pl(c))).slice(0,nf).forEach(x=>out.push(ln(x)));out.push("#เครื่องดื่ม");shuf(DRINKC.flatMap(c=>pl(c))).slice(0,n-nf).forEach(x=>out.push(ln(x)))}
+setv("items",out.join("\n"));setv("cols","");render()}
+const CK=["sn","tg","hrs","ph","foot","items","cols","suf","nopr","ppos","type"];
+const slots=()=>{try{return JSON.parse(localStorage.getItem("mpb_slots")||"{}")}catch(e){return{}}};
+function drawSlots(){$("slots").innerHTML=Object.keys(slots()).map(k=>'<option>'+k.replace(/</g,"&lt;")+'</option>').join("")||"<option value=''>(ยังไม่มี)</option>"}
+function saveC(){const n=$("slotn").value.trim()||"เมนูหลัก",o=slots(),s=g(),c={};CK.forEach(k=>c[k]=s[k]);o[n]=c;try{localStorage.setItem("mpb_slots",JSON.stringify(o))}catch(e){msg("บันทึกไม่ได้ในเบราว์เซอร์นี้ ใช้ปุ่มคัดลอกโปรเจกต์แทน");return}drawSlots();msg("บันทึกเนื้อหา “"+n+"” แล้ว ✓")}
+function loadC(){const o=slots(),k=$("slots").value;if(!o[k])return;Object.keys(o[k]).forEach(x=>setv(x,o[k][x]));onType(false);render();msg("โหลดเนื้อหา “"+k+"” แล้ว (สไตล์เดิมไม่เปลี่ยน) ✓")}
+function delC(){const o=slots(),k=$("slots").value;if(!o[k])return;delete o[k];try{localStorage.setItem("mpb_slots",JSON.stringify(o))}catch(e){}drawSlots();msg("ลบแล้ว")}
+$("layo").innerHTML='<option value="auto">อัตโนมัติ</option>'+Object.keys(LAY).map(k=>'<option value="'+k+'">'+LAY[k][0]+'</option>').join("");
+const pagesOf=t=>{const a=t.split(/^[ \t]*-{3,}[ \t]*$/m).filter(p=>p.trim());return a.length?a:[""]};
+function allPages(s){const f=build(s,0);if(f.NP<2){build(s,pi);return"ยังมีหน้าเดียว: ใส่เส้นคั่น --- ระหว่างหน้า หรือกดปุ่ม ✂ แบ่งหน้าอัตโนมัติ ในส่วนรายการเมนู"}
+let o="วิธีใช้กับ Gemini (ล็อกสไตล์ให้เหมือนกันทุกหน้า)\n1) เปิดแชทใหม่ วางพรอมต์หน้า 1 สร้างภาพจนพอใจ (ไม่พอใจให้สุ่มสไตล์ใหม่ได้ เนื้อหาไม่เปลี่ยน)\n2) ในแชทเดิม วางพรอมต์หน้า 2, 3, ... ทีละหน้า Gemini จะใช้ภาพก่อนหน้าเป็นต้นแบบ\n3) ถ้าสไตล์เริ่มเพี้ยน ให้แนบภาพหน้า 1 ซ้ำพร้อมพรอมต์\n";
+for(let i=0;i<f.NP;i++)o+="\n==================== หน้า "+(i+1)+" / "+f.NP+" ====================\n"+build(s,i).full+"\n";build(s,pi);return o}
+function autoSplit(){const per=Math.max(4,+$("perpg").value||16),cs=parse(pagesOf(g().items).join("\n")),pg=[];let cur=[],c=0;
+cs.forEach(cat=>{const its=cat.items.slice();let first=true;while(its.length){const room=per-c;if(room<=0||(room<3&&its.length>room&&c>0)){pg.push(cur);cur=[];c=0;continue}const take=its.splice(0,Math.min(room,its.length));cur.push({title:cat.title?cat.title+(first?"":" (ต่อ)"):"",items:take});c+=take.length;first=false}});if(cur.length)pg.push(cur);
+const ser=it=>(it.recommended?"*":"")+it.name+(it.price?" | "+it.price+(it.desc?" | "+it.desc:""):(it.desc?" | | "+it.desc:""));
+setv("items",pg.map(p=>p.map(x=>(x.title?"#"+x.title+"\n":"")+x.items.map(ser).join("\n")).join("\n")).join("\n---\n"));pi=0;render()}
+drawSlots();
+init();
+</script></body></html>
