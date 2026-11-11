@@ -38,6 +38,7 @@ textarea{resize:vertical}
 .side{display:grid;gap:20px;align-content:start}
 .sticky{position:sticky;top:12px}
 .tip{font-size:14px;color:var(--mute);margin:10px 0 0}
+.responsive-img{width: 100%;height: auto;max-width: 600px;display: block;margin: 0 auto}
 </style>
 </head>
 <body>
@@ -67,6 +68,10 @@ textarea{resize:vertical}
       <div class="grid" style="grid-template-columns:1fr">
         <div><label id="lExtra" for="extra"></label><textarea id="extra" rows="3"></textarea></div>
         <div><label id="lNeg" for="neg"></label><input id="neg" type="text"></div>
+      </div>
+	  <div class="row">
+         <img src="len.jpg" alt="คำอธิบายรูปภาพ" class="responsive-img">
+		 <img src="camera.jpg" alt="คำอธิบายรูปภาพ" class="responsive-img">
       </div>
       <div class="row">
         <button class="btn hot" id="bAuto"></button>
