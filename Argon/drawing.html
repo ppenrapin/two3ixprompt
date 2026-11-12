@@ -1,0 +1,2136 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynamic Semi-Realistic Colored Pencil & Graphite Prompt Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface-alt: #faf9f6;
+      --surface-code: #181a1f;
+      --ink-code: #e6edf3;
+      --border: #e2dfd7;
+      --border-strong: #c8c3b8;
+      --ink: #1c1b18;
+      --ink-secondary: #4a4740;
+      --muted: #6e6a61;
+      --brand: #b45309;
+      --brand-hover: #92400e;
+      --brand-soft: #fef3c7;
+      --brand-ink: #ffffff;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --accent-ink: #115e59;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 6px rgba(28, 27, 24, 0.06), 0 1px 2px rgba(28, 27, 24, 0.04);
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --font: "IBM Plex Sans Thai", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #121316;
+      --surface: #1b1d22;
+      --surface-alt: #23262d;
+      --surface-code: #0d0e11;
+      --ink-code: #e6edf3;
+      --border: #2e323b;
+      --border-strong: #434854;
+      --ink: #f3f4f6;
+      --ink-secondary: #cbd5e1;
+      --muted: #94a3b8;
+      --brand: #f59e0b;
+      --brand-hover: #d97706;
+      --brand-soft: rgba(245, 158, 11, 0.16);
+      --brand-ink: #111827;
+      --accent: #2dd4bf;
+      --accent-soft: rgba(45, 212, 191, 0.15);
+      --accent-ink: #5eead4;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Top Header */
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Container & Layout */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    @media (min-width: 1024px) {
+      .workspace-grid {
+        grid-template-columns: 7fr 5fr;
+      }
+      .sticky-output {
+        position: sticky;
+        top: 76px;
+      }
+    }
+
+    /* Cards & Sections */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--space-5);
+      margin-bottom: var(--space-5);
+    }
+
+    .card:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: var(--brand);
+      color: var(--brand-ink);
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .section-desc {
+      margin: 2px 0 0 0;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      white-space: nowrap;
+    }
+
+    /* Form Controls */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 640px) {
+      .form-grid.cols-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-grid.cols-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full-span {
+      grid-column: 1 / -1;
+    }
+
+    .field-label {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .field-sub {
+      font-size: 0.76rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .input,
+    .select,
+    .textarea {
+      width: 100%;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--surface-alt);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 78px;
+      line-height: 1.5;
+    }
+
+    .input:focus,
+    .select:focus,
+    .textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px var(--brand-soft);
+      background: var(--surface);
+    }
+
+    .field-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* Sub-group Box inside Step 3 */
+    .subgroup-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .subgroup-box:last-child {
+      margin-bottom: 0;
+    }
+
+    .subgroup-title {
+      margin: 0 0 var(--space-3) 0;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Reference Image & Upload Area */
+    .ref-showcase {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 640px) {
+      .ref-showcase {
+        grid-template-columns: 220px 1fr;
+      }
+    }
+
+    .preview-frame {
+      background: var(--surface-alt);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-frame img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+    }
+
+    .preview-caption {
+      margin-top: var(--space-2);
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .upload-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: var(--font);
+      font-size: 0.86rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-accent:hover {
+      filter: brightness(0.93);
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--ink);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+
+    /* Checkboxes */
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: var(--space-3);
+    }
+
+    @media (min-width: 640px) {
+      .check-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .check-item input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--brand);
+      cursor: pointer;
+    }
+
+    /* Output Panel Tabs & Code View */
+    .tabs-bar {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-4);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--ink);
+    }
+
+    .tab-btn.active {
+      color: var(--brand);
+      border-bottom-color: var(--brand);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    .output-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-3);
+    }
+
+    .lang-switch-group {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .lang-switch-btn {
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .lang-switch-btn:hover {
+      color: var(--ink);
+    }
+
+    .lang-switch-btn.active {
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    .copy-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .prompt-box {
+      width: 100%;
+      min-height: 410px;
+      max-height: 540px;
+      overflow-y: auto;
+      background: var(--surface-code);
+      color: var(--ink-code);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      padding: var(--space-4);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    /* Reference Guide Table */
+    .ref-table-wrap {
+      overflow-x: auto;
+    }
+
+    .ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .ref-table th,
+    .ref-table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ref-table th {
+      background: var(--surface-alt);
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .ref-table tr:hover td {
+      background: var(--surface-alt);
+    }
+
+    .status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-soft);
+      color: var(--ink);
+      font-size: 0.8rem;
+      margin-bottom: var(--space-3);
+      border: 1px solid var(--border);
+    }
+
+    .keyword-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: var(--space-2);
+    }
+
+    .keyword-chip {
+      font-size: 0.74rem;
+      font-family: var(--font-mono);
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      color: var(--ink-secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            <path d="m15 5 4 4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Dynamic Semi-Realistic Colored Pencil &amp; Graphite Prompt Builder</h1>
+          <p class="brand-subtitle">สร้าง Full Text Prompt &amp; JSON Prompt สำหรับภาพวาดดินสอสีผสมดินสอกราไฟต์ให้เหมือนคนวาดมือจริงที่สุด</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="btnAutoGenerate" class="btn btn-accent" title="สุ่มและเติมรายละเอียดระดับช่างวาดมืออาชีพอัตโนมัติ">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>
+          <span>Generate Auto (เพิ่มรายละเอียดวาดมือ)</span>
+        </button>
+
+        <button type="button" id="btnResetDefault" class="btn btn-secondary" title="คืนค่าเป็น Prompt มาตรฐานตามไฟล์ md_prompt.txt">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <span>ค่าพื้นฐาน (md_prompt.txt)</span>
+        </button>
+
+        <button type="button" id="btnThemeToggle" class="btn btn-secondary" aria-label="สลับธีม กลางวัน / กลางคืน">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
+          <span id="themeText">โหมดกลางคืน</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="container">
+    <div class="workspace-grid">
+
+      <!-- Left Column: Builder Controls -->
+      <div class="builder-column">
+
+        <!-- 1. Project & AI Target Settings -->
+        <section class="card" aria-labelledby="sec-1-title">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <span class="step-badge">1</span>
+              <div>
+                <h2 id="sec-1-title" class="section-title">ข้อมูลภาพ &amp; เลือก AI ที่ต้องการใช้งาน</h2>
+                <p class="section-desc">รองรับการพิมพ์ทั้งภาษาไทยและภาษาอังกฤษ พร้อมปรับโครงสร้าง Prompt ตาม AI แต่ละตัว</p>
+              </div>
+            </div>
+            <span class="tag-pill">TH / EN Support</span>
+          </div>
+
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label for="artworkTitle" class="field-label">
+                <span>ชื่อภาพที่ต้องการ (Artwork Title)</span>
+                <span class="field-sub">ไทย / อังกฤษ</span>
+              </label>
+              <input type="text" id="artworkTitle" class="input" value="Semi-Realistic Colored Pencil Portrait Illustration" placeholder="เช่น ภาพวาดดินสอสีคู่รัก / Couple Colored Pencil Portrait">
+            </div>
+
+            <div class="field">
+              <label for="targetAi" class="field-label">
+                <span>เลือก AI ที่นำไปใช้งาน (Target AI)</span>
+                <span class="field-sub">ปรับคำสั่งเฉพาะตัว</span>
+              </label>
+              <select id="targetAi" class="select">
+                <option value="general" selected>มาตรฐาน (ใช้ได้กับทุก AI — ตามไฟล์ md_prompt.txt)</option>
+                <option value="gemini">Google Gemini (Imagen 3 / Gemini Multimodal)</option>
+                <option value="chatgpt">ChatGPT (GPT-4o / DALL-E 3 Image Reference)</option>
+                <option value="midjourney">Midjourney v6.1 (พร้อมพารามิเตอร์ --style raw --v 6.1)</option>
+                <option value="flux">Flux.1 Dev / Pro &amp; Stable Diffusion XL</option>
+                <option value="leonardo">Leonardo.ai / Ideogram 2.0</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="promptLangMode" class="field-label">
+                <span>ภาษาเริ่มต้นของ Prompt &amp; JSON</span>
+                <span class="field-sub">ไม่ปน 2 ภาษาเวลาคัดลอก</span>
+              </label>
+              <select id="promptLangMode" class="select">
+                <option value="th" selected>เฉพาะภาษาไทย (ค่าเริ่มต้น — กดคัดลอกวางได้ทันที)</option>
+                <option value="en">เฉพาะภาษาอังกฤษ (English Only — ประหยัด Token)</option>
+                <option value="bilingual">แสดงทั้งภาษาไทย + ภาษาอังกฤษคู่กัน</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="subjectCountType" class="field-label">
+                <span>ประเภทภาพบุคคล (Portrait Composition)</span>
+                <span class="field-sub">อ้างอิงสัดส่วน</span>
+              </label>
+              <select id="subjectCountType" class="select">
+                <option value="default" selected>ตามภาพต้นฉบับทุกประการ (Preserve Original Reference)</option>
+                <option value="couple">ภาพคู่ (Couple Portrait — เช่น ภาพตัวอย่างชาย-หญิงโอบไหล่)</option>
+                <option value="single">ภาพบุคคลเดี่ยว (Single Solo Portrait ครึ่งตัว/โคลสอัพ)</option>
+                <option value="family">ภาพครอบครัว / กลุ่ม (Family &amp; Group Portrait)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Reference Image Upload & Subject Description -->
+        <section class="card" aria-labelledby="sec-2-title">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <span class="step-badge">2</span>
+              <div>
+                <h2 id="sec-2-title" class="section-title">อัปโหลดรูปภาพอ้างอิง &amp; คำบรรยายรายละเอียดภาพ</h2>
+                <p class="section-desc">ดูตัวอย่างภาพต้นแบบที่ตัดพื้นหลังพร้อมลายเส้นดินสอเฉียง หรืออัปโหลดรูปของคุณเพื่อระบุรายละเอียด</p>
+              </div>
+            </div>
+            <span class="tag-pill" id="imgSourceBadge">ภาพตัวอย่างต้นแบบ</span>
+          </div>
+
+          <div class="ref-showcase">
+            <div class="preview-frame">
+              <img id="refPreviewImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAADwCAIAAAAmZtkfAACAXElEQVR42uy9L4DiWvI9fr/uyisjI5HISCQSiUQikciWLZFIJBKJRCKRkZGRkVf+qupUVW6Anul5+3b3fX7bzL7Znm4aQlKpv+ec+n855/Dz+Hm8e/y/H+P4efwYx8/jxzh+Hj/G8fP4MY6fx49x/Dx+jOPn8WMcP48f4/h5/BjHz+PHOH4eP48f4/h5/BjHz+PHOH4eP8bx8/gxjp/Hj3H8PH6M4+fxYxw/jx/j+Hn8GMfP4+fxYxw/jx/j+Hn8GMfP48c4fh4/xvHz+DGOv/VBHyTG+HNFf4zj1TRCiNMvvnrCz+MnrLwxjvBjHz/GYWEmeJTJ+MYQU3r94c/j//dh5d3Vxkej78uHREZSfO/HPv7/YxxF1oAvyzTiJaUY81MLKPJB+ZsZPw348+NI/qfCSlZjGQ3GLAPuw53Hr/3Oz+Mfaxyln8jyZbSr7hf5JcGUjzLkIVFukRFMQkxxGAaxhqQRRn7XrQTu5McU/m8ah9/a78rRyU2fy98fwwl9lZImHPQv+jrnXLzkf9I2/i9VTf8Q4/BTptffMobsXuMX+cXUPnIuwgr5CnIbqeIihb6gH5GRtF2Xh9z3Pb3FYrmUd+W3o5/Dhv5tbZL/Y82Wf6hxTANK+XgyizE1jaO3KL/SfzzaR9/19Pzb/UZ2MJ/N+757tG1gR1L1Q7/b7Wp5hLGuydHfMf7rV/b/XqflH2UcYWxzynXJmg3kogSNX2WR+s+sf8RzDPfb/XQ+Df3QNM1sNqPvdl1L1nC5XBaL5nw+0wvu9/uu7epZTZnK4XD4/PysqiqSD/Fi5381IfnneY6seUBxm+V3PiOU2WVZsA7yibq2pS93+/1mvZYIkshV0A9m9Yyue1XV5EIG8iUh1HVFv9P1Hf3Warns6NGzI5nN589p718xlPzW5/0Yx7fPXfbK8nlG8lVzyzpbalLcvRgylSP8dwj7j4/H/T6bzzTqIA0RuyFDoe+REZCfuF6v6/Xqfr/TT8lb0BdVRTY0NPMmSvKx3W45ga0qP6LCP32nzPmioJp8858bbv4ZxvHF0OzVMsr+5qQ4gc+g3DPFxWJBV3q1Wj0eZCF3MgIKKLcbpxoVeQnKMPpeapZEz6SgQ76EvkNJ64x+WlX0W8heN5tN+3hQxkouJHiHNT4fyesnksOOL926/EXm9GMc38/R3CLeF67iJLQkkSdSldEPbC5DPh4P9/uDritHCnESlSSbdHXpMpNlkLE0zWLI/IdefNEsKO2gJz8e7byZ0z/pt+ifbUtPf9DXzXw+yJt9Hg4U6ciAxqObGO4XsUePsujEjTbzfyDK/BeN44s7xorXJ3xGfvnKDYWeRZUIXdHL5cyhoSYzqCk68EejkpWMYzZLMnKj8oTMxY1DCl10PALVL0HaIZRxLJeLhzzo7ZvFgi0wJUpfwsuA5skgfokp+YXniD/G8SeJ29R/+DHS9zjfzEEaWcFSCX7stluyA/qdga4ouYq2jeJUyFboeiOHoAhCdsF2MwxiHJROIMqQs+FahsyI/jlI6kquguLO7XYlyyBro6JGeqyxPMantMOq33dmn8PUoPLfUh//T5Wyk5Pq2Z/aBy7JkBFN8mDFyjBQXsl5g9WfZCt01TO3vypyKtWspgoWtlJLhiHZSQrWOaVv0AtTCUO/NQyckSyahtyMlDb8mm3Xkn3M581yufSw4Hnx2K8bJzelZ4zTWfDkk/6TAWz/eeP4Is8oY/PXD7qqdLuPNQibyLDf7ahMpQddWrw8XWXyD/ArdN/DVqgSadsOjiZwBVvjCtJ3urajpyWZwsylgoXjIUdCwaUizzGb0fMuVN5cb/S1pR0ZJbf0Y2C1ccwqxsZunlhTmbH+syd+/7Sw8qszJXFE7zN0M+hy3m93No6h55u+7+mSk5XQdSYToNSDvsMuRJJT+ia+JgugF+HnkI+hXyELoER1sWgp/HSUvbIdcJ2yWPTiYGSMl8lK6AXmTbPj+KLOQA9GjOPZA04NYxIq3cf8sv/7v+k5irpu0tf4DQIHs4+skSUi5VjMG3IJdOuTt6CrSJYh4YM7npSLLqWgJbdCRiNVTE2XP1LRIbFJGhiRcliAPCJ7piyVDgWajoII1cLL5YpCEvwEpTIUeja7reSzEXmPG8XoDGxunM2A9IuyZInFRw7/0OLlvxRW8hcJ+9c13iA9rkkrle/mO+WhGjVSRTc+uYWav0z0CzMZlARJSuibFC/YdFJ1vd0opeBGKFUzA2cg9NNBLhoZB4Ut7pZm7pzS9ae04/640yuSnd2uF3rabrdvmmbQ6e7LlR2NY4w7z/lnkYlaiPknZqb/DePI0zSt6Jtru/rdnZStqT7IGZfpS2yaOd/uCBlkHF1L2aPYQZ0kq0A6yf9FOHKyJ4xROL5cLhd2AFWiOpZiChkNfA+9E2Wj5Cc4HpHDaBr6PiWz9Pb092qzXq1WY6NWyqdk6NSgaICgB8lu48UnFt4zS1b0k3OUbYwnp/ocVp6bHEXDHOA+vgIUNZYLsgyuKbjt3dOFms9mC7qqfNdHoH4kSYwjJDByAsGTe+lwIF1teRCT6W/paKS27zkPlfHb7XZfLJdkAS2nMlwiNYuGvAgFncKwi3Z+zjE9N/7hHvxUPycoT87kJ6yMjYvSf8j/IWEMxfhNY8rUO++329v1GqSmkOq0r1JcL1fLRROzZoiWMFpCwEaSvrRaeWmqR9gy6opeUoZwQ6prnKVFw7ZI/mA2m2+3W3eDsWiRA+NuZ5UOI42TmJDdnbzOof+Bacd/K6xMG1ulxRR5XNntGPKYm/BtPwyb9Rrzd/IcdM4peZhVFbsNlJrjbRrRZg9R++1vLknZc5OfkhEcDwd65a7v720r1pnIOKgCut9v9H2qWSaj5NHaPf2EhxtgCopCGP1imjhRN5r/9bAy6RHBHefR7YfS/UYA+8ZU1OyLogVnhVSIVrX0OgPZBJUr5DcS/9ZQlpqjceCpeRoPykoyFrFiYLjY7X5/tFQMURGUyED5TYeBLOZ4OpVmoY18D3ky2KPDU1yIfcbSbVjqFYvI+WMck+p/Mo6Sc5emxjG9pz3ADwNVHDwnk9qEbWVG1UndcAuLi11coklYGU3E7OA5+Z0aB1/Q4X670Rucr7f740FOKkoqQyay3e1CeG1uROBJKqmWDZ5qR4KunR7VWMSap/zpc4ywCC1H7bKFoiswOnt3KggUvbW9T8fj8fApVsHlCbmD5YIejb3JEBztkeKbkx6/+k4sxqtqH0Gy0dPlem+7ZrHgEe58RgUt1Tk4cPodrWytNecAZlhGkkQnT7Os0RrUaIYY009YCU+RxWE70XPP/NIwlS8pSRTjyPv9nrLROglCI7HbmNUVgID4XapFB0ZpVNIXrTSffT8NC8+RZWxniX3wXC9f7/fD6VzP5jJ/Gba7PRXAT2HFKg9u6qOA9nQqT1gzk8KkMJefsDKevmTRtqz0pjS00btwIkF20A+Zq5L1un08ajS/qmq9WJBxWE4Xr5eLwIb5LehmppqjpgKDDaieXJkxb+VAFcYEpTCdYVAKTIz7zyMP/RkTVO/3H/j1EW1qfdJhyMXoJIygVq2o89jWkwd8hs8C/8dzjvg02i7aAJq9uZl4rEH7iz12T3nAlS4/pYr1rObxWFVt12vwD6TNxS0KOfuDJAqVZJYD6oXVcklGojVPfvJhYWTHIKZohNJW1efpfBazoxe8UBXNESR5dBjDott9WbDyK6gzmgyetUqP/1M5h/eHnzrluQzz5WCzrC1RoRQ/DYmNg3/jcT41i2V7u+0/P2YC66LAsluv5Xqoy6ZyArbCUVyud9d3ZEx9x5M5yk3oksOArO2BBCHy+0X1Z+IzhmDUOfrJ6Xo7HI8MBamqy+WabJALywb+FBdZvp8t4VYPMXpDFOfAHhSTpv+RsPI1ymv6kzzB1JkpFIFl7EMrPmwg4yDfsNntrpfzo+fm5nq1WjZzfdMYkZco47Hoeg0ydNUMkTMRuumrgCH7MLBnSfzknAHy4Hu6krDmAe98vR9PZ4opZDKX8wVZJPyHl69FtpnNCHA8nLRqAwZGMYLKxky87Nj9+qb7P2ocWUF+ZeaJE9FzmoaEw9KwOInKIZYwdLu9ovdFu+slP+7cFW3mdG33fB8PH7tdZW5Dh7dVul1vUjhUfc5MYerahgyI8o/HQyctZhw8w+97+uJ+f1xvtxmPVPgoyMGIjXGKg2t6utwut2uQ3zoejvQ3l6wSgNCGH2OKeL6BO3cZcxw08XG2cYTRLQNBc9DneIR68iZjP/4/ZR9/n3EUHU/k6sV4KXrqh+Ygbji3DJ2/P39m/SaMA32k7nIJ7WO2WND1pABxvFzpuu62G+eu4Iala3y+MCqn68klUGWxPR0Ou/WKyl2yEkYZUmaaGCXIvfmOG6ACXpdjrZGj9HQl6or7ocum4SCVA+Uc9wc/ebleg7UAt2H3/VBQc9NTn1e7Hd6Lez55yuDFfZXSl7SM/0NhZRIkJmlmKFRT7EpHT9wKREdM8fUY4KKz9w4tOSXPkcgsFs3As9PQMhq0b+aIKXSzVvABeA96BbrGZCi3++N4PJ6Oh/VywXgOcTwcbhg5xtiNIJBjPj4ueiscsmDJuCtPL7BZr+gdPo5netb1ertcb2SaNnTN0eYmcszZ0dGDFbfycbjlkkN4qkqK08Lfh//IGhKLExu/SOBi/PehUf8uz5G94hhbjy9T1lx8cq/sjSs9mVsCIlp2OPDr/f3W3a/L1Yoi1OVyySkumnnFl1ObaUptkuSG3bvCxrS/dLueZbhPCUfNlkG/mHuuZBjaIZeTzaOGX2GLYfIbz/Sa2SyL57gyun12+DwolkwK4EE42Zp1WlceQGhzmlnKmtgNQ+XSUyPY0eJHnrbUJ+Cx/Jyx/vsdy79mHHkKxXj2KTlMpgmG35+II+AqvnGz1gMY0xH+Jl3Gx4Pq1+v1Ss/o80Cxws6teew4RrdeLi6kOSpJBSjOJL6uVRQLyIIPetwptR3ubUs+BgM2CiX0H0carpEy7un955HiVLNYrNcb7tzPatg4mdsg6VRWrIl+QvomWvvcyUB/Y3QGg2AZ7XtiGe4eRjSk28QTT+YJlvzvyUL+Bs9ROL1cCnBNvj+Zio9phN9n2Ybs9kktC5lktHyTUkrZXu/8jBnDiStH8sT0fCdFHYNFIbBw+TEMOLyKLUNKFTIfvpur++NB//w8nnqhsszqer/bzgVciDYXOZD94UDPPhyO4DH0fQdc6vXGf5I4pfVq3XYdZbWDdM/oB1RMTT5mkaYbwULDU3rBsrxzGK9t3jzp+v/3jeMJlZOnrJ4S5mREDwA/gdoKPmDDhZd7DsEYY1ipAkJhH2ZkdD0otlyu5AfmnF12Uc5sxJXWDtpY4IzsBrnk8GB0mavZPKDslBqW4eZMlK2q+UySEOYunE6n7WbDIHXQHXLe7D42m81iuUL+2rUt2c3lfH60reccgQNTNW/m8iL8djwObOaKR5PWSC+wZ6/F4ugpg2uEvKoOvdyE1qz7twWXf8lzTLH57lTHKPCE9cqGkkL7ksdRccxc4XGsZxBGdxH02tDZ7e43Mg76ghIOyjxwOoOc9GCv9gxgDhldTvyDQg1nrppVZLCbGJ7D0J6WMpBqpuDCwND2W9M0eEG61tvd/nQ83livgRxDv9/vHc6OQ67Ee3h/T1CrPRr8PKqt2c3NZjPyW3lQlNpgviQaQTuOuOUSM5YnN8moGjKOdv/2Htq/YBzFyFQTwDiRTNC7wbILweaZZUgM9jsjI2csyj+4cdf7c0/QPW6hbWeL+eV0lum8PBI6XfHlHsrj3xJZ+H0kD5CYQiG/j37PxnFW3AuEnZ9ms3V6ZkcHzZVxX88X248PvwekzglS6+KVdEoChkRiD8EGwWxsgbvS0zfbdRLHqbIA1j8dBiVS4FzlKWVcQUNAmg1D2Un753kOM180f14QUOOgVZEN6ksCRtiDtDowVBjyYP3BsvlhrY4RKxbu59NiVqFNYsYXtSopET0KvDLjYJToA8/g+xXGIXBh/SyphIGZoUx73ZQC11VNdnO+38l54LPV4gOCgpK0d15J8/V2v2dQpyKodYl+l8sk4fLv97uW27VyPFbPR2usQrBqrHVHWGEBTbbI8u/jzP1F4ygZGePfA9qCE1yChwzcK6LQVdkpyEnpJ1roBw3bgYqMFFNZ0eF83VkxgSuAjqejlYtziFkkg27k4Jcq81jl0XJXFLTYajZjugruS+ljBAGoT321HDeQA0KPo+O+Xi48+E9pczgESSCEko8YJLwp5lHqk5FXUUxBlGErqarlcskoMqZH8J/1ZjOb1b2MYKZXNzuyUEu5PLGJ535S+HfhT/+6ccQXLjyoPp5mKHrF8gyQEO3TOqay9CjBX3Osb40tzeUik0oC1Z104qkKaFjrTduOYh4WBex3JGmk27Wlt14sl1Lc9rGqNZ2htKNrA5pmbAppMvXBNweAhjiq3K+s8UKf4Xi9MveJkSJJOuhMlxQocpd1hDswW04YmiGgFRbBsmTaftP0eAzDbrebS7h5SkifuHAWwkYnodleeqWB/Z1qH3/BOPTtS+CW453kRGTJAoKDo8bRGt9SFVjxGomArPT6wmITCLH2S0jgIyCZZG6P241xYB8fRk1FQzQGd7+oeeQ2hS4P/56M+zVhrCSBZaknqXDFowRkteW9iMGsHFLPSNJ+fzxISApJUe+cilaMFplTtCGD4ORUCLfNfHa93TsFn1L9VSEGkVWwC5HDo29+fH64r4X4zAQTlLWJ7PVqRtklOXgGTH9EW8Yvpff+wzmHm+xEobFIRNDkeZLsgmYX6hRBaqUxsQ1gIXDOjxwetjJM634B7nbn43G7XsmMvQDsRC9P5CGQcVYQZPZzDc4BWZU1T5HCsm9r7w9mutQVElWjTw0SU/jVKIqRVVGq8Xk8om4C6kxaIPy/G0sIRck3e7TFtusN+ZLL5aqQJYksSE5bfrUkjTUyoxnFl+Q5kyJk8xM2LYxloGFiJgKcb/j7/82EdJJFj5mB3PfFJ8m57HhyMlHLrQwZUC9cUXSwXIJkBrgzjN8W8lS8hRKby+m0bOZOZAvTNwvS9EJugWZUj2AvP/UDPhyPu922kX4JJQg1eXgYR4puZLAPykYXi2WzXkuzFRiRQYrSmdzJ/O4iNNeL7oNkmUNumjkZhxAtE4Pj2TiS9UzZc7RM4uWzwbgyMakwlRwwzPoYX33Ip32/CStsiqf/l1sgfznnmEx8QqlBjU5f9jzEqtwpX8SHtAhGeJ3kg2/DXObnkl9+p2/vl8tyqZo7I4RicGwO5xAtz9jCg5kFLaQWGN8nQ3buaG22LBp2uy1XS/Irj8u1rmfa/3BNOAEYD9rPihu5hIDIV5ybsvHNm4bewvUaOJb1FEoCZa+bzfrzcJBzRQfTgVZJJ6JmvZBuJoIA3I2dzSjQ0CtK3HniWRfsh9eudDmp+rvdxp8ZR1mYhCkIbuwmBLcMbaIPgASr7goufIAygqYqGMAiBEhPsXwXdJfEY6sQMf3sej7S35T0yc1Txi2JZz0XlyeB8WEmN5Mu50OQHKvlksqK240H+vTKzHqVk9s/7pKaVLFKBRlCVCsfLScHx+NVJi9kKhQLrFqZQfLlcr1Jb6Yz8Y9UiyDd9XK93u9RnQmHYHl6TdbwuPMQoGsfUv3W+48PBR3mEo9skKGQp9OFwg6K+zLE/5JxvJ3DluaKYDx2OyR5kntYm+LJzcZigTEftceOIaffNi6uIiaFV+ZByfnwSemeAEgDNPBL4+j64XS5In41lBnOajZQCVtIhzsuJHoZr3CrCqxonpS0yo+VsGLkxp7Vxii/XGy2uD6CPmcEUNMsKA9lzyQzAXopoHvIPCmI0HusV8tH28rPew4a3CFNYFNGAIXk+ZTJ0oGdTjzWUfSQ9YdKPMPrfCVPw3rI4b9qHFOFrjBhkWcHCcNDDApaiY5zcfCOC70JjmJAjxMCLJIuoOERkSuIw4jZFh2w5zgdFvOZdL9SOcqxVJQKXco929v9RhepmbFQJDmPJMFAlVt4Xs9u5/54dJIV8uW8P/jlKkMWig+QzgTrEa4221YyaDrimbTYRfBjTh6IShYOKIEhZ7fblSeuwqb52O8o56C3aNsuQTjbYgo9U2gT8SFimPTrkB1jCSHL3rWmm0xYDBoxpvAvZOO/j3b7Z8Yx7rQYt1KMkPECkxHLRoiCK6VQCWUKadVH31nZYui6aNIoMB0vWGTI0cWhk5puQHO6OC8KGUcPjb68XzkfTHUFUUDKMJDdUZjPghudLxbn66UXvbnA3XTpllqHNMuUjv59a9sP7n3J6L+C9+fLTH+3bDoNJG+NaE+/wqS3udjQWXJSS7r5PJBlzLn0fciQpRfNID5RR5kJk+WFkTKZo+8QQu8rFT/yhDQ8SbnG/3zOMVpuMYid4O9FEjROU5PxeQB/9waNcWFhH6EUXCB2JBhyltwxFlboHikMAtGiV5tly0lxHsexn7xrSzc0G0pF5jJfLshKBmOxPu6PVsb09D8xpki1sWK0ojbwcz98Hk9UpqK01B4rFb0yTGH1hxkHnAcLiCVkOwNwZeI8Fg1zZcg4Wqlk6qpmAbu+a+ZM5FwuVzdRBJnVrCdDv7lab8hGMzQ/ADqUE5Ne1UomnNus2NsxLf3PG4fZSDEHecIEFs9Ses8QCxChZyRFLxhqbkkm59mazRaGDMaDbRic6FENcrvMhIZIRQjlcRHNb7vJCk62ZvKDLNCoBOVLr0KhAR0UyNCeL5cZX8I5BZDtZl00/rMEtbze7jp275RjzpBHYzzGkEIWiOKrQlkFVSL0mufzWZTp2MqT6JySh6BcFXgyYUPxA30Oej5ZyZ1T41ok6lhzbLffAxdiJp7j6BYnPP1iC1lpIv8t48hj+9axCO4YMGgt8UsKloSbGYJ1KyJKj0riCJPSrFktrxBQDoDn4+Iq5qzI+bSP63m9bLTLxYZVvwDJnlvPlIIG6UJymwtaUG0XRFOSbtte2pyJf1g9SXWdr9fdx0FodZxvsrCYZEk1pjM8lG+cVIdsV3MplpThDjs94XQ+PVitEG2dCh3hxaKhsEJFr2h+dOxv5Bxut9vFcuUj/DTVebHcfGwrTzA0r2HlX2t1/FkpG6Y6aDZ/z+ElxIzTuOBd0TiOTryp508uCt0wOoxc1kRooYe+rZL11b199p4KC6weFa53KWhnFV8blMciE0jZX3zuOgWrkajq2ez2vUlT0sUGxJCzDRGVw/h0Jhh3OojNenM4HlCyitvgMMSeg0snxpvJZw/4FZ7YUTosdYrOdmKiZHa5Wi1XaylnnjD9E1GkX41h/8M5x7OCkc1NHIMDDJ6PS9C0UJnHMFIgDeqpBa24lsqjEUaaoK4DdYHgQmeW8gOZtofL6Xj83I9+TJvrahwaFKZmmkXVia4N47W4ZRKofmHDaJqCzJ9f5SApoNxb7ltUrFia0Q9z/iN3waFcyBK5G9YslIK25qyipYJ4vV5WDEbn+NVxPcyxpRNXhx7PTHjYnIzLKFsmTjw8olxkvdkOknIVA9tsc+xUjo4dJzCVk/h7xm/f9RwTRk3Zzh/z+gJKbnAmYB3MmFLJjZ5EKG2USTWrzjl8fn6QZazXq5PIpEhkGijFWzYLHUQheI3AkSeMseHOpbdFb8e8WWmlsPRPqnLwwW8uO4zcgO2GCzNfuFkCTr3XSqihWO+24z4KJSKMB4C6bT0TBhTbx2zOFjATvSgM5+4ipt7KhpdgCQcuOH3quuKwBZ3uw+GUJCQZWH/smcYxyZ+A7t45j3+/cbyO9t5KPnryAQw+KCDeFI8TjlcusI/6WVk4p+/vsmArs3rOHIkb/XO9WlEwINfBcM6KFRe03+ovg/mmTFKik2MLuKDYZTVdIponN9kooi7NsGG43h8HqSrJjFzyFhVagv41ZaOJy+Mbl8oivB8ZyM4kuciK6ejNOORTXFxPmSl90Jv08tHa2e1299tdnEYfFYzIJRhE+LUjh0Js7DuPziOX2f+0KLDG+n9ptvKs3OWUtZHgqmuTnM5Btw6aE+C5azmDwlVIBEDzSj04CGIr7babpq7mkt0BrDvVzxDnVDRSpXcWg91lkxPkk8+cy90LauCAm8R0ud33nwcd9PQ6CHQPj6DJhh4VCFgzsI+VTJeLRRTrIaN5GgYp0LBjEam7xLgsOEiysNWKVdvJ/STuevXANK3X68VimQQy+JTDTfjFRiQOhqN5gmP/243jLQotT8ULTLZL5yBFIcN/8UK15QLJOnJMTKih8YhvknHQhae6n04Wvina5MPleCTPUSf0riJrTz+fdwEQc+kYcyiQqSCfuX9ycFf5u0FjU8aer2H4PLLAU1b1bAYPcGRJahvIOWQNQ4cPP5NChttW0oSdN/PkOPhS52NQ+3swNYZFxh5Uh4tEP1UrzsOmahbHczye5PhDZX87WsoAheMdWJjOkxzyvzus/HJFvE9cEQId3jHI56RMQufUWpfyZ2PZ4Dx4zaJTN5lMqgPXsjAJEjNcjocFb0vRu6KevRiHFVKgnWVBK9KvM6mVKdQsUZrQKMP5SgWVJg8mKRsolHRDliv34KxCCtSg7V0FUZARRNavfSRr3Nep4rdIccms6zRoqyYWUHg7QM5+OP2kX2cQUD+0jFlmOi5FTLrwl9s1WlCmioUKWvYc8lliIUJnI2urBMv69Xn09t8A+4zlnjQPLGHmQ7s/7gtxqvgwZAq4DHTtpV1RMBKyNbukAzAw9bAT6F0lYuQBacf582O9mDvb0UQ13ixdyMYPAA363ipUc8Gsa+mzyVvzvM3E4AAtY2/fdvPF8nK9Pu48CUH3MxrvCN0UekDLFqR7qUX50nITdD7DLY66+kUhSEkRwp/j/5FxUGZ65TkwuSvm+pL/oE+NBIqOZz6fLdg+lr4HQoNIHAVtvL6F3eu1CKP23HTjx2sE+D3F9k+MI08qlJKLdj4zugJXHfXl6M2zY4nVeZZ0escL0kmjU88jD+mLA7vLZ+p+a2R+gnKmaG9PcF9j3mcaByxXfb+LCkfKKsETZaTCF0P6TgOwW/0QHv2w/+TH6XgKI9VbqQNA+FHIm9Mvio7xQqjbvI6UYx+3PcJE0/IdlR7myAzNtmv7C+UeHf0/A5HoGMnxIH9HqGUe1GK53mwkTKti6dhi9m6jYdBtDldA/t/nBvmP1sv94eDNjBHxD4tYWVdvinkcN7Ghe5HHWpMlp8VV9NKTNvkbzT/mwiKkLyqFAWfKRgeqFYdeYF1qIk/7ZEf2ttlHDyGvwEgf1qrmtTqYa7CQLV2MWj0Qt576HHsKK1xKsMYcBOKQQklPtZaBu34osjWGf1GOPJ8Bem5qAIVu0xvPUWCeGbgaz9crVcsPpjjwiVqtlgARyoZKFk9es8L6+sGYIHa6VKn1RsL24kVOpstlOSPkiT05CgC/2+MR/76p7Iia6EG8ERCldsoByCu1ZpWJCFrKMNaLOqf1hqlQVuEt8FKyCydJNZvby4VifaWeoxqrlVDUoqEAJAqDGTw0WFIvgCuYIFhDiAs8HAnx43CezRv6RNfble5qn2TUAgQpZ40A9tSik8ydTUlUbeBRyM7E+H7bEG4WgRKSXRxO51b2mGZxQsumkZK+w3mggpY8xyATPtcd00azUaGUnGPH53oXsdjX7GcF+Vz8tmX88WzFy6Xj8bjZbFMBRcH/I0JPBNQg0iXZokGIs/UMhG1guToVug3rzgZd2ib9U+mgdRVmXcl7XOl5IWMuVbM1P8WLIB8J6rcU4SdWyIdB7uJ8QwZKdy1PyLjTJbodCtya1YJsZeucCx9BuK+8uWfg8foMsAHKhsCoe9fAnrAlZItH17bd8XJ5CD4oS2DartfAqkna3gkw/ZPOJWAfCnMB9xrn2VQ3c3aNk6hUoCnCxmRch4kc79+ekMJyqTQFekqH79aR9E5itp76WO0W2UaKYxCA2glSSG37CNnaSdV0FsiH304HSBPHUebryTiKuaUXMKagMggiHMeZdLwyCK6z3x+OqeZtgXR6W2lPzeoxjkjLi123lKyxmfPKtx4j4kIbU8ylcUWGl5R5ahwSWci2zhRXpKkOf88yh4wqZdUy+ja93W7/wYTvGKwFF2wBocKpxrTP2PrpCcdZJqGjccS/uVrxPFR7/lE9hEtdqXiXpKMgk/vmcH+JfuRl8MfESNZKDP20KArQtGYUruDtqASsI1PvA25rlwD0tHT6RqFkczzz00WyR1zIg+EaZ/qK+XNy88l+SZsQipnW0nilkL9oGk445nMetSA2Qaew644iTUaflu4ZtHcnl2G8OkrzH4TwdLneTterIynJP2CzOsY0VDZTwbJebwPvFdLQiftKyF0jf32UtQhh0mEqxnDmP6Z7xf5Gz2HWEF3AquRGo+M0mExWsR04OxS0EF1E2yopnAkMY2R8kiqiHcJWKPx3ukCPywkdBdPriS/FWB4phK8pISK28giygImGz9N10BPKh972LdI1/DoSQDqxZB+rRUPvvFwu/d0Rv4VEXwGgzquKpeDibhiVM9PE2fuVKFluko2eL5dePnWSYIf9t7greN8xUxY+BzkAdE4VRWswH9tlZuldLImTpfsoBvm/UID5jnG8/R2q/4XQx6ejrn0WNVH+AyBUO4kO4LPGOvwzuh3Oo1SSEloUWdUsfEef3bs1qNAx84AKk9svbd/M0frlZbEQEF+SIjDy4XqD9xK4Bm+hhh6QoPeyEFQ4rs3JVeS8328VVSTh/3i69PJqTG9sW7rpZUUcjC/MeIWUI1VCxw22fL3fJGcXRWXee92RfQx2Eumo6AxXejawopDSjkM/oJPBvYC+hyyRf75YOOMwxW7nMKE2mEn9iSDhtzzH+Xymsgp9JpVVGbUTJ2AwwK/H4ip4MBpc+iiORowdA1k0gdU+0OoYZVy1/uP3vZ6OdAcrErOcrpUA17FkmZB9BlBazKvRK38cz4HKVBnkcCx7PLB71juPdO8y0S3k7WazWiwwk+Xg2PWX6+V8ZemOh9RBFCR22y3d9ZSa5IgUsjJbZfDg7X7nZMJWhuHuulyvx/NlMHwXXXsqjxsp5um3ZIZQMe2FjSHpTCdF/VvTKcM8mJNWnEOJOjZaVJyykb8zdvlt+zxj7ybS+0FWf4PbWWjwFu06k40zGcYoq9Gi5SWDzb+gn8bzNi9tFFMj0N/sM/iIECO3Y5W6+51pJVWKb/ZghDItlRfsvao3DQ59L3rJWzdwsSDhnwLWlXkuGdACEPyZn8IAoWqzWjKO0MOE7sDO9/Yh7faWrvnnx/5BefqiGVhTahYNUM3zlMcdiqiCJOW+BVtAzofjCUM40yAJDDuWkaS08HkJMiUds/kC50vwuXoPIJFHtxRFn/Gw9dK4nrrnT2Mj+18JK0+Pz8/DbrcDGoVLf22Z5/L94pj5ZSlbejxHUshoNhERWcoxs4gUJM/+tG+Ccq7lbPTB7cJK5NiSuqDuMRPQ5ZsJQolrx5TVbt9CuJEB5cfLtW5WdLEYjSEZD9kIcIqgcdNbUApBSWidIoWMNNIkTS1fzL0VzxEFikwvwasbWMhHpAopwkp2KRsXbpSeNbKo9nw61cx5aWT81qkou/h8TlZkGMR9VA493JlfrjeoXZ1aOCa7SrNOT+sFp8ujYjmZ+6PI8q2wYnd/cHYJesFRSfRes4RxqCa3zWxWq3fJDOhy/c2CbphH0ptUOpUmKwAVu9BPMFpUvJ5Oq8Vc2MvTiiC/doUNna2auEpTv97bw+XaLFfocaFyZspkHuVykg5x425N7qCRQZoJV8KGLLmRxYPShODx7Mw5uvyEljFgMqypThRBRGeMISA9K8pRTGkFqRCDfhY2Su7N8QLsVlaC0BfL1UbilCKx4Y/zYIrsrg3EX/CBJCcOuiKSZ7IGyv8mmvBXxkE/og9D5ZlXH1ifSdePPjCSA8vRnNGkPSd0dlF/26RexVnttzIcAaRkvZ+D/mAwZTeYxYyJQMha+PKej4fNZp18WPC0BOOJpTlkb6qykmnXnW/35XZ3vd3DgLEsq4HRVWol50hQY5HbkS7Zx3ZbQbk2Fj3Qp/zGGjBWNSTVPKfoIFRH2Sg4wz0tSQ5/3v2RhSsZf1pEZt5sKcJAD15VyWf1QLkRi8MMePM0jtlGekcovXIsircwST+czv7Nbse3cg7HvJdqC4Igr5wUrcxxu8CmAh6RmqEtrZOIPLijg3ynvZTo0/cD5vL0gq3IFJt9zBB32LukeGH/sSgSj+duabkax++SnpfH3q/3x2q3H2T5o0QffqrUocoYoKfOpblOH3K32UBnYdwF9koeL6YX5uGldfVgbm0UWQ5NqkwnjmxChMVC641EOXRZfdow/+pxp5eazVkPldOOkG1PUEQXBOMIDAQGF+qQhpgUZTGNAsDPUnTfXN/xK+No2d7rYIUWYBbaA+h6tGylwz1iBHG+sLfgwWK/lczSsmNVpqremo54ESEIXC5YXEBNs40wkijR6WSoBxUvQrR/cxv4nV2cGnqJ2/VGGeB8uaI0Eo6askUAJu68cKPD5edmv0zdtpv1ZrGciJw+GUdJtovTqZuMELWzbmuH9G8RX9h8fHT9mHrjnieP1VDN0jQ3qnuZ+xmq2Xy93VnrE76WfRlifXhRWNc81Cqa+DR7ffnGXzQOcoYqUQKWAGaVIJ6I2BlcMK6fywHKzB2pcg9Al4kxBpRw7jbgRVz7F1oMeILiNiAEK9/H6yAFBg2Q3pqn23Faub1Jv/X+oYKcjaqaBd5dzdiRx53/iJgkfdi7ujdRGcTLbVfLrWhyxEJcpYAKhAmozOMOvuj7DM8H43DFBPqAjPTpV/udCILprASzSToqQaSyz227Fi0ZiixWd2QF1PVDuTgXcQ3yDS7tLf324HprJWzslyjh3xkH1jMLBE4x/516eMFVSZXh7qTGbizDl0uhOKCBQd9fUHXHukqD7/S29oex4kSVa7QVAZCyxoF8YhnPRod3AIOIewjOhr5zO58XgA++CTFqHHScjM4bMuV3Qctjttjb7SroJPriroqDMbg/265X9L/oKI2n5HfUihl067huJxVToLfoO6XxpWoULJRJEtUp64+PQrRIryqmvoklthuOc/Lxdx+fzN0qKq6J1olVjGOHuCA0PEm65D8BEX7pOZTJaGUImkjgtSOHyCpGwDGPTQQUFb3de8yuBF9TK0IiJjd8+AA4oZI5p3N2+do0fnWwSt+spFUgCmvZEc5KdgrD7XJZolXlZoHukIgy3MgLMlqzHgwaiEYTRsGBNfOv3hvouzaLRa4XzefHPkXTOfUmeEHqF3zoQCWxKI1Kgy6p4NggM3g+YNfQ1d0dw+fxeBQFEWT0Vo4NmPoKcYG3w9zFOObzZkOpjxVxgnCLeRTWf7N90qT4J8F1yimJf7HPgZGxGyDX4iKFIMDrykQUtcPRsaLvzJePANVx5+lzEFLZzOpb6d4Y8ck9HFZfmSBp9rtWkDUpo1a0vARTePIriFP4PcVUCrH9cbuFnJXYyHT7TlKler5YkuPwD8vaB/IA+aznMdhl0DeijK/FyaTK4XQ4pGQ5R35pyEqOOUibs5L2XRSEo/ZweJU1Uw2CCnCr56DTudptAeYoxTa1HpEBE325XC7vAhirpFWKpT4TxH8eBGeqsja4i3CWVEO8EI6Kb/bo/hXPkYdhspYMMUXVVA1+MQCYJDidoHoaTnjn/I5OTsPiKarcq1dFAUt6kND0wUTGktDROHAIOkCXmR7qI5ymgpFbeRTzh1mSJjwCTtVUQ7Aj3Fuj/JQHRomDZie4cG673e8s+gZia0rHjz3T6ieq+7FYHJlB5SUXBDFJvh3lgkmjLIi6RGXoxoTnXx+PPWM1JmRo4fVESdQ4tNSswz6TwNIylX/eLBZL+q6cjVjVvE+Opy2qRYAiYFzsgf4T5N6jtQlCeJKU+kthxTUPcVU6GZmiVJGT3mvLC6itrgV91KFyLOB3u4mo0nKkQkXzdbZcs8CYjomST90kLU15xP5lb4GgpkVd4/FLpT6wBENlzrO7a0tQkvfW6KSTBW8328zaOncs3akYMPAYO+4hfu53TTOLo8hpmGBXXR5Cfh1IkUWzgPfFhaqhtzGezGHzsUfS5knAqEprRATcSOQ8OFu638nydrs9PDRcLGI64OlDLpUvtMlb9DletIH+YinLMbRPxY1iEzFNEaJu2NOGmLSwBtg7MFT4+nRipO6KsjnbmKSEPnNrT4iE4jCQvSIGpWTSg97DSbrgovcSX1rdfCVwxlkW2DJi6/QHW+BYOZJIhimBuUMp8tFyL7wdxLhiIRtNF+p8OlZVel7Z4UBpx2VKLs0tedldysM3bpbUbgNQwTrfblCRC7in87iW2PHVQUJqJapinAzJsHonC9L142N0nEcwqW2lVGS/yahrN12lO33h5lOI/PORvf42xh+oKZzb44UGoh0WGsGv4rY6n6/05UYYGSWww3veZtK53KkJK0Fioc1KcYmD4U/lM9fosA3WTEMLUmtdMbte+uIiy1SbZXOnknvSQ8a4nAIJ8BMCSLjLdEWlEOhLMCsxbSHjmEFK++1SYJ+29EMpocHNEooUEgedfU7l0oqRodlE7bUeHXqFUHmHEHgoaaanru9wp+/3+xkvbBjoZTlgWZsAY1HO2eFrJQvRFKTguTwlpH/BcxRIUad2a/slu7TqqMnA+r2VhOwOTRFksge+OXipOO4oX2xWbMbztfVqUf3QO2FcvtYoZu+T/QuRUqlly1YXzCUka2AP4jdgpJpWC9LC8UQAMLesuDKH0tCd6SoPnw6KiWT3WHR51Hk4+aDEjtDRUvY9oJcziPHVInAujm8m8jJIrUKGsBheBQk+ao1huoLUe7uSecyl48mfiOpb7vuRO4yRtweFyHJWHGVCb+YVfKttfNcdnOwp+WueoxhQeDGpo3brf1uFqbUd7IPKQhivIOf6/W4PQsCIfkb15n3cMCF35lFSZ8AzMdf13NMaKjgFlV+QaMuCi002vkl00F3A0vQExxUhyQyl46m6/M5dclIWi8JnNBDvZs1UgTi2uSxW4MDIFKSdRV/cb3eybBH9mresms3yopKZDufr9XA6PW+tBzPFPrzWHQYsRYKfjPVGZdpSpKRA0RB6uuyylA5kxagoVUAOoRRmGDFjxfQlh2e9ivhL45jg7mwwJrm32wdwv8MwjFxeIb1BRYnKNvHkw37/sVg0y+UK+YGOOm2AV3aSRtBQdqmWXGgKmt6v6VzL8qwK4HVfdzJADChPNgoWazh1KIiDl2Q5M31X42aH70RpClPSd7tdozm8mhmtHTn3z4+P+WwWHMI0JZX3bSfnJbsBMXKYp/cVEuD7o2U0eZF8G3MqF6fF1o4O2nR2z8rhRZ6+3awhtVskyHCZvMQD+v96CxWrSQq4Xp4kHM+K6b81jkLHx6kDJU4Ha4vGeYAZB56M2vVw+FwulnNeFK1ADZsoulJDMgrOeBUV7aiQ416XIRSbi+yoNNuK1qcb6RnF5k73objMgCkBOlRV2tuVwuqOLbUtD0L5DN5vVy83bOAZlk2z226hRv0UXOC/KKHgljnLzrA+HV2cuTBDB1kt+Hk8Qtxnspe9EEJStI7qjkTfxcvFvHQNBIhfk1fYrtdYsqzwhugMIAZQns7nNZa3j7REs4w4CunEJ6jcr43jiVSphyXCzglInKQ7zAx6HgRuWSFFbY0hzZJIw3A8HbfbHYJCGJWKVfmkvH1cjtYQIQYNzKqcD7CDt8jk3bHHpMBeh5ddgy/CMmgGAEdDJSJ9n/L/jw8qHT5h6PRenIl0TKvvjVx0vd0FbdQv5vPteiXb2sot6NkEHPh1C94f55KQN+qEmHk8X/T0ukznJMnjJV+o7MBPAQm2su6WSGzz0VPaQW+2mM/WqyXDr8xYpZnhG4l4e+aC3La42BywICDEcnQ8ITfFP5mt6BRNEHUi2gc8X22gezRCtMMjtgLBPGDd6KuPjw/KSd3aCtx5GBsc9qXaYqmLVjBpPVnJBTg0m4pcYdBTpl2wybV16CH0gOyV43fDnQOqFT8/P6mgpSdTwkQf9nQ6V8k3yDDSEAhTKlg2q5Ugy2dpCu/QUbELOqA1SW/HcJ8HU5h6TjgspVKPK/lqig47lKKjEmJupQ2CwQs67WqYl2LuXUrLRQMVE5ibwTF1UNrLzDxJB69kSTqx9lvG8byf0pZZIs/oRaBC2KfSg3K3kW0AZtPU9tGCQsgLJbZb0V1MXoWiNntaVe/gjynbYmRCPYVngD88JD1BEwol9cGaS9pLlvXS49q5pKvUGM2EURdaIPS4nM8IFWgpdP0QbCnLerWifFCUkLmcRqZp1WEh+JF1fiNtMb5r7y2zVDrg7+1s63GKseKhMylAQMVWUP1BkAI6LQ7QJLNbMDIoNSJ6DKJodH+GQQxvbr9TMj1oD9uykKng51fAwTeeo6AdZGUxRdC8NMj5BtAJwkNahJyit4y7p9KFkqME/deU9H4dqwmDCD3tnnmBv7o2kMdm1CaIZa4E5uM6/90iDx3Ry0BKO1rxcrnQ0ZLzMO/dC16Y53FVhJhxBL0NWGG6DFRJzkSNSUY8cw0uvhMuu6xAZiiXNS1uj/Z8u0n3ZVQiC9bSsmWYGRoKmknYGfNZJn6pshk4UoiK2XiJZVCg6qnFoLkKhQkmMpHlep3L8nCybiH+QSlriN9B2o6dNAM6XMW6quHdZCQxwoMZay80SV5IIA8DBWZbo1rWrc88i7IImKQLxsiJhpfJ0wzJGzBqNGAFCtfBg5ertlWQaJLzSxHkzjt4WBO9kg8ofbCeytpeyKxaKMndAqhEzaS01Zw/Gl8BTHT1ZhU+n28eBLNSOFHcG6OYwooc4n7h9ozgpDvOILZvmNwwDklMqxMCZZbyz4A1pBesRT2zYVUZHeIBLiY+PhXMP7b08+XKu7S/CwT7nXGEyfLHoZzGBSso4Mm7brjfhcohbGAsu3PehNJyUuUN0zI0TAraqQMoSOSlyxn7feVuyhLukAszAqkCa3BqCd70DN72WM/gY5De3lhjOssY/9Fj8ae2t61Yy9zwWDSzCs1AoSeBTmHYeiZH4XaqTNGL+ZLnC8NFB4V9ZGUCZ+u+IM0Pdn5GkRa2Wvkt7ElFL9W18aWkH6i2Wi0WOCYh8XesCpTQz01OzcAZkYXLM90+Gf8cYFwKqjjdFTonXq3IKAtzih76fwKW4fUU1+sFghOQ1pQWau23fgFFHl1cDK+Qg0nS4flmEWKyyRCEUkZ9JP5nXUoKxqLlqgZW7XuoiNaGgwS+CZMRsvJspa/3aZAUU1hZL5e+I927L3kYN28Bx4VBBmiSFKzuwkIYxrVBCiY1hcJBJLa1IQ0Xkk1tHZ54sF0UlZhzJ+tLQf29325kss1sTi8H4RBbp5rCFHMsDRgutlMRs/6gfW7wJFU+LFuZuuG3WCIOd01Hw1KsvIxoQcZBX2w2m0oqQ7o7HdCGaw25rVIroiTbvKClJwDN6VDAOzGOmy0yEkHuCBsle5Jh8wsGgKHPCN0fvNHteiNjIv/RiuohQDe4wDaU5shCBe3cUK7OLMpTW7dNQvxHOLSsMNkBMmr4m+iKCTL3QW1Fl9ZABQ/ueGZF1ELQZhDZQh3JymYIYLA58PVMzaIYSbelRL3qZdeua5nE2/2xwJaZPzCOXOJYAHvpbakuJADh+npHVBj6hlHE18uFPsn1dq1Ed7GWYSkQGED+ie+pssu0jcVtWVVNgkuptfiasTqeVkc2HhBdTKYolHRfgnQLcDWlZqwwi5Eql9vndw4uXJsAVzGuD6Yw0QtCBdWsZCqlcNvLcg82jk5GfT2rtXR0SQajM3h1CpdA7wSsCWf0vGGD37wVWR9eCsa4uGTja0+egpzhNsu2F24vUUCZ1Uza0I5DLP4e4fLQl34DX/qOcZTLnIEBc4xneFFI1WAs3+IFEVWi07uE1ATy0FDsyRXbKvaMDgWY9JmNXnZtyzaGexTPKYr13fZk07NDZqDoEEEOIFFA7WoSqECH8NZqurmpuIVqZg3JfUlmQXUPQiuC5GgtdjMRWXrCrkr5CxQ+vevl9rhRKiO9Tl3RreHSJieyE2LsySI3QtCRW4uxJo/WCAo8qpXiYIB3xCaa0+fHRIjgjXFECOlQcrrZbsMfwQR9ZAqiAxxDAQgOll0iG01AzSAKns9nCpy88fXzU8qclo6+rEPq2jY/xuRB2lvyRRVajpvf9PZLW0GlPeRSl0IZtk+AfRBh4AKhEyQHM5ZU5DzIvnts+Rp6FuMSUGdv3XfuCEuvYL1aYkowEXN+Oo+DSotSkk45x+F8kd0JCQQI3BvI4byCm89qz/JgHxDBZTbvvIF7APCsZl7ZI0kwAlePDO10OKDVMIYSjdeFXMVYB/KdGt+CEH4bVqCQNNiKW8MOKgC9E8YAng6ENH0MuufoDF4uV7IPqDjSqZGTGIHDwAf3G85LTdXY1ynzOBNxf/MM3cwTdHW5zjmYwL6Ee51n+o2ISFQJ12YwHBesH33u++MOaqQQh2aDta16lmyrogibyna3OUccqCXHp0UW2XRaNFuEFsjHkRdr+FrMAukZbSOYDNcC31SDsHAXVIPIxknx1hknUAxljlIBt0RHx9x31/MJW0oKElcMryWJI+ZjCin9iecYAc0aqpFvljiDZFk6/l0JNgKMtPOZ9cLxkRRSpYAd7c2gxim66aFsbY0DucKLjRpRRY3tdHLfHjcUqetTQeSUCIhbKIY7QzomOIjp8eCpG9m37LHmryEsKew0zOoq9CKbORfALGatDcBp3B6LbVYolBWWfBp3H58PSR7HjrDNwDzxlD0erCXUap7B7o3OpCLErNXh0p0P7jem7n47Kwr6Vc4wTYXeQ8lR5s3tf+A5bKmW71qzEnHwbjqCN1oFOvLuwWGsL+czXYDVeg0AIzATMI4YVfYVpOFCjDQ6bP2pZvJOcIE+yCapnp9awKNoTrGPQe9OuRIivSVFpio2kVnk8smoOanUIps4nY4p6JBI4T+iTduIPgJ9P8vG4dpqlncavuVHYFPe7j7cONKoXmfAFMZqsDoqi1FJQhp5BjuDNqvEOM7uhVvJ/oz5Tlpn9TsJcmGS+rwIob7j8lCw+3XN8uw5VBbS7mDhIw5eyOkaFN9nZ0krfB35ZEo7MG9Dn7QgzA2OLlY7Q/NnKpz51C31Ie2T9ys8x/gEg4BlByfDV2mHVJbaSx7XCz2kEuYVe29RzGHSbLNoLqfTvJmfjgf0OVz/CVB7EdqOi6YBUE0E8PPzkDOa9NYwSpbRG212e1lprsesu+5EpQg9dx63gnjHjZk0YxNUWWa0m1lbRpLZWmwUN9vjfruejymmb5hFeGKB39u2Wf6Jcfhop5hx+zYJIyWIn5AqVyGyrC/bzKlOuV6vgoMNgO9uKR8OkH8ZSkgHl2FSr5fx5Z3OOtjY6R3KNTiBG31r1D6efpaNJrw73Xlt1zMcRlSsuO3YzNFlxzbJ2/Uip2C43W+ZF/1xl7PvbI+wyI/KyIPVeTgQMFplmg/Z5ZEpbq2qh3KCV5vtXYDHDqN3ZihCpbRV2K9erhf2T2SCvPxWm2B6f7KuS8v1bcdcOjKZ/WY9q1P4vXHkF11DoUr8shX2Jqx4h1RFcGSAkl3e1TI4T0TIK15vt0rJTpxXM5IKa0ec3KYYuMobjhhzOIt4Inf3jELJ01m8/tQo/yOYqAgoYz8XkaXLkQ5yt1keT1eAu1bLhQnidggBGK8/WLmL7wm6BnQ/dLysqcda6+VcbEJyDlcgnSwAG8eeZUePf7Rab4ToFR0HrwwoBTRVqHswmAVmCozUmUzV6HdFS5nFgWSzDH0uFlmkPHSijpfDpPeVJ8vPn/i9fG8Ltu37xqEZhgON7abPSoXIKGR0n4PApiuVWjMtL0wcGI8kX8vtm0IhJxJU4SrlonteLKGecodKRvtEeiJ4muwwD7D+e+B7Y/AQdm95xfxqSREhiloGz+lPDCuvcXVblvSnm7X7PHxW2DgvzlyAx3yBKeFgyfMoG9rE7UkHeoriFbNoBdc+MmClrqCw4saBvM0XxARbn8zgeDFT2QXWI6uDlTD8sqo7kWxXTzn0h/1uriJHUMiAEgnmKWm6vi5OxUu0pGK0yrz5A+OYXpIMCK/FlFGmX8GCULuST4XMgwIKfVIJLhmYPARaAMCmhHjXCutNuuOrlvm7tM8AY85WitOqsjIFXJauvvfkKiju9bwQspb+9B1LxZfLpVwJsaH77fD5KQiaGowpivTIllbkCedYM16pJFea4tFjsbjOfbt8PHKln8czqh4U7j6bZREfacnMBFwIzkvTNDIXrJWLpRsPtTZm2TFZX3Q9HgBtV1cqfZSo8NIU4lQnIk8UlfDFjXLS9epbI/uyCHTlBUX627DNEHtDtBaZjPgS5PFgAY0gpEEAQanmcB7zcxOhKk1+h3JP8YQm8VQU5GydYPVzyXFimLM4j9/YAvnRsWrXspnzAmmGQcv6YFmdgZQWHfTLmT7EBemCHrB8xoZh3yxFKovKpU0CbUIb6bnnNpV+53ANYhy3AxkH+DhiFrVRkaUfJhoT8h16e6YgLBaYC5IZUpIha2sUPdOD8kVpaQynz48AaxBsc3u/87IiZfSnYt398zwz2Hlj4dBF803jCCb9rA22wfQ2vCxEMdrrklVpAj5abIE8n0/09Wxe73Z776xLz6OPVuz43iGF0oxqpD5zj+OEeYQeODpwAk5BWQgtTmzQ0SaKqjnYMIWLrBq4Yqf4BhXAzKCxZN4y1lKdglsf01oyhRuIcc18Ldw4b04jUFqXU3F/7f0xK8UgbMhyvVw+jqdBl42gM1nhSBCb0P8mmziQMxAnRhkPuWEsPhO107ljOHCnLGb1x26nfkJM+8HGMecXHJnf+b3LNc07PkX17Ktux5uw4johwcQqDPnGb1eJz+ytOY1Cl45F6tgLfeyPj73jNso8AN9BN9rIL8UaiuD7Jb/IkPKoxjtqE6Y4EUXIwZAKWmO7nena96gWpjBB2w+E4pzu7yMWwzICUIyjrjG+Xy4a7npJcEyYCdhU1jt1eQy4Tyc0X2/Xj+O5XEXiNxu2LwAUt1gyoJUlLWSTENVEwqKeIRXFZYA4Ogfu9QqNOHC2WCjgcqZarIbQpd0AL3WsFdjAzpHLD4J3/JbniKa0XUxrekfojJsPdKGJIwVv1xvVYFS7NpTSY++8YRF0pqxsMwi8JyPfppfRmuY9BbL8GR4GmygV8qx60joLgxUTVc4lsKUEfAzKqcTQqj9fzjdJmOg72O/ErQU5ejIOQIul41uNSH9PiwDkSnHC/dHhZKba+ONwQjGiyvF9T8Wq3uu880V2js7q8+mM8zYnVyEOu5NRcCe0CYWPyGj1dj65DBVXiWQc5+tqtaxkswwoRmMab1PKYn0g7o1IRjcT5vc3kWAmIzl2DwdXdQq2Mx3caG/UXMT9bjZr6wzyuQGYA+l6TNEVj42340hVpRvFF7jPRLLZeS7jhhmHHI5tOa2cx0UOwQFdBcF/ZFdgjQaVEsfDAdNB9LNx2PQRKfnc77bkQtYsSJrikz6YfLGYN6fTqZYW+JNxIOdgBX4zDnwkKCxA7hjT2hk3Z0/IhGbiNtbrlejkZBGBnXUqasuveT0dKyCc+XW7x4M8B+/L0sgSy9kbOnJT7TJVI4q3O+Wkm+8ah0c1R9A4mFsXKxXjL55finFQwgF+G91eELrDaAqNPN3wNSi/yjs/JSoR9S1TxGwCFyd7pXMhxpu1zxGjUbKNhCfOqWs7X0DsWhKAJoFdOKBJ2nU4uXSQx9ORnB/YKwlKszz5vNFPyRduVismPs2w1daLFD28z4+P2/2+3++Xi+W4csV7TZlXGB9PF5em4TqZYfoKrY02hYbORzTXIlDQCh6O4Rqi04fBhWSjByp5Ob3g/XhUjj2w44F7dFi2DTvgJ4xQXNFaFXq3kLOR7qTZ/C1B4R1MsHcAR/QU1TRDlWMmaESUqdLkYAj8jcxizkWz42ggMBpdZGjc0Wo5jTNTxoUbeSrJmzFcjZaKmtFYteK0Fwx7Yce6Eygrl9rXG+huX8mc0IwBj55S0f3H3ocviaNwJUTtB+jLZByYdY2y6wVpHUO7KNn3a11AR3m5XQ+ny9iVEWURF51FZwIDNjIy4M7RdNbhsGheyH3Y8zr3kDnhaJoIYQiZX+w+j4+upZDyuf/gVaaeYwljrhj5DFLOJDUOSFT81jiKOjZa+yD7QNmBwbZKmt+t0+Y6Zx6UjW63GxDMZeHS2GnVbEBRceMaDZ+rDaXzyJONHE/q7mUfRsc9clsgNmvlEmN2ATv3NNKz6kXOCs+R1Sr887Z9kEO+il4Ue76maR8GPWdYXlqQo+YV8wsnBz/PP5/qvadWEYeV++fpPOoW4T4RBB0+PjmSx/3RLJozE+O0GCBTWDQL2wITol+InI8feybbzGqAQul3N4cjLPHGgakyJe6I3T9JdVQta47M+eYPKL2JjgUt6+KivPMc4BA4hg9xV9Vwhlw22Wx9hK5DAM2w4bxGV4HabCyafaiYZH5HnnGYWTkcKWhLoKhMZXnNYYRisYuZ3ZiloocBPBjcCTqz6D/ykEjqkfP5LH083Wwil2S43++C4RjWrOHM+47JHYdRv+Ddlr/nvq7mgFcWbDkpdkTEYnVlHRq4phNI5iuUbq6+K0QIVYLTuACuEJ3Zy4E7dUlUkbMAVLeHo7DexDgQbsSRBkNzarYkMtzgI3HOl+qeVwDn5Xr9rT4HQxdZTrp3HtpgqkueyslECuzNDFA/S1HMRoZWMG1N5lbUlRecjg81oY4M9qyx+B25o814JTMa1lB6Qb0LLsRiGNQrnuiZtYAZbLDJMKC5GPHQ17w/nKyDsml5LV2Fwbv+pItKSeiSEYGr1Qozm8IgvjCO8NR04utKfunjcHRNIj1LaPOgqyGSLBDNNbF3kWOQvwVQJ6CqwM232HdXMgUR4ear03Wr/b4TnCSZ8uN6M/DXKOasZVGtyw8H4a/WIoNMxUaFCPVblr0PjCCh5B1uBUQxNbICqBpqJUJNcH7zABD9uEU+Rl++NAamly7FS5s8+kBVcgj1Rlr25HIck7VRKxYA4KZO+2yHjdPAXLwq295vCh+QbZFKkNt6wHDAk/FiL26q8vYuaKSECWh0ahxfav3yvXWkdP1ydbKgIgokeUYgFjYyL17gLQ4QX2f0Mn+cWnZ1Y8SPW3Q5n39sNxrdKDFqu/XHPoPnEsP1dLLO2OBJW992NdXhQhLWgpjOsBDE+T6lnCPFN8Zh08vSOLJDqlLCptMa/lY2BCBzTChqBCBzWywaQSu5gwyebYhVqQ8wAaucnPIa8pOCiw32Ip6jHihgD+2IAZPN0Ak95ugrdsy9wd8oZkI91sjiT0Y46HgG+yC3p8LFcoHn3HiICtztu/12I3PRSmdaPrv50mcUQdM82+F4omrChMkFkVrXmiyrrH1GNcuYUMFCiHyBYokp0+ct3UlVYNeLJSVAPPIkAyIvcr2R5fG+d2En7GA3416ReDx8btabRMly0k7R+XjkFY4xXi/X5WpdzGYnEV89B3zsFEU2lHMydQ++rc3a2BSwmO2/YMBtshXvT7nklNKhWyLL1OFp+xiaIrZXJjqn3uU1h16H3RC/DiZZqTJzBfNqnH6F7JvVcQB0n5Jl0BGfjsc7D+HmMJHIy1YqoRQMlJXsNnwtrOWVxk8zLiF8t82jBF71/f7z0IEBFLXKc3VoYd1xeKYvyPmTQZ8uZ9yKCD1SPekSNHIS3MhfrsgNPHixGtPWmbDO7jyTLa8WizlmJfjIcpyX04nu3iRyqMhCgBThyvn+qGfzrwb3HlYyoK1yrN7QBEtFV2+O0u+CjoF0h8AtI9rqlGxrV1RScc8oba42hKn2dlFQgA6vkiw+8nCIlzf6IGSYfURnFuDND0DuwBgr9V/Lbgp8+5XHhPXn50c0rVzEYGikkNGQR1nKzi3WAJoQhMIzjSwW4oJluLHhp4jEqZ4kGhW88a9WnHOdKiZZSReAt4nJjQqkIP1p5g2lPvSru92Wko/b5UrHE4QnwbtjLpdK8iQ0UcilJNS3rrgdwu10Zjig3vzso0SCv2aJ9z7Lku3Zr8VbQAntJXu68i7kQXHgw8jSMgkUWZVrC1mOlEyhl4CEA9f1KZGcqnQkh2IU0/yM1lnU4Xv0bcXjCvtgmH3hIoxSH3KXWM6RiwlwtlTDicuDaJSxKwYM/XQ+8+y+ng265DbwKAMBS3zUZrVkXdEY3hjH88yiyFUL46DbfSfbMwSPONjRMiZAJoIVyAdImATN02OUL7T1ivLN/W6n8zzRhK1lDzKzra7XmVCo9Ubtu/V6o50Y3T8Uyexqfq95QE+FcxSGG4I7nkKi+75+hrS9SUih5M37YTIjGx6UntWMgg++ySCr7j03ziHczwFbmj+VgQhdv9F1e9CH4OTGMtORHuZdELEYDJyCqnr2psscgaDEgvti+haKYT2melXQujc6gce81xjaIKDLMP+2Y7i55LDAFSjKV/ADvFBhVlPOMRdx9IlXyNN6BM2lEN8A9UTzaLvb4ROD2QbAAzla5INzkTkXZ9wJUomTDtxAp+OhEhy6KlK2LeUZ3aNN8inmIhbCt2srYp/DsPGEA03tqtpvtmRbnJ0AsTuws1lS8UWu8XqlRPv2eEgdG39dyuqUiCJS1EXw3ESgc0R2B7yrbCRTBXt67sfHx2q1Rjgg7yf1y+DUZOumxpHwMG6SziVzFZVIb5vh0PAWrF4WGk8O2p2MheS5LrULk4Ulsah5cgEQCT41vMtKX8xFPz8++JbN2gOQnI7lnURvgtGadFfSc+q61PGJbzoZiJgxTp5mxnG+XI6nCwQ5EQLA+sF6BIyLsBYUrFswY+kuFX3LKk4XD7L1tF1VV65rg7q0FVzSZrfTFaHaHk2Xw3G5WsZadtRJRHvc7pSXCImSUpw5w21m9TeMY1RtHsaaR9y9oX7YZLgPw7hRymW09qNY6DiGftRbzS7tUijSJzcLX2Ku0OoQR8DOoCLOJkNbwQ6iLTuGOxFlwZJEGkZ20ztZEihwwJHQa242m44x/nxtZvJBgCxPQjbkvgLTyD55nPaLVEMQb9E3qkwKGS6GKeHIMqChWCbTmYqyeFmWm4FJo2wjcTu/hYqy0F/7I4sX1jp8dwJqWRZpm0uui0SjO0uqf2itKfdWNZtRwtFwNlp7bm6KapJ4PR4bAYT/dvCWS377aB/aS8m6x5BOMeUl95auKd1n1lQOgMI+SUh7mEc0KXemIAxBKOEhSNqCBKtZinxT2xIhjkEEL15uO/NFa4NRqMvtYxj5tsJjcz9D9835dAZCEXA1hi/JMKiVtgfwHNyoHvE7MYTXTbYMkEwphdI+7PlkB/uPT6avNQ2CpnUB2DWSQ8ZKBhgHJ3OSk/Ks7nhgbkRK0xd8WT9FT2XuJquC0L94/a+YLAZ4x9Np3Sx4AzJOL6ui9YAa0fl6dF2jS0ji943Dd8yUviQ7bbDlpaydqOYO6/Vq3IAx9kZTmYQ62BoQG+TqaHIbVgh7zh1gp8s0VMnE1r5MzotXKCptLqxdYaqJnMHgMCIcDFarAMgLI2bpbR7HIGXm/RUP3nwwAzjhysuqu9ViyfnofG7TimcqgtxClKGLcbvqgXkO8v/kNiqeyI/e1Nc8sLsVcmyUPTLstLrufL0IDp2nJ8J4ezW46UIZIPVYMqZnD2EzSwwgL+fzarlKiirl83m73uiT0km53O5rJo78alnTO+OwJY+lZdg4ke/JE6X6/IEzTrQL3UmrI5XFaiyqj3KG4m7f6ttxn4YLUaY0LhLAGoBQbI0te+3wQMMwbjeubJEAPE7PbekHmmAM2CFf9bgzXPR2DdD+la4ud6nlxh0ytKe58U+l7HazEcfwcoVw/wg9n5ErVWEccsKOh8NDhJ3RwDVJax6ai9JG7UKAFJUpPeZskUsn3v9y2O8415losLzZbqGC8B2vL0RfyyH59/ud7jCRgg3St6xA+afXpLRrs9u/5QT9on1uenjuPMYQo2/a9uEuHgysiqZpSiYtShXPl61hOnKd0bOwFcOqGYdmq7e8StCGr+MuVBxd4BF5ic3ebDOBr+y28eEA3X4ENfxNqXSU08ctnBxm8A2RqaV0MHfZ5wXMN+UIHzsWVE119WIccm166F0tokgtev+U3MZeEl7o9ss0Pwv9R7G3mLRBlAwi4MI65v1RNVcZq0ZXPL31HAWoU+h6D1G+i2lcJkppMKv8MP6IO35Suw1khVSerKioCaVE57cE42yHyCQ5HVee0PU+XG7kazlfEyVo+tZqvS6l71GtoHYFv8OWOYz6DoVGkg5B3OuWji4WKv+AckfX3lPbjcH2RZQjWyC+MKXrXUdcYorQtLrr9SoiTyL4x4ziWvXUo0a6DvRJmV6Qw//cf9B1iKl6xcxh0worwprnQPdJuiNRRlC95dQZLVEGSfUdCu9KftSz+2klXetwtj+ohKaEtKp+axyiH0LZqHiOpEvkWYf5clVUm5zQ6+024w3XC4rZOTzRPuKfeA4T/nS5NXCR+yHUDaPm77c7d/KFATaf6+4Bz0yNrcr4iaCztyTbRlV3AHojrmlkYSJNFVFN9avQ53YMzagaZkthvJPhuGUBgXb4UYHtGI7HIxJAUTdQnwU4CMZUAOQhXFLOSD/dCVQlvs5TKOC3jM/b7rYB2FL+dD35DEAAGSFc163swOsF6YJGX8ZyBcHygMoLKMntdmXqSkqbZbOSbsQkrDxV0WadGEJxRYoxm8yNqgQVZb4/L6yos6pM5Sz+Tp72F6XsUKwEyL6Nh+zzdL3vPj55RVfb+gdDqqGLu23e5iymoEON/CQQWKauBWN23ARovzXNzkc581wsSHDMR3QIsQDiH8CqFbLaGQs06OuPj096GcFocwkN7jyE5JKSDyLqlyxKBky9f4rQErHoCefLmdkYUh9vtzsF5XM3EfLc3Ndi4KF1AgU2MAgYMTkoEKEWJXTDpLpI4Sx8wziC3APIXgfBptPzr5dLI2JAPF2731eUYdjJK0jrvxGcfBtWhrHrp111rOtM9byh16fk53K9kIlSeoyuhnD16kI/X8WKnVTu72JSioohhbawFp8YzdvExJcsOYq4RA6kNG4rN+G9ZO8u+4EYvIMaKpXAAMoua0E9XXmnfCvvyAe0WDSdthkFFs+bMFhxK+lKIO6pHD8+eCAicGUMLzBnp9KGXMX5emVKUtJ3d10TOjPczdRmOZsCJSiQYBeRat3aPOhKzYyx1LxO++2O854nxchy1KcZsfgJacZkuOrEixCRNt3bjk7imo0j6waqEYmXSxXjPzGOrEUmMBR07c43dhuc6t95Ehsi7rYMlL2AIntsC0QC4a0L9+eqJlhVodhykHyYEl3WIj6pBjpsfdyOnqKrFsdxTfeAokb8Wu/yjCr8KEBz6EnSLXsQnQW57hX+e7QPByPJd6Btx1Uu+J6rxeJ+u1ENLKiwKGwpJjCemLCjbTR+cQmyoJ/UslJDjEy340p40sJ7zhyTCj3AzC/FuFGeTvDUMB9Z4AvKbr8yjiwTj0QBOuvchKqnGWc2LCaw2qwv1/uStWllyYaV7tBGmQKTvpmQSh4l+zgVTcqF62wuuLSAngH2duEumUnageIC+QTCShn+iwGHrxguxUMh16QdjvKQDAWoFuYI51LXxUWk0HsGzN0xJa4YSeXrbI7FGu35dIYsqQtgJqEcIosEs00cPiRoohKDRY1Gmu6cdcqOi9BnHgOJ6ErFOm4iUdvLpu1BFop1goOBCN1iuehkbJZwk0ihJShRuVWqJBK5fZ3C4fNTq9kRuDpScEdeqJhkVTOWrJrV7f2eRVZpwdsX+ckXzpfXMU5VGeOzetb31njxRbJso3ep/jiXMpp+eH/csSxNdC+504yRlSn48AQGyL9CvTuXg3X/esLYy1q2FAK02fsfSj9UZqXv4sDQJLmQGCsmFNBiRV6kcWHlICo5t/sNS/8Q9QdZXZOMjwoepSSMHUBALLTasjYX8OUYu7uciR8YirWsFEHR8RUBIVGZYkNZCYqd57GdNpFzVANCeKWfwrjpzjr+1jhU647znorxKElKp6v6pwoxnesUGEeBc8jlWvBvG0dRvho8dRAqaWpW6ywNed7Y9WglrWCddnS0WNQA+1eN3+Z6QOWGbGcm+ih1QlvyPZohuoBYCCV8NZdboaPp+SmsVdJJD1ue8aDuOBwO0N1C5XVkVirWKTKzg62ZY6KMs4XO6bJPrNomlgGkKnguQhUGHTdiUAIKDVK0QvR+gOJUVOwjWm6zBYUPqagp/4DCAtdHdcUbxDATCOF8PEg1XU103yacIhVCFN8zqBa20J9K5JHsJqjwSfPYEwoxxPCHG6lL40BlKyuUySxCnDEsO5BtKiVaRDkDFnn2A8XLchOsbynw6bybp+NJS/tNxiWcBjrX/3ftqHH9ivNZcOphGQDhDaNyPjRGO131JS/JHdLLBfI91oPnuxZAGxjHjHkDwfUkxVnyBQCUyYcy+DhU8UJNlrMNWavjHhuMOqwYwHKMije/kS32IvPlsoIB6lMgrbA64+dHXZc5xwtq1UFG3AJuIQM0w7qgMUUD0RzAImnR2j3529XD75bxaLUysRJ6g/P1vtl/0OuejqekujxBsAgBMDsdMwZMUsDqBA+9cs5jkVpOBuwFPamcs49bXdy2XHPBsYUwNeBlyoDiPiOwAsDZltDOKKmUhvqdwnMtLV1Xm2/7DptNgu6HGNCiNUxJB5avrbEa4KW8U5dQoPlSVYliOloXMA52YsxYNWpQTYBxhwmSh071fVPiPtjclh9MIsuLNOjzZZ7cZAaLssQ/RdOwcAN+vyzyG8YRdHLBJQIHtihNJE022TGwbQIYPWDUYiKQikVNurcxDVaLxhjfyWNmB4m5ZYwLUWMYl7eFPBXDrx6CgsbLoC1bvrjt9+OXp5+SKdMfihQdS7PXTrZohZWK9gaoZvjbj3AmECyTJOEPoqgqVGeiIMuMeCnXJW0KnS0/hP3R2ZASj26qRu6cPvsWsL7D1lJWXpAO+na1XC6akN4axzTzeMOoL5Q57Nd9dj0R/Al/sG8lj7iBwkpk5N1RXKGTdSTPIQx/7+F4hwMpKippVJvlElpfWa01QrZNmbZ6suDeJRfONkp+KJppuWBgV9jUhzkkmveu+ABYA5mC8JVdy3BgpYOU7qLHraIMgAam6ML2i2bBG1UYrzWYKmtfeib4fwc7gnU3FyaBg1ecrNYLfRcKnHMe5cwg8iyrJ9lAb2TfhlCBi1ovmt1mPTGOp7bml3yIF+Nwh10syhKPkTzr/6ZxBK9WSudOXvTW9uvN9vPwCYchIrhJ0rEgCxJqW4UUJ5RGSZdcvkEXNBWbA0a5WctPJ8DP8ezHUfbDtiL1A8A7lWFYis1wOny/1tZ4oAcZCv2KLKyPymWyX3FilUxVFBYp7LQKM14WBpUtf71hgEWpB+VGgKeBeMko1CR4R9uT3fvn4tgi8tmU20uPS8H9mLDgTlo1zX67USWWt8bxa77MxHNIX2Lc8RVfqtnvh5WnOYuxDVuq3avZ5XpBfo4uE+YjzrlDcPHMEZUhMCZlEmSLqHQam0flglElTHsbgAsVu829dw6R1DjepoPf00AmD8Y/APy4knYThRNuT1XV9XIZ12AHBUmGLPK0on0O+0OQdpaNb/rxhbdY46jUbWv6QX7fN1pCzW1kTDHoJIvaQucdvFrokO6cls38g0c21j4vB/fFQr4pr//JaLIFFN/qNWkOfR/P8bVxWHnKxV5mQU9YJmSX63rmFJpBGRmxwIcm75qPypujskaME/Gk4KwnjPy8f+pzNeR9g20KQvByeZYYJ4txWxEO9O24QP3o0JUpPRfpZAgRTTdI8pGo6jm2WOQRCF2GleybkeXSOiYJIkhjUizDZBQsFumy8R8lKRFuR12l3hRRVSM658Ws/vzYj5tKY/yVcbwObHUwyIvv+cBMDCcW4hHxj3OOJySHD1kkfTrf7tLIq1TjV4bt4gmx7jU5k9Epr9ZvCE+DNF9Y/Ex6M+0vR3s4FtWntUE6ofDkMDHPSBwmiCPh+C0NLr2bGTx3lklhvpxPHToWPF2LLoQHbAfiiOIOTSUAf8MgsC9dZ5X94KvFB99QWZC8x9tDOD6YpEchLgSVl0Fjc0BOzRz8qjp87EYwWDm4f7rn83vjoAO73x7Sn6wUNZnC04ar+PUE7u1e2QISZq0O1EN0JU7XW8X+Nshq9Tm+QNdlXIeTkvchDOLnyvbFBN7AwHFaiRQRRlthTxs/yl1j8N5uZKVSPTZMg/MNIRQmFYoaB5f7fX8+nwbbCihzIdWIwtpYJfr6MjaTDwCkF9fYxdExn4FBBFMcGVz0Ri47ambVBKvq6D8S1Q2VPmQj4yqakpumJuPYv4cuf9c4wuV8aZqGvXsh1ZQnBMQJ0+x7xuFp6dgQY99wubUZW490BSHf4DPG3iWZurXSP+Ymnd3TsdwTkIM7A/XhcAN2o4+y2pBEngicyyi8xATp6hbnR9keAucl6HZLLi91Ji5M9gfi3knk4WRxiTDtpDrDnM4b/JDqAkHL17aJ+E+NLl95dpnpnyrvzOqRgzDCzJQO6wcFaz3DLSQ1bAfcq3ogaRCQccyrdPz4UFZ02Qd7YVQ97z8rysPD8USvRpWXI0lDLPJ6R9N/u8+RR7W5saBVubJuCDem0LCC/3w2r8QUIPSsPjw6rHfAzRQnk45sJHoTqyiWZvhoXjK1ocDvGDAwT6hy/rIOPnVDhNvw+O3+5s7UQoFzRsbfMhdcJ4XIYwYd4uqgZCYRJ2N7kFaFZoWybrePIU62PkgGjaQkW64DWq9nbpLzNsiXs8vzWbMVfDhmz8Z4OR1+FVZ+aRzwvbJsr95ut4JA06Q7jf5jzEK+6Tl8acgQpw11mXoPjyG3ncI4TKWVqYUAl7sCjMv7uVhPcUxOgPW15dFZC0VyOnqCccZvDDYof8gWleQwRB0CywomdLJlmgrhDeZNnc9MLuUstevu1wsUA6h+IT/fc49VLRitPKuVkiANZCyn8qPcC/aYou0TQRErY0rao62kOMGGyb3LVZhAlA7o+qFEtCt0XkYD19MxuWU4geVbD22Srre7KHtk1HA1oy8to9R1nWS93zCOomzBZzvdHnQ70elbLBuk3xyATaYYzsPxGeXqxnKYYk7XWJOWgpTqF5aRRMW9D14eR+fBWtEzzu0wSalsVUWW9Wy6Qpu3CXfSK6vIMjpbQNbKAmIEF5UmCyM2zSx7HII4Kt7aXKXmQvDJFrp8XqToIgfZwDUX45D1q53zd4LKr2V1YGQc51PlnuNPjUNO6XqzoS/Ifwj8OI2bVid6APHtmOXrsJLzhKNg8B/6en88VTXQo7N50yCXA+ZKxSezim5Jlase+0n7PPkZtOJ20rUZ8esulJvtaZPtCN4ascUmwdoMPUQmZQVdJaMQBuGh9knssY9ZerX0IehQL9crCtB+gPrPUGFvo7DdddBqm1MRTE3GNPj6IlsjqtJFPnbB9/FkFpq63XUhWqXlMZwHWnmodQVnMJwPnzMFtb9GlvhlB8zQtfQWq9WKlfwp7eB9nVBhGDdahlB00+O3PEcu5QMK/owax+flKkwc5l2AFgHHn4zUBEhjSXgP42Q1h+ftCM8ixi7IXxxuLHZRu3Z6KNTltPqFKgSGkNFvCJvAnSnJSGkuPbrjx56BmpLkBqHx4QtZ0oMVydooAlLQqy1uXqUUvV2bw1ji2oKMqP1QKYxrjCFHBQpRwuQvZzNFImo5af0by6/ZOBTY/Gocvw8r/Ndmu0Nt//n5GZw24usrrMX3ahlfh5W3HBaT3LjcHt2gHUNwJTB9cD5umTMahk+HmVXlGvhhijUP5SJ0lV5FLOh0OW2JInuSAfLPhi3Jg1QNrveCKreTPJqOYiHQ18N+t1ouRHUNY9h4vtAnezDjyEbKT8fm4XLSDVOp9Vwso7E2vBW3qipjhRXouCxqIvFuRJsyw8W3ObFDPB8OvHBwUs1+L7LYxANUWIazM7qRCwijlScXtsFN+5T+/9I4yqnsyI5kb3pvu3vHu2pQkTt7AGIv4/qtcc14/GoYW2zZiaX8+ZiSCGpEWU+yuM8gxOPOnqiQhYSKwJx8UjVj7j9WQpRVkXOKhtfz5XG/kefb8B6rLEKLwDENn8dDZ4qDWUVvVXvftf0M7ZxyuSAZyA9st+ihz+yAHG3c6YQFRThgY4aXhp6R1v/0iSQ0k3tbzGrVmo0vcnW/NA4R8rsfzxdMepccX+bRrkchKV6gO/7EOIJCBo2hhS/IOK4PHh7OeVsR77S6P+7I7a0fNVEfDIbK8UWNhREMvk/DJaAUMIGK3LY3PvVqPA5Zox2Lulr6/MDU+JBWVeZyfsgWS1GfHY6HTzo/jAnquoZC46IRreCsW4n7Yf/xwVdTFOld9qNsYOD4DJPhyjPReru5gEwr5k0zEnR0hCexkE3eXd85pVTvB8ai8jTqY7tZLZo3YeWplf6K9ZRrfTgcrwJXQLtyv9+LDv9km8AvlhH8zjjUMoZYFF59jtd7i5dnaLE0m6F7LK6ydhhYqcDhjMb0fmfbSEmCZ9bF5kMul1bHUki/AMo6Iw+Q4gLArLlZK9ugGZMhRvD5+VFB3snKImkjVrAqHsz1/efxmLmTMThhLr6spPF5im8gKa7XmGFbJZIxFTLuRZzbWhIcLYhhpofJvkem9qv0TNGOvzIO716GuN3uHjItZ0xTjMvVmvc+SaOywAflr+zjF8ahId0qF8WTCkAlnG8P7JKNvNZqDhQT05HH/TTCURBBxWKvylAy313N3ob5ut6FywFRTHMZMWs6xbJRVqxCRh7Qle1z9DFt70cveHE+JDrm6+m4YwF/hWjAz2fZ2qrQHklOKbhs93txHjoz8iVChScbQeCmLaOTFw9wYWrEujVh0MPzD4Xl5MEg0fK58ryqPndbGQylYsXOLzOPgj+2Wq/5MokaveAb6+1+592BMv1/20D/jXF4NFHLEOOgFz/zdsUAbZpahUEUuYpRiMrLDLlIPqKvhix3hZbdT+dFlv0u1/opi5dS71ZY848C6a7AYyRZmVt22EfBzqyZzdr7ddHMjfiaRwh2IeHN93HOt0f7eTqZ3lACO2GUR8uTfSumLFuVSbVKS4gcnpMqbMiSkZ7b0uTY282AnClJG/f08VH5evpn3br4KxhHzkvRjQG2TfD0M6psk84lYokG+dOwUk7gBtdKxnL7q7SSZICZ5I3pRh88R8TcAfmO0jilnJvsfRzvvxymG91suBoNxlxZFzIUe5xUf9KWhqpMA1rdgsUSuAl2Xgn8Ttfo0YVpWwqGvhrthf5a4le645nyq643UQ0TkLHUQXJ+13qIOjRIKjoOlaqiuY7GrqEnkcInL2i89lHlT+aoDcf9XrZusFCUyl2O05D4pWXI51hvt9l0cugnlF1tdzukO+XvfgX3+YZxTBoeA/Twby3YoCL4JKt4BcY9wJ8DDDZujrFc2PcO+01vXqG8NHnKoVWUaLZbsJzKehseXgXLwlDaKP0kMmMW0yzcnefjoanSbrcZUd3PbGGLE4JxfLT97uMjMuofhOxquVxezmccrCFGo8lgJkCLsQwK9OislBxo7mouJaEzTQUHRp8Hbn4tGKIlJUM84a+khZUm+wbfAo7tfns8uv3nZ9/1kCTRbRDzmWw+cb5bjl9DwX5tHFOmAkT2xHOc7g8mNSkSrFbAvti7cIWT3FLRZa8NFZxCuWo6hnFPw2jC+p9L2dsG4eybR7Pba9S1sT57GiyQofmIXcPa1Afz+XZdNvO56CM8I7afVHnVU2pwGQKGRLHhxbk3gFK9zrJMYsjDk44IZmm62c4XfksSUAW9fyC6Sglyxdt06GazDIui+BhCnrQ6YnxnFv5B0unEmtrwQFxaNk3LAi/LOUuQ2TAyhvRnMMHXVql3O3RHQmBxHwHFALctm1a16aT+UEFpwbdw+Ki2XKlkmWl8QUZ6ZyaVExaUBoNLM4xrHMaVPBD7kHs3YfO0VU8d/Q6l6cx0raqpfFO59ycXSZDOxfaHAxlHBwlU1LQ5lyre+LDgcvYqGpnAlEGwQ74ZdSlRnyRcUonUSLkXC0HEpxWZ7zZMvzOO/OQ54nqzG3Q1UQtp/VrW6VIJwwmZafLHEP9azvEGjD5IK6BjCcoWjDFxV7y9xk8c0gaF9Rq0UzeP6rqCUXynIEuW3f6xx4rAYbvZSrBqjr53WxKUmCZjgkGXOii8mS7Y6fNzv1kziXRiieEFMCPuJ/suL55Ck31EyCNbfgoCHJblOC8ymbvGIBeQRDZrgaayY6hV7ekVY5PLjYhP65dDeKYhPTuOPB2a8oL0bDoGYHSylmbX73a7Chtrg8rA/+HI/ldMhTD0+fxocZi40poPSzSRjRwzDOi9r2zKC+lpr3g5TZ0M/gpAV9llB0cBT3DSg21+jC4wil8WZnMa1wIxLOq0nNWLkQzyZR2ofN1R8o6vHED2otRAhW4fp6I4UAVEETurZ1iYUiVXpLFd969LrN/oIZdE1qd+8rOnKxRtSrxxWq43JjDAV+ZyvUjfkplHu/2uMgrnX05IX8VJFUZ8ubeDwOkrZRBlaOMFaxgFm1IGqyrLdaTolhrSx7GA1leVy2AiCyV1ZRQKc+joyJ4d05oMWmJneAtMASmLHIZu3czJimtePP5UEOa3JvL6/xPoVH5+gRzeoe7en/13gOHvzuJfjKNUgpR5wmb3AVbwarm8i+S+gOK4Q0ppB4/yf/fOvzWOZ44CBgfn2z1WM1gANp3KcniV5fAT5HQEn2PlovEyXV0+8non/bFyiIL0bSo8V/ZRXHwsyAZh/wRIk0+nE5nzbr0SMmx6QVW9aH2+Wa4T3wM2Xw0lvJATyx/HXxpOfI8nf7XUt0UKHqfT5XS74VZZNAtsku/6brNen6Rzs6AIt2gKZb2/ZhxPBa2UK4fTZb5YGaIri0oHq9lpSyNnp46hlPCwEqxrNGXcGMx4wgsJ4+JZK0xc4cko0aHcy+RMKt5MxfV9rVB4thXeqzJ0LRlHw8IVX9A1ym/mKajgiYr45Q33GzLI79zJL8B/+Y3m+ktXVJxxWq830OCqLNJRkbUWy8DfVLww3KLoUP/LxiFQO3qx/edxuVoP1rdQEgnKM+ug47q6uP2rWGDRCDd0hkI3Bgdq+NCuL8RMp2j14O3XrMoYGRSEYBgLeoXD4SCNuH454zXgb3inIX+dfzyt7vrOtQ3vvU74pZjOL+Zcb0JYfs5Gfdt0SIv1GlPcRnaek0H0vAaq3W43DcNXFQ9lG9bCX5itPE35lO3PU83LpZ4teiFpkQGKdGbdino3kKTAphc6CCVSMAohIKleT7nVL/gCVJOyN4SEj/L9eVGTzV4QimPPFK10YEiZ+izUdSDzWEahve+32+QLvX/zqZ9cxZ8bx6hM8vpL+X2QerKCZ/5Bfl9nFQKcJ9ndJHU1793ZbDftg9WX6Cxtt1vYRMuSVPWzT/zrxuF/D/nWtiHVKPNmgtxHNHmqN2yTRvJOxji6NDMyr2FYmKe1wrpBYSimrGM7oNxijMEYtG8Fe1zr0t2UxG3U0N8JfbvinX6zN4oGv73O8avUIH7DZ3zHLH7x0y/SEEWj5RJUstruMdoVxcca352JOBHlH+vN2vOM0df8deMY7QNacpxg3tseJExsVsb+ae8L6Qym2HWBiYMBW1Q2ySE56BR5pg/eig45JaMEblnkFQYvZXFekvIYMPXuIBAImVQZqvTwJaBAJl5xOq9wyvJ3KoWXWz5+4R/yF22rV1v5Dvv5fW6BbkiYLFEoQwxbfLXcbOFiZRXK/HK+VHXdiFBRkv0Fi6bJhlr6xYf/U+MA+57xZ0feJ7US2biZ01WgIO4QwDHQZiN0jCjGEheYnXQfwrhkztBVcRihYs67jyaRnnyy34vsMHqjWNJgqqNsuNfrNbFWx+Vzt1OPmuJfyR7+KJq8z3jzFx7h7ca413y5nAFNMXUhfx7PdyEzs1xxI5YhrdjyNlhji+zvXOe3jSMUch0ybbzcHlkE1EqJSCe5T/1BVJKSNtSfNUZdN3Kc2getcYod47GsR9wh+UIxqHwGE1Z3oUuobOHpvGgihsf9vl4uG1uUEd8qbj0tWMkv5MP8zrvE3xUk8QuDmKSWX9ayDvGyaVf6/9q7VuhEtiV65JEtWyKRkUgkEomMjIyMHBkZiUQiI5FIJBLZsmXLlq9q76o6pwm5dz7MzHp3hSfe3JnwCV1dpz77M6lL4G62eX5pZzplMJ1xMGhIaeYIW+7kl5eXlG8QVX49OGzDIsFx6UciBSmmhvQeWKbGYDGB0P84vgkJkRx4zxh9Wr6jNQmDIEbmyRHeoy/4Ce2PtiVAaCTHcv6DaOuB/KaOteo9Svvd2mnYFMGgfCV6k28VquM/FSXjJ4dLTv9UT9zMGdMLVHxkxuk8FR3s2263PxzhO2beViokARlx6BoOxP7IX5qCyP0yR0zD9Nw/d/3xdLGtCqSaqdVBMZ3I/M5+Kx4GufZIq3+3am4dyguBrDFfyNGl5VJIUDraCqcJVyqE818uZ9YuPVCljY2QwWGBnbb86EK1XTUTSpSA1Gnrem5QsRYxM2VVcWmV4TdQAI6eUVEPfsQv3RyHjDdb2Rs5yTLrOAnSmAUM1ftSyES+8e3+vevNY5X2FTxPebfI78smFoJ6c8oO5B8WjPtX7A9MK+VT7PZHMn+0cQWAmx+FVFj3IxpiFhKENhP3SVRtaP2ICaqB3x8p1Xv/JnjWbh3HBiQq7uCSBCTT1WMGgjdP5xPBOVSJVGRh368Xei8ZZ5d7fQ50faei75JoVJV2+32H4lfqu6WU/otFriwpa3hp4V5Mxu3jVLTJdbpsQTq1D6nmWoGBCkRc8lmhRPDxdDqqUuVMXkW9IyGsLh9PJQbhPik/IN2KVB5Sm8sT5U7QiJ/P7hUcEdRDMt2U1A0QCsNGFKbVRhucP8xCe9qcOBz/R/hkpIpKsj6RQuYgzYaM+LC5V6k1FSwsdqEQfApJ5OFKddQUWhxmwatDSx5eKrWvuVzkmPn2uHmYtWanMj0LmIcd+qs+rLvjQb2lscpyDJuunCS1rFcryeezJofpdSXwPV553aV6eh9Zo6YFV49hcDuAUX1V5Eqb9q0aV6vkIfRVdSkoV71zbwZJk8/Pz2SrL5SYqMWAPFfuhAWDY3bP4MilYcHJ0esH6llvuI15Zt7mKr9G8bhEdaIFXwzBquZujAI2AEHuETxAAbco2g4mxNPXsvksYAkRIhqPFY+NyzAi5MFH2Cm2q91m+bCYgxHuo7rJze2Le1qNykH1tt8T6Bt5ooUcJf3G8dl0LrcEVoObWZ2+TAVqyHAbJ4DUEhwmLYF0dVYtcVVR5T1AuBWnOHQvCVS2BKySidDBvr+/y5e5Wq8umjwagM6VDJqgnywfrGnbu9YcdVmKb+xwVp6ItIiQz1KHLFoShRdC4wrLV5v3EOrghWdNSldVJ9cNlE4gLcxESH2eOlhn1ARpO6Bl4N0PJshd8vyIAXwfAGAJ6P1ub94dQ/fyuGnaj/D/iA+cooCyXLr+bbe/OOYtNGtZJ1FplG+htDYVW1KZHpySBn/U8x4ES17IyMkAug70Hhz9oB3sMeY6FaVRtfrPl8EpW9QtVR0RFz6U1988biREKJNHkZIECq56vOEBT7uHeweHA6XeD0faUb+/H9QAt2m8wnR+X1G5nwxAp9W3YYnr7QmfS27xdCgyhjjpVJOhgHhjw8JXNs4I0ob7EDZnIMR6jMjkvb89bdpJcFxpBQ/2xiDNHU6n3eHQmx16Mt3BAhKyXpqHJtHCIRZFOlPrIKZUc0JdSZ3TwtE3TQZsQ4QHcgoWuJ1LHOgPL3GU7HY7XPtxvd5Q8RIRo66iT09PdAYa3MusaZp7Z45gwuE6b3e79eZRvoRvr69y4PG041ySJWc9Nq1rbIdpDrmaYlV9jfEQQ58j+ApVhzIxe3OP9KHoa/vfQx+yFE1yLXUgBm47xPyGp5WCeNNtb9ipCAX0HVZPz2CScyhsvNM5KBpqjuEmndIydl2hwproqquHjQXU5NoyhtSfmfZLpdAtbyEFjdSdrctp8hSjpLX8+/Go+XsG45sGJwvL8KSK01spPhT4jaEUhdTa33Ks1PCfpn15et48PVK5Zb/bkVxFla1xDOWu0uth3DnYJgVnanAUWJfYhx4rJxVPHW6Lar1ZMGbt9YkUjLrP9ZY4mb14cQrh87PxswEaGvpuNW8XymT5JDiiU2Pl0XVPr29SbCFhjLBlCT/2xvm0FlUuElc02iNWrP8K6BqFyZxjQaMFut2SSq4myM7XNTE0NAGStgl7piqQBMxC9wY94e/vh8OzT4RRb03sKO4eHNUSPzeSrOT5r69vvNcVKPDwALtUY3dFeRhyUN58Ju5EAo9Z60LloiVX4BpXhUvtSpkrgHEqOrU5xNEvHgq81eDjZFlafqo/n543G7NF+jQ4jPkHrNPxbfeerdpV+auj0rLbxpx1OsAzGyjkQ5ADVixyqWjTgUOzdcZsohQplQSY9yRJMJikhJT/VsXjRtXuArZCIgiQzLoYp4cLCj5pmtb8ABJMj5uNtCeKYZ5rOWgOc9+NOvu54ChzXNWJRuVM92HktyMW5QP2gZNrXLPp05TPUhvtuAa+d8IVPbVqWHIutrQGP46dfgDEcWb1VGAix0ltKyAXpoNkpTnNtZs4n1fqDZ4zUen5lteEg1pGWBRsXl4pHTbSVsY2iwk+h5nMDCrYmBylE8FDzTKEh2w4hCGv/E+Nj8ck0dYCuo1ibCQ5yLHWDXVo6DWG/t++QxiFaknBPlbiSS3ZYVz1AF3Q/AN4xF8LDpaX2+1Wbh3aD/D3p+tiY0wWM1GLDXucNaHUM42bOH3GiqdYGJFkskTjSg5Vov1ghTgMw4MedmoQGS5r3tPxqO0VxGiRm5ukUn/uLDwRO/gQH5igLNQYnKL4Vk/QeZrwf/UEssWQ6TmzMefNbhsoUIspp89cQjcgQvapMNCzax2shARAYk6c22a9JhuZ3jfyZO0JciOXQxIJA07HGy44lq9EfH9jcHhtLV/Pfr+XDwGU4iL0RgGx0UY3iIKBDavEFMarmXK903ABLqvbeBilSmSMLzTDl4tkrt9p5/qWPiDpOf8OpDGDib72qM6gzCGf9XDYrJfGZ2k+Dw520sPw+PJy6Xryxho/w2I6TK9GrpyYKmiEMLoJlUEI3FCXdsN8R7n8kn05ttKuBJ4serjMH6SAwNBigQaENiaJYw9+tuVyJVWpdLDQ3rfQjE3Tj17jnw4Oe0jZL02KTh6BeIaAVWKNRkkM7lbCojG5rIr9TUxey17T+MQsYmISz1rV4CC+1w15dZZsvN4h5cP1SguNDb47wWAMIGJKqJcliUTS00JPhzFT7+C2i9EYeAJp47f7PWf/HG/Q6otjDCZCuYoXL24oLaeHDhsrJ0tyOkJNRLgZ6c4DYPE5mx15NTnF+OuTD42x2BkI2X6xWOJk6S1PeKbRT4Jf7Uo+6Y8GhwQpB/WhCkemVwtwIieLXWcsJsTvNHnEKsmp9GX6ETN239wyJkxrC5W8Yz5qgK3NCeSdLrS2IDUZtT0lU8+nE/tnH2hSUVq7Hcqpuq3aZzBP0w15fvnWoSDgD9IqMDfFWW7m0rPss5Kr9xuZJacHuPLMoMDPU/Okt5lNd6QdlRc8Ho68BxbLhZwgsChMZdMJSBvZsPJPS7UtPgIRmKvBz/gXgsMli1UyEJTUhBPxQv2WWj6L8u+WMFBNzGFIFimkchlOMQ7hpIODgcJN8kOK4/Pg34blIpXBbBIPFylODtgvQE26p6quSt6oZJvZrJz2ezlZKhmd5vbvbEtgPVn6MdlINFHVo3fU7ohaUjU/YrkTI1T6k7ee9lTt2YwHB67Xw8rD7HwwGpf7UL5BrONVx0A6gNPxpO5HM9Wu1OhZLM6n8wzU1NAo/rmwuENwcHodwoHySufzCYfcQIhoqvyhRw+gK92wuNghqVBxZ0cHAUXWuZKZG70+HQgpShXPNh4hmmuTaYyqoWqQaTrGE0OfraVrMjJ7bj69J/Aaz99eRxcx5uWUVKEV5SCtgc6L6Y8hf79er4/KIsnkrHLYxYNGIuDSXThGkz9LGqY8vn69PaEnEt8252b6edw8csjLPI2n58VSjQTjx64Unv9CcEwrxzBcylyuulv9rKZKQ0H2Qrx4oL9qnXxeafPNcCa+851CCci0Gzoe4XnChqrEKgczNgNbAr72sK2Q9LtaIetkCgsTkKIl1H63mOlAL9Htt2wF80fcwuF0Jo1dSgTmwhks7swFJrt/w6D3NA1+7Btz0HwCv3K9XslbYhHYMYmassg4MKnYcDOl1XqtKhL7PRdY8rLwDJllqsXPWj+gm5rr9ReCI97YbQ8MkhNa/Phqin5tQDSCvh59RK7ok4Nb0sejqaTvKmu3EpR8bm2DRx4NHL4uqNdsKk+agt6d6LFp4dZxBMKbVTIfUa4xDattV4t2Lw+R8eVtKy+5Wq6IVGVdTEQFlaioraA1LwiJCudE6cDq5KxKFgOLNuVP6K0v0dDLz9A9jqEvNYTpbY4pfNroE8huh8jhYHylyo/gV277O2SOOnnYFNxFfKLX56Vy8mxZu19QVHM25c7CIdGaQn3QKQgp2pAACFYHaySM3pxQfLLCSahWslIEWEmvxA20A0VPl6/TnQ6zZmpUcEWFHxzYMgzf3rYdIEVkTsvF1uX45RJupnRE5B9Ugb/vdaEKqygOhOTEoWQZWzzoWcxx9PSsXiU99PDJRsujjtfsSvjJW5dF+fVQ+F3BkaZsxICowLDYsCccftDV/MqU3UaofmZMOfij7+GsjAixKA6YycD2hW1ynxeiWeOSm5Sb3W1eajBnVP2RPvuiG6w2fxocBUMq//+qwTGslku4dHebtT62223QxAlZUjS8u5ej46Wen5FGWUfz25vj+GD1QAkNmoE8gLgmATSHLOnEOsJ7v7vHx92C42PLVBeGFInui4S5jZxrlY6KsxQkyhITLc7voYIBVIdrCsSh81ZM5KkIGSKReD+cywInpyLGYliTIcHewKb4H/fanh7lX9/fD4OLFNJ0mOmKN7fWpKcjsYaKUW2Ksyt3hNwCqoibbmK0ayUYh/60EiJkMhZVnD/7uGdwfBYxzlPq4w/S/TIrNhO5ldpjo0CEIkQqjVjDalROCWOuFG0D6TOxvMAltwzsWB5e18lV1+RxnFFU+io4aj4SZTObdrfdxVaW4/OHxYOOoVQpW88CkwkpODf9BqSdiUad8bRaLc2tGIearujgS23jMozRUvgS5fxfCI6roVZlkRFC9yaqd+VoP9aCJLkG+xS1ybpV4xKfgzgeVdx7haUS7zyORpqmWgTeIMTrEWhGzTfk6Mkcodasomg5SgFCUr1qBx2fPFCf3+tHKJ03NLPqVutVQsF+Oh3jjFAyGD4Vq2PnBeY0UQtN+Y+ExR8NjvrQiXYjFy2ewjNIt7Rmrp47BXln39SPUZeFRF+uRHojhjxKhivXnynerXeYp2+J8xWnhEiR8XA8Bj5jhb4jF3R0mwPLpRucPnwImWl8wUYcRlMAyR/Kr7/y+HPB8eEyG6TPM3yuPOvTVB94rNUpP04yagaS82yb6bOu4+m7pr88OIoVWp4ArVNxwSWIix3ZmVmkrZze4Izc+kzWaszkHzznTwYEw7/C+P5rwfH99ex1/TfV2i0WTwWzfB1PtzLCjyTniW9vLdZ2xdgjQ5RaKRlwFpNEa01iPIZn1gQ3Oac/VTf8R4LjJyqYj39zs2P6lXf6VLhtcgaZySGDQF0gseQjGiP93z7+L4Pjvpnpt77Ld0J5v4Lj6/EVHF+Pr+D4enwFx9fjKzi+Hl+Pr+D4enz/43/1L4FMS05qjgAAAABJRU5ErkJggg==" alt="ตัวอย่างภาพวาดดินสอสีผสมกราไฟต์ พร้อมลายเส้นดินสอเฉียงเป็นพื้นหลัง">
+              <div class="preview-caption" id="refPreviewCaption">
+                ภาพต้นแบบ: ตัดพื้นหลังเป็นสีขาว แต่เพิ่มลายเส้นดินสอสเก็ตช์เฉียงบางๆ รอบตัวแบบ และปล่อยชายเสื้อด้านล่างเฟดเป็นเส้นดินสอ
+              </div>
+              <div class="upload-controls">
+                <label for="userImageInput" class="btn btn-secondary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>อัปโหลดรูปของคุณ</span>
+                </label>
+                <input type="file" id="userImageInput" class="file-input-hidden" accept="image/*">
+                <button type="button" id="btnRestoreSampleImg" class="btn btn-secondary btn-sm" style="display:none;">
+                  ดูรูปตัวอย่างต้นแบบ
+                </button>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="subjectDescription" class="field-label">
+                  <span>คำบรรยายรูปภาพตัวอย่าง / ลักษณะบุคคล (Subject &amp; Pose Description)</span>
+                  <span class="field-sub">เว้นว่างได้หากให้ AI ดูจากรูปแนบโดยตรง</span>
+                </label>
+                <textarea id="subjectDescription" class="textarea" placeholder="พิมพ์บรรยายบุคคล ท่าทาง เสื้อผ้า หรือจุดเด่นที่ต้องการเน้นได้ทั้งไทยและอังกฤษ (เช่น ชายใส่เสื้อยืดสีเทาโอบไหล่หญิงสาวผมยาวใส่เสื้อสีดำเข้ม สร้อยคอจี้ดอกไม้ ยิ้มเป็นธรรมชาติ)..."></textarea>
+                <p class="field-hint">
+                  💡 <strong>เคล็ดลับ:</strong> หากไม่พิมพ์คำบรรยาย ระบบจะใช้คำสั่งมาตรฐานจากไฟล์ <code>md_prompt.txt</code> เพื่อสั่งให้ AI รักษาหน้าตา ทรงผม เสื้อผ้า และท่าทางจากรูปที่แนบ 100%
+                </p>
+              </div>
+
+              <div class="field">
+                <label class="field-label">
+                  <span>โหลดคำบรรยายตัวอย่างจากภาพต้นแบบอย่างรวดเร็ว</span>
+                </label>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <button type="button" id="btnFillCoupleSample" class="btn btn-secondary btn-sm">
+                    + ใส่คำบรรยายตามภาพคู่ตัวอย่างที่แนบมา
+                  </button>
+                  <button type="button" id="btnClearSubjectDesc" class="btn btn-secondary btn-sm">
+                    ล้างคำบรรยาย (ใช้เฉพาะคำสั่งอ้างอิงรูปต้นฉบับ)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Comprehensive Dropdown Lists (Main & Sub Categories) -->
+        <section class="card" aria-labelledby="sec-3-title">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <span class="step-badge">3</span>
+              <div>
+                <h2 id="sec-3-title" class="section-title">ตั้งค่าเทคนิควาดดินสอสีผสมกราไฟต์ (Dropdown หัวข้อหลัก &amp; ย่อย)</h2>
+                <p class="section-desc">หากตั้งเป็น "ค่าเริ่มต้น (Default)" ทั้งหมด จะได้ Prompt ตรงตามไฟล์ md_prompt.txt พื้นฐาน</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3.1 Color Mode & Pencil Medium -->
+          <div class="subgroup-box">
+            <h3 class="subgroup-title">
+              <span>3.1 โหมดสีและชนิดดินสอ (Color Mode &amp; Pencil Medium)</span>
+              <span class="tag-pill">รองรับ ดินสอสี / ขาวดำดินสอ</span>
+            </h3>
+            <div class="form-grid cols-2">
+              <div class="field">
+                <label for="colorPencilMode" class="field-label">
+                  <span>โหมดสีหลัก (Primary Medium &amp; Color Mode)</span>
+                </label>
+                <select id="colorPencilMode" class="select">
+                  <option value="default" selected>ดินสอสีผสมดินสอกราไฟต์ (Colored Pencil + Graphite — ค่าเริ่มต้น md_prompt)</option>
+                  <option value="bw_graphite">ขาวดำ ดินสอกราไฟต์ล้วน (Pure Monochrome Graphite Pencil 2B/4B/6B)</option>
+                  <option value="bw_charcoal_graphite">ขาวดำ ดินสอชาโคลผสมกราไฟต์นุ่มลึก (Monochrome Charcoal &amp; Fine Graphite)</option>
+                  <option value="vintage_sepia">ดินสอสีโทนอุ่นวินเทจ / ซีเปียผสมกราไฟต์ (Warm Sepia &amp; Muted Colored Pencil)</option>
+                  <option value="selective_sketch">สเก็ตช์กราไฟต์ขาวดำ + ลงดินสอสีบางจุดอ่อนๆ (Tinted Graphite Sketch with Subtle Color)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="pencilLeadGrade" class="field-label">
+                  <span>หัวข้อย่อย: เกรดไส้ดินสอและน้ำหนักเส้น (Pencil Lead &amp; Core Type)</span>
+                </label>
+                <select id="pencilLeadGrade" class="select">
+                  <option value="default" selected>มาตรฐาน (Delicate Colored Pencil + Fine Graphite Outlines)</option>
+                  <option value="wax_prismacolor">ดินสอสีเนื้อนุ่มผสมกราไฟต์ HB/2B (Soft Wax-Based Pencil + HB/2B Graphite)</option>
+                  <option value="polychromos_fine">ดินสอสีเนื้อออยล์ปลายแหลมคม + กราไฟต์ 2H/HB เก็บเส้นผมละเอียด</option>
+                  <option value="graphite_range">ชุดดินสอแรเงาเต็มสเกล 2H, HB, 2B, 4B, 6B เน้นมิติขาวดำสมจริง</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3.2 Hand-Drawn Realism (Anti-AI Look) -->
+          <div class="subgroup-box">
+            <h3 class="subgroup-title">
+              <span>3.2 ปรับให้เหมือนคนวาดมือเองที่สุด ลดความรู้สึกภาพ AI (Human Hand-Drawn Authenticity)</span>
+              <span class="tag-pill">Anti-AI Look</span>
+            </h3>
+            <div class="form-grid cols-2">
+              <div class="field">
+                <label for="handDrawnLevel" class="field-label">
+                  <span>ระดับความสมจริงของการวาดมือ (Hand-Drawn Realism Level)</span>
+                </label>
+                <select id="handDrawnLevel" class="select">
+                  <option value="default" selected>มาตรฐานตามไฟล์ md_prompt.txt (Authentic Hand-Drawn &amp; Visible Pencil Grain)</option>
+                  <option value="ultra_human">เหมือนคนวาดมือสูงสุด 100% (Ultra Raw Human Artist: น้ำหนักมือไม่เท่ากัน เห็นเส้นร่างจริง ไม่เนียนดิจิทัล)</option>
+                  <option value="studio_sketch">งานวาดสตูดิโอโชว์ฝีแปรงดินสอชัด (Expressive Directional Strokes &amp; Visible Construction Lines)</option>
+                  <option value="master_fine">งานวาดมือเกรดแกลเลอรี (Master Portraitist: ไล่เลเยอร์ดินสอสีซ้อนทับเห็นเม็ดกระดาษจริง)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="imperfectionDetail" class="field-label">
+                  <span>หัวข้อย่อย: ร่องรอยธรรมชาติของมือคนวาด (Organic Human Imperfections)</span>
+                </label>
+                <select id="imperfectionDetail" class="select">
+                  <option value="default" selected>เห็นเกรนดินสอและเส้นสเก็ตช์บางเบาธรรมชาติ (Natural Pencil Grain &amp; Subtle Sketch Marks)</option>
+                  <option value="pressure_smudge">น้ำหนักมือหนัก-เบาตามจังหวะข้อมือ + รอยเกลี่ยดินสอ (Varying Hand Pressure &amp; Subtle Tortillon Blending)</option>
+                  <option value="raw_unfinished_edges">ปล่อยขอบชายเสื้อและรอบนอกเป็นเส้นดินสอเปลือยไม่ลงสีทึบ (Unfinished Sketchy Lower Hem &amp; Stray Pencil Lines)</option>
+                  <option value="paper_tooth_break">เห็นรูพรุนกระดาษขาวแทรกตามรอยขีดดินสอ (Unfilled Micro Paper Tooth Gaps in Shading)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="check-grid" aria-label="ตัวเลือกป้องกันลักษณะ AI เพิ่มเติม">
+              <label class="check-item">
+                <input type="checkbox" id="chkStrictIdentity" checked>
+                <span><strong>ห้ามปรับโครงหน้า (No Beautify / No Idealized Face):</strong> รักษาเอกลักษณ์หน้าตาเดิม 100% ตามคำแนะนำข้อ 5</span>
+              </label>
+              <label class="check-item">
+                <input type="checkbox" id="chkAntiDigitalSkin" checked>
+                <span><strong>ห้ามผิวเนียนพลาสติกแบบ AI (Anti-Airbrush Skin):</strong> บังคับให้ผิวมีเกรนดินสอสี ไม่เรียบเหมือนฟิลเตอร์แต่งภาพ</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 3.3 Background & Diagonal Pencil Hatching Options -->
+          <div class="subgroup-box">
+            <h3 class="subgroup-title">
+              <span>3.3 พื้นหลัง &amp; ลายเส้นดินสอเฉียงแทนพื้นหลังเดิม (Background &amp; Cutout Hatching)</span>
+              <span class="tag-pill">ตรงตามภาพตัวอย่างที่อัปโหลด</span>
+            </h3>
+            <div class="form-grid cols-2">
+              <div class="field">
+                <label for="backgroundStyle" class="field-label">
+                  <span>รูปแบบการจัดการพื้นหลัง (Background Treatment)</span>
+                </label>
+                <select id="backgroundStyle" class="select">
+                  <option value="default" selected>ตัดพื้นหลังเป็นกระดาษสีขาว + มีลายเส้นดินสอสเก็ตช์เฉียงบางๆ รอบตัวแบบ (ตามรูปตัวอย่าง &amp; md_prompt.txt)</option>
+                  <option value="cutout_rich_hatching">ตัดพื้นหลังออก + เพิ่มลายเส้นดินสอสีและกราไฟต์แรเงาเฉียงชัดเจนรอบตัวแบบ (Expressive Diagonal Halo Hatching)</option>
+                  <option value="pure_white_no_strokes">ตัดพื้นหลังเป็นกระดาษสีขาวล้วน ไม่มีลายเส้นดินสอพื้นหลัง (Clean White Paper — No Background Strokes)</option>
+                  <option value="keep_original_sketch_bg">คงพื้นหลังตามภาพต้นฉบับ แต่วาดเป็นลายเส้นสเก็ตช์ดินสอจางๆ นุ่มนวล (Soft Hand-Sketched Original Environment)</option>
+                  <option value="warm_cream_hatching">ตัดพื้นหลังเป็นกระดาษวาดเขียนสีขาวนวล/ครีม + ลายเส้นดินสอเฉียงบางๆ (Warm Cream Paper + Diagonal Sketch Marks)</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="hatchingDirection" class="field-label">
+                  <span>หัวข้อย่อย: ลักษณะลายเส้นดินสอพื้นหลัง (Background Stroke Pattern)</span>
+                </label>
+                <select id="hatchingDirection" class="select">
+                  <option value="default" selected>เส้นดินสอเฉียงบางๆ กระจายธรรมชาติ (Subtle Diagonal Graphite Hatching &amp; Loose Strokes)</option>
+                  <option value="diagonal_color_aura">เส้นดินสอเฉียง 45 องศา ผสมสีอ่อนตามโทนเสื้อและผิวรอบตัวแบบ (เหมือนภาพคู่ตัวอย่าง)</option>
+                  <option value="cross_hatching_vignette">เส้นแรเงาสานกัน (Cross-Hatching Vignette) เข้มใกล้ไหล่แล้วเฟดหายไปกับกระดาษขาว</option>
+                  <option value="none">ไม่มีเส้นแรเงาบนพื้นหลัง (ปล่อยเนื้อกระดาษสะอาด)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3.4 Additional Essential Portrait Categories (Item 5) -->
+          <div class="subgroup-box">
+            <h3 class="subgroup-title">
+              <span>3.4 รายละเอียดใบหน้า เส้นผม เนื้อผ้า และกระดาษ (หัวข้อเสริมสำหรับงานวาดมืออาชีพ)</span>
+              <span class="tag-pill">Optional Fine-Tuning</span>
+            </h3>
+            <div class="form-grid cols-2">
+              <div class="field">
+                <label for="facialSkinDetail" class="field-label">
+                  <span>การลงสีผิวและใบหน้า (Skin &amp; Facial Shading)</span>
+                </label>
+                <select id="facialSkinDetail" class="select">
+                  <option value="default" selected>สีเนื้อนุ่ม ไล่เฉดด้วยดินสอสีละเอียด มีมิติธรรมชาติ (Default md_prompt)</option>
+                  <option value="micro_hatch_skin">ไล่เฉดด้วยเส้นดินสอเล็กละเอียดตามแนวโครงหน้า เห็นเนื้อดินสอชัดเจน</option>
+                  <option value="high_focus_eyes">เน้นดวงตา คิ้ว และริมฝีปากคมชัดด้วยดินสอปลายแหลม ผิวแก้มระบายนุ่มนวล</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="hairStrokeStyle" class="field-label">
+                  <span>การวาดเส้นผม (Hair Strand Technique)</span>
+                </label>
+                <select id="hairStrokeStyle" class="select">
+                  <option value="default" selected>เส้นดินสอเล็กๆ เรียงตัวตามทิศทางเส้นผม มีน้ำหนักและมิติ (Default md_prompt)</option>
+                  <option value="flyaway_strands">เน้นเส้นผมเรียงเส้นคมชัด + มีไรผมและเส้นผมปลิวธรรมชาติด้วยกราไฟต์ปลายแหลม</option>
+                  <option value="glossy_graphite_locks">เน้นไฮไลท์เงาผมด้วยการเว้นเนื้อกระดาษขาวสลับการลงดินสอเข้มลึก</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="clothingEdgeStyle" class="field-label">
+                  <span>เนื้อผ้าและขอบภาพด้านล่าง (Clothing &amp; Bottom Edge Fade)</span>
+                </label>
+                <select id="clothingEdgeStyle" class="select">
+                  <option value="default" selected>มีรอยเส้นดินสอและเงาตามเนื้อผ้า (Default md_prompt)</option>
+                  <option value="hand_sketched_fade_bottom">ไล่เงารอยยับเสื้อด้วยเส้นดินสอ และปล่อยขอบด้านล่างเฟดเป็นเส้นสเก็ตช์เหมือนภาพตัวอย่าง</option>
+                  <option value="loose_sketch_garment">วาดเสื้อผ้าเป็นเส้นสเก็ตช์โปร่งบาง เพื่อให้ใบหน้าดูโดดเด่นมีพลังที่สุด</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="paperTextureType" class="field-label">
+                  <span>ชนิดกระดาษและแสงเงา (Paper Grain &amp; Lighting)</span>
+                </label>
+                <select id="paperTextureType" class="select">
+                  <option value="default" selected>กระดาษวาดเขียนสีขาว มีเท็กซ์เจอร์ + แสงนุ่มนวลโทนธรรมชาติ (Default md_prompt)</option>
+                  <option value="fine_tooth_bristol">กระดาษ Fine-Tooth Bristol 100lb ขาวสะอาด เน้นเส้นดินสอคมชัดคอนทราสต์กำลังดี</option>
+                  <option value="cold_press_textured">กระดาษวาดเขียนชนิดหยาบปานกลาง (Medium-Tooth Drawing Paper) เห็นเม็ดกระดาษชัด</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: Sticky Live Output (Full Text Prompt, JSON Prompt, Reference Analysis) -->
+      <div class="output-column sticky-output">
+        <section class="card" aria-labelledby="output-sec-title">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <span class="step-badge">4</span>
+              <div>
+                <h2 id="output-sec-title" class="section-title">ผลลัพธ์ Prompt พร้อมใช้งาน (Live Output)</h2>
+                <p class="section-desc">อัปเดตอัตโนมัติตามตัวเลือก หรือกด Generate Auto เพื่อให้ได้รายละเอียดสูงขึ้น</p>
+              </div>
+            </div>
+            <span class="tag-pill" id="modeStatusBadge">โหมดพื้นฐาน (md_prompt.txt)</span>
+          </div>
+
+          <div class="status-strip" id="activeSummaryStrip">
+            <span id="activeSummaryText">✨ สถานะปัจจุบัน: ค่าพื้นฐานตรงตามไฟล์ md_prompt.txt (ดินสอสีผสมกราไฟต์ + พื้นหลังขาวมีเส้นดินสอเฉียงบางๆ)</span>
+          </div>
+
+          <!-- Output Tabs -->
+          <div class="tabs-bar" role="tablist">
+            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="tab-fulltext">
+              Full Text Prompt
+            </button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="tab-json">
+              Dynamic JSON Prompt
+            </button>
+            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="tab-guide">
+              วิเคราะห์ 6 องค์ประกอบ &amp; คำศัพท์ (md_prompt)
+            </button>
+          </div>
+
+          <!-- Tab 1: Full Text Prompt -->
+          <div id="tab-fulltext" class="tab-pane active" role="tabpanel">
+            <div class="output-toolbar">
+              <div class="lang-switch-group" role="group" aria-label="เลือกภาษา Full Text Prompt">
+                <button type="button" class="lang-switch-btn active" data-lang-select="th">
+                  🇹🇭 เฉพาะภาษาไทย (ค่าเริ่มต้น)
+                </button>
+                <button type="button" class="lang-switch-btn" data-lang-select="en">
+                  🇬🇧 เฉพาะภาษาอังกฤษ (EN)
+                </button>
+                <button type="button" class="lang-switch-btn" data-lang-select="bilingual">
+                  ทั้ง 2 ภาษา
+                </button>
+              </div>
+              <div class="copy-actions-group">
+                <button type="button" id="btnCopyFullText" class="btn btn-primary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span id="copyFullTextLabel">คัดลอก Prompt (เฉพาะภาษาไทย)</span>
+                </button>
+                <button type="button" id="btnCopyTextEnQuick" class="btn btn-secondary btn-sm" title="คัดลอกเฉพาะภาษาอังกฤษทันทีโดยไม่ต้องสลับหน้าจอ">
+                  <span id="copyTextEnQuickLabel">คัดลอกเฉพาะ EN</span>
+                </button>
+              </div>
+            </div>
+            <pre id="fullTextOutput" class="prompt-box" tabindex="0"></pre>
+          </div>
+
+          <!-- Tab 2: Dynamic JSON Prompt -->
+          <div id="tab-json" class="tab-pane" role="tabpanel">
+            <div class="output-toolbar">
+              <div class="lang-switch-group" role="group" aria-label="เลือกภาษา JSON Prompt">
+                <button type="button" class="lang-switch-btn active" data-lang-select="th">
+                  🇹🇭 JSON ภาษาไทย (ค่าเริ่มต้น)
+                </button>
+                <button type="button" class="lang-switch-btn" data-lang-select="en">
+                  🇬🇧 JSON ภาษาอังกฤษ (EN)
+                </button>
+                <button type="button" class="lang-switch-btn" data-lang-select="bilingual">
+                  JSON ทั้ง 2 ภาษา
+                </button>
+              </div>
+              <div class="copy-actions-group">
+                <button type="button" id="btnCopyJson" class="btn btn-primary btn-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span id="copyJsonLabel">คัดลอก JSON (เฉพาะภาษาไทย)</span>
+                </button>
+                <button type="button" id="btnCopyJsonEnQuick" class="btn btn-secondary btn-sm" title="คัดลอก JSON เฉพาะภาษาอังกฤษทันที">
+                  <span id="copyJsonEnQuickLabel">คัดลอก JSON (EN)</span>
+                </button>
+              </div>
+            </div>
+            <pre id="jsonOutput" class="prompt-box" tabindex="0"></pre>
+          </div>
+
+          <!-- Tab 3: Reference Analysis & Vocabulary from md_prompt.txt -->
+          <div id="tab-guide" class="tab-pane" role="tabpanel">
+            <div class="ref-table-wrap">
+              <h3 style="margin:0 0 8px 0; font-size:0.92rem;">ตารางวิเคราะห์องค์ประกอบ 6 ส่วน (จากไฟล์ md_prompt.txt)</h3>
+              <table class="ref-table">
+                <thead>
+                  <tr>
+                    <th>องค์ประกอบ</th>
+                    <th>ลักษณะของภาพต้นแบบ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Style</strong></td>
+                    <td>Semi-Realistic Illustration (กึ่งสมจริง เน้นรักษาสัดส่วนและหน้าตาของคนจริง)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>เทคนิค</strong></td>
+                    <td>Colored Pencil + Graphite Sketch (ดินสอสีผสมเส้นสเก็ตช์ดินสอกราไฟต์)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>ใบหน้า</strong></td>
+                    <td>สมจริง รายละเอียดสูง ไม่ใช่การ์ตูน รักษาเอกลักษณ์บุคคลเดิม</td>
+                  </tr>
+                  <tr>
+                    <td><strong>สีผิว</strong></td>
+                    <td>สีเนื้อนุ่ม ไล่เฉดด้วยดินสอสี ไม่เรียบเนียนพลาสติกเหมือนภาพดิจิทัล</td>
+                  </tr>
+                  <tr>
+                    <td><strong>เส้นผม</strong></td>
+                    <td>เส้นดินสอละเอียด มีน้ำหนักและทิศทางตามเส้นผมจริง</td>
+                  </tr>
+                  <tr>
+                    <td><strong>พื้นหลัง</strong></td>
+                    <td>กระดาษสีขาว มีรอยขีดดินสอเฉียงบางๆ (Pencil Hatching Texture)</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h3 style="margin:16px 0 8px 0; font-size:0.92rem;">หัวใจสำคัญ 3 ประการ &amp; ข้อควรระวังในการสั่ง AI</h3>
+              <ul style="margin:0; padding-left:18px; font-size:0.82rem; color:var(--ink-secondary);">
+                <li><strong>1. Identity Preservation:</strong> ต้องรักษาหน้าตาของคนในรูปต้นแบบให้เหมือนเดิมมากที่สุด</li>
+                <li><strong>2. Art Style Transformation:</strong> เปลี่ยนเฉพาะรูปแบบภาพให้เป็นงานวาดดินสอสีผสมกราไฟต์ด้วยมือ</li>
+                <li><strong>3. Original Composition:</strong> รักษาท่าทาง รูปร่าง เสื้อผ้า และตำแหน่งของบุคคลตามต้นฉบับ</li>
+                <li><strong>ข้อควรระวังสำคัญ:</strong> อย่าใช้คำว่า <code>Beautify</code>, <code>Idealized Face</code> หรือ <code>Perfect Face</code> เพราะจะทำให้ AI ปรับโครงหน้าใหม่จนไม่เหมือนตัวจริง</li>
+              </ul>
+
+              <h3 style="margin:16px 0 6px 0; font-size:0.92rem;">คำศัพท์สำคัญ (Visual Keywords)</h3>
+              <div class="keyword-chips">
+                <span class="keyword-chip">Colored Pencil Portrait</span>
+                <span class="keyword-chip">Graphite Pencil Sketch</span>
+                <span class="keyword-chip">Semi-Realistic Illustration</span>
+                <span class="keyword-chip">Pencil Hatching Texture</span>
+                <span class="keyword-chip">Realistic Colored Pencil Sketch Portrait</span>
+                <span class="keyword-chip">Visible Paper Tooth</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      // Sample image Data URI embedded by finalize_app
+      const SAMPLE_PORTRAIT_SRC = document.getElementById('refPreviewImg').getAttribute('src');
+      let uploadedFileName = '903235996_1134082045700250_377172209807032110_n.png (ภาพตัวอย่างต้นแบบ)';
+      let autoPresetIndex = 0;
+
+      // Exact base prompts from md_prompt.txt when all dropdowns are at "default" and no extra custom text is added
+      const BASE_THAI_PROMPT = `เปลี่ยนภาพถ่ายต้นฉบับให้กลายเป็นภาพวาดศิลปะแนว Semi-Realistic Colored Pencil Portrait Illustration โดยใช้เทคนิคการวาดด้วยดินสอสีผสมดินสอกราไฟต์ (Colored Pencil and Graphite Pencil Drawing)
+
+ลักษณะงานศิลปะ:
+สร้างภาพให้มีลักษณะเหมือนภาพวาดด้วยมือบนกระดาษวาดเขียนสีขาว ใช้เส้นดินสอสีละเอียดในการลงสีและสร้างมิติของภาพ ผสมผสานกับเส้นสเก็ตช์ดินสอที่บางเบา ให้เห็นร่องรอยของการวาดอย่างเป็นธรรมชาติ
+
+รายละเอียดบุคคล:
+- รักษาใบหน้าและเอกลักษณ์ของบุคคลจากภาพต้นฉบับให้เหมือนเดิมมากที่สุด
+- คงรูปทรงใบหน้า ดวงตา จมูก ปาก และสัดส่วนของร่างกายตามต้นฉบับ
+- รักษาทรงผม สีผม เสื้อผ้า และเครื่องประดับให้ตรงกับภาพอ้างอิง
+- ใช้เทคนิคการลงสีแบบดินสอสีที่มีการไล่น้ำหนักอย่างละเอียด
+- ผิวมีมิติและดูเป็นธรรมชาติ ไม่เรียบเนียนเหมือนภาพดิจิทัล
+- เส้นผมมีรายละเอียดเป็นเส้นดินสอเล็ก ๆ เรียงตัวตามทิศทางของเส้นผม
+- เสื้อผ้ามีรอยเส้นดินสอและการลงเงาที่แสดงถึงเนื้อผ้า
+
+แสงและเงา:
+ใช้โทนสีธรรมชาติ แสงนุ่มนวล เงาบางเบา มีการไล่ระดับสีด้วยดินสอสีอย่างประณีต ไม่ใช้สีจัดจ้านหรือคอนทราสต์สูงเกินไป
+
+พื้นหลัง:
+พื้นหลังเป็นกระดาษสีขาวหรือสีขาวนวล มีร่องรอยเส้นดินสอสเก็ตช์เฉียง ๆ บาง ๆ กระจายอยู่ด้านหลังบุคคลอย่างเป็นธรรมชาติ ไม่แย่งความโดดเด่นจากตัวแบบ
+
+ข้อกำหนดสำคัญ:
+ต้องให้ผลงานสุดท้ายดูเหมือนภาพวาดด้วยมือจริง ๆ ไม่ใช่ภาพถ่ายที่ใส่ฟิลเตอร์ ไม่ใช่ภาพการ์ตูน ไม่ใช่ภาพอนิเมะ และไม่ใช่ภาพ 3D
+รักษาองค์ประกอบ ท่าทาง มุมกล้อง และจำนวนบุคคลตามภาพต้นฉบับให้มากที่สุด
+
+High Detail, Fine Pencil Texture, Realistic Facial Proportions, Soft Colored Pencil Shading, Hand Drawn Illustration, White Paper Texture.`;
+
+      const BASE_ENGLISH_PROMPT = `Transform the original reference photograph into a highly detailed Semi-Realistic Colored Pencil Portrait Illustration, using a combination of traditional colored pencil drawing and fine graphite sketching techniques.
+
+ART STYLE AND TECHNIQUE:
+Create an authentic hand-drawn illustration on textured white drawing paper. Use delicate colored pencil strokes blended with fine graphite pencil outlines and subtle sketch marks.
+The artwork should resemble a carefully hand-rendered colored pencil portrait, with visible pencil grain, natural hand-drawn strokes, delicate shading, and realistic artistic details.
+
+SUBJECT AND FACIAL DETAILS:
+- Preserve the original person's identity and facial features as accurately as possible.
+- Maintain the original face shape, eyes, nose, lips, facial proportions, and natural expression.
+- Preserve the original hairstyle, hair color, clothing, accessories, and body proportions.
+- Render realistic facial details using delicate colored pencil layering.
+- Create soft, natural skin tones with subtle tonal transitions and visible pencil texture.
+- Draw individual hair strands using fine, directional pencil strokes.
+- Reproduce clothing folds and fabric textures through carefully layered pencil shading.
+- Maintain the original pose, body position, camera angle, and composition.
+
+COLOR AND LIGHTING:
+Use soft, natural colors with gentle highlights and subtle shadows. Apply delicate colored pencil blending with smooth tonal transitions while retaining visible hand-drawn pencil marks.
+Avoid excessive saturation, harsh contrast, and overly smooth digital skin.
+
+BACKGROUND:
+Use a clean white or slightly warm-white paper background with subtle diagonal graphite pencil hatching and loose sketch strokes around the subject.
+Keep the background minimal, soft, and understated so that the subject remains the main focus.
+
+IMPORTANT REQUIREMENTS:
+The final artwork must look like a genuine traditional colored pencil drawing created by an experienced portrait artist.
+Do not turn the subject into a cartoon, anime, 3D character, or digital painting.
+Do not change the person's identity, facial structure, body proportions, pose, or original composition.
+
+Visual Keywords: Semi-Realistic Portrait, Traditional Colored Pencil Art, Fine Graphite Sketch, Hand-Drawn Illustration, Delicate Pencil Texture, Realistic Facial Anatomy, Soft Pastel Shading, White Paper Background, Highly Detailed Artwork.`;
+
+      // Option Dictionary for Dynamic Building
+      const OPTIONS = {
+        colorPencilMode: {
+          default: {
+            styleName: 'Semi-Realistic Colored Pencil Portrait Illustration',
+            techName: 'Colored Pencil and Graphite Pencil Drawing',
+            thIntro: 'เปลี่ยนภาพถ่ายต้นฉบับให้กลายเป็นภาพวาดศิลปะแนว Semi-Realistic Colored Pencil Portrait Illustration โดยใช้เทคนิคการวาดด้วยดินสอสีผสมดินสอกราไฟต์ (Colored Pencil and Graphite Pencil Drawing)',
+            enIntro: 'Transform the original reference photograph into a highly detailed Semi-Realistic Colored Pencil Portrait Illustration, using a combination of traditional colored pencil drawing and fine graphite sketching techniques.',
+            thColor: 'ใช้โทนสีธรรมชาติ แสงนุ่มนวล เงาบางเบา มีการไล่ระดับสีด้วยดินสอสีอย่างประณีต ไม่ใช้สีจัดจ้านหรือคอนทราสต์สูงเกินไป',
+            enColor: 'Use soft, natural colors with gentle highlights and subtle shadows. Apply delicate colored pencil blending with smooth tonal transitions while retaining visible hand-drawn pencil marks. Avoid excessive saturation, harsh contrast, and overly smooth digital skin.',
+            keywords: ['Traditional Colored Pencil Art', 'Fine Graphite Sketch', 'Soft Colored Pencil Shading']
+          },
+          bw_graphite: {
+            styleName: 'Semi-Realistic Monochrome Graphite Pencil Portrait Illustration',
+            techName: 'Pure Traditional Graphite Pencil Drawing (2H, HB, 2B, 4B, 6B)',
+            thIntro: 'เปลี่ยนภาพถ่ายต้นฉบับให้กลายเป็นภาพวาดขาวดำแนว Semi-Realistic Monochrome Graphite Pencil Portrait Illustration โดยใช้เทคนิคการวาดและแรเงาด้วยดินสอกราไฟต์ล้วน (Pure Traditional Graphite Pencil Drawing)',
+            enIntro: 'Transform the original reference photograph into a highly detailed Semi-Realistic Monochrome Graphite Pencil Portrait Illustration, rendered entirely with traditional graphite pencils (grades 2H, HB, 2B, 4B, and 6B) in classic black-and-white.',
+            thColor: 'เป็นภาพขาวดำ (Monochrome Graphite) 100% ไล่น้ำหนักอ่อน-เข้มด้วยเกรดดินสอตั้งแต่ 2H ถึง 6B แสงนุ่มนวล เงาบางเบาแต่มีมิติลึกอย่างประณีต ไม่ใช้สีอื่นเจือปน',
+            enColor: 'Render strictly in monochrome black-and-white graphite tones. Achieve rich tonal depth through multi-grade graphite layering from light 2H highlights to deep 6B shadows while keeping visible hand-drawn pencil strokes.',
+            keywords: ['Monochrome Graphite Portrait', 'Black and White Pencil Sketch', '2B 4B 6B Graphite Shading']
+          },
+          bw_charcoal_graphite: {
+            styleName: 'Semi-Realistic Charcoal & Graphite Monochrome Portrait',
+            techName: 'Fine Graphite and Soft Charcoal Pencil Drawing',
+            thIntro: 'เปลี่ยนภาพถ่ายต้นฉบับให้กลายเป็นภาพวาดขาวดำแนว Semi-Realistic Charcoal & Graphite Portrait Illustration โดยใช้เทคนิคดินสอกราไฟต์ผสมดินสอชาโคล (Graphite and Charcoal Pencil Drawing)',
+            enIntro: 'Transform the original reference photograph into a Semi-Realistic Monochrome Charcoal and Graphite Pencil Portrait Illustration, blending crisp graphite detail with velvety charcoal shading.',
+            thColor: 'โทนขาวดำคลาสสิก ใช้ดินสอกราไฟต์เก็บรายละเอียดใบหน้าและใช้ชาโคลสร้างน้ำหนักเงาที่นุ่มลึก ดูเหมือนงานวาดมือบนกระดาษจริง',
+            enColor: 'Monochrome grayscale palette combining crisp metallic graphite middle tones with soft, matte charcoal shadows and clean paper highlights.',
+            keywords: ['Charcoal and Graphite Portrait', 'Monochrome Hand-Drawn Sketch', 'Matte Pencil Shading']
+          },
+          vintage_sepia: {
+            styleName: 'Warm Vintage Colored Pencil & Graphite Portrait Illustration',
+            techName: 'Muted Earth-Tone Colored Pencil and Graphite Sketching',
+            thIntro: 'เปลี่ยนภาพถ่ายต้นฉบับให้กลายเป็นภาพวาดแนว Semi-Realistic Warm Vintage Colored Pencil Portrait โดยใช้ดินสอสีโทนอุ่นธรรมชาติผสมดินสอกราไฟต์',
+            enIntro: 'Transform the original reference photograph into a Semi-Realistic Warm Vintage Colored Pencil and Graphite Portrait Illustration with muted earth and sepia undertones.',
+            thColor: 'ใช้โทนสีอุ่นละมุน (Warm Earth & Soft Sepia Pastel) ผสมเส้นกราไฟต์ แสงนุ่มนวล ให้ความรู้สึกคลาสสิกและอบอุ่น',
+            enColor: 'Use warm, muted earth-tone colored pencils blended with fine graphite shading, creating soft nostalgic warmth without harsh digital saturation.',
+            keywords: ['Warm Sepia Colored Pencil', 'Muted Vintage Portrait', 'Fine Graphite Underdrawing']
+          },
+          selective_sketch: {
+            styleName: 'Tinted Graphite Sketch & Delicate Colored Pencil Portrait',
+            techName: 'Graphite Pencil Drawing with Subtle Colored Pencil Accents',
+            thIntro: 'เปลี่ยนภาพถ่ายต้นฉบับให้เป็นภาพสเก็ตช์ดินสอกราไฟต์กึ่งสมจริง ที่ระบายดินสอสีบางเบาเฉพาะส่วนใบหน้าและจุดเด่น (Tinted Graphite & Delicate Colored Pencil Sketch)',
+            enIntro: 'Transform the original reference photograph into a Semi-Realistic Tinted Graphite Sketch Portrait, where fine monochrome graphite linework is delicately accented with light colored pencil washes on skin tones and key details.',
+            thColor: 'เน้นโครงสร้างเส้นแรเงาดินสอกราไฟต์เป็นหลัก แล้วแต้มสีเนื้อและสีปาก/เสื้อบางๆ ด้วยดินสอสีอย่างโปร่งเบา',
+            enColor: 'Predominantly fine graphite pencil shading with restrained, semi-transparent colored pencil tinting on facial warmth, lips, and subtle garment accents.',
+            keywords: ['Tinted Graphite Portrait', 'Light Colored Pencil Wash', 'Sketchbook Portrait Art']
+          }
+        },
+
+        pencilLeadGrade: {
+          default: {
+            th: 'ใช้เส้นดินสอสีละเอียดในการลงสีและสร้างมิติของภาพ ผสมผสานกับเส้นสเก็ตช์ดินสอที่บางเบา',
+            en: 'Use delicate colored pencil strokes blended with fine graphite pencil outlines and subtle sketch marks.'
+          },
+          wax_prismacolor: {
+            th: 'ใช้ดินสอสีเนื้อนุ่ม (Wax-based Colored Pencils) ไล่เฉดทับซ้อนกันอย่างนุ่มนวล ผสานเส้นร่างและแรเงาด้วยดินสอกราไฟต์ HB และ 2B',
+            en: 'Layer soft wax-based colored pencils for creamy yet textured tonal transitions, anchored by crisp HB and 2B graphite pencil contour and shading lines.'
+          },
+          polychromos_fine: {
+            th: 'ใช้ดินสอสีเนื้อออยล์เหลาปลายแหลมคม (Fine-Point Oil-Based Pencils) ร่วมกับดินสอกราไฟต์ 2H/HB เพื่อขีดเส้นรายละเอียดขนาดเล็กให้คมชัดทุกเส้น',
+            en: 'Use sharply pointed oil-based colored pencils paired with fine 2H/HB technical graphite leads for razor-sharp individual strokes and micro-hatching.'
+          },
+          graphite_range: {
+            th: 'ใช้ชุดดินสอกราไฟต์หลายระดับความเข้ม (2H สำหรับไฮไลท์, HB/2B สำหรับโครงหน้า, 4B/6B สำหรับเส้นผมและเงาลึก) เพื่อให้เห็นน้ำหนักมือการแรเงาครบมิติ',
+            en: 'Utilize a full artist range of graphite leads (2H for delicate skin grain, HB/2B for mid-tone cross-hatching, and 4B/6B for deep hair and shadow accents).'
+          }
+        },
+
+        handDrawnLevel: {
+          default: {
+            th: 'สร้างภาพให้มีลักษณะเหมือนภาพวาดด้วยมือบนกระดาษวาดเขียนสีขาว ให้เห็นร่องรอยของการวาดอย่างเป็นธรรมชาติ',
+            en: 'Create an authentic hand-drawn illustration on textured white drawing paper. The artwork should resemble a carefully hand-rendered portrait, with visible pencil grain, natural hand-drawn strokes, delicate shading, and realistic artistic details.'
+          },
+          ultra_human: {
+            th: 'บังคับให้ภาพดูเหมือนมนุษย์วาดด้วยมือจริง 100% บนกระดาษจริง: ต้องเห็นรอยขีดของปลายดินสอทีละเส้น น้ำหนักมือหนัก-เบาไม่เท่ากันแบบธรรมชาติ เห็นเม็ดกระดาษขาวเล็กๆ แทรกอยู่ในเนื้อสี (Paper Tooth) และห้ามเกลี่ยสีเนียนกริบแบบคอมพิวเตอร์เด็ดขาด',
+            en: 'Strictly enforce 100% human hand-drawn physical media authenticity: showcase unmistakable directional pencil strokes, organic variations in hand pressure, microscopic uncolored paper tooth peeking through layered pigment, and raw tactile graphite grain with zero digital airbrushing.'
+          },
+          studio_sketch: {
+            th: 'เน้นอารมณ์งานวาดสดในสตูดิโอศิลปะ: คงเส้นร่างโครงสร้างดินสอกราไฟต์บางๆ (Construction & Contour Lines) และเส้นแรเงาเฉียงที่แสดงจังหวะการตวัดข้อมือของศิลปินอย่างชัดเจน',
+            en: 'Emphasize an authentic artist-studio aesthetic: retain faint graphite construction lines, expressive wrist-driven hatching strokes, and visible overlapping pencil marks that prove manual craftsmanship.'
+          },
+          master_fine: {
+            th: 'งานวาดมือระดับช่างวาดภาพเหมือนมืออาชีพ: ลงดินสอสีทับซ้อนกันหลายเลเยอร์อย่างปราณีตบริเวณใบหน้า แต่ยังคงทิ้งร่องรอยเส้นดินสอและเกรนกระดาษให้ซูมเห็นได้ชัดเจน',
+            en: 'Master portraitist manual execution: build lifelike volume through patient multi-layered cross-hatching and light burnishing on focal features while preserving unmistakable tactile pencil grain across the entire sheet.'
+          }
+        },
+
+        imperfectionDetail: {
+          default: {
+            th: 'เห็นเกรนดินสอและเส้นสเก็ตช์ที่มองเห็นได้ตามธรรมชาติ',
+            en: 'Retain visible pencil grain and natural hand-drawn sketch marks throughout the portrait.'
+          },
+          pressure_smudge: {
+            th: 'มีจังหวะน้ำหนักมือหนัก-เบาตามธรรมชาติ ผสมรอยเกลี่ยดินสอด้วยเปเปอร์สตัมป์ (Tortillon Smudge) บางๆ บริเวณเงาแก้มและลำคอ',
+            en: 'Include subtle human micro-imperfections such as varying pencil stroke pressure, gentle tortillon paper-stump blending in soft shadow transitions, and crisp over-sketched detail lines.'
+          },
+          raw_unfinished_edges: {
+            th: 'ปล่อยขอบชายเสื้อด้านล่างและขอบนอกของตัวแบบให้ค่อยๆ เฟดหายไปเป็นเส้นสเก็ตช์ดินสอเปลือยๆ ที่ไม่ได้ระบายทึบ เหมือนงานวาดมือในภาพตัวอย่าง',
+            en: 'Leave the lower garment hem and outer peripheral edges deliberately unfinished with tapering, open graphite sketch lines that fade organically into the bare paper.'
+          },
+          paper_tooth_break: {
+            th: 'ให้เนื้อสีดินสอเกาะอยู่บนสันนูนของกระดาษวาดเขียน โดยมีจุดขาวละเอียดของร่องกระดาษแทรกอยู่ตามธรรมชาติ ไม่ทึบตันเหมือนสีดิจิทัล',
+            en: 'Ensure pigment sits physically on top of the paper grain, leaving tiny organic white specks of paper valleys visible inside shaded areas rather than flat digital fills.'
+          }
+        },
+
+        backgroundStyle: {
+          default: {
+            th: 'พื้นหลังเป็นกระดาษสีขาวหรือสีขาวนวล มีร่องรอยเส้นดินสอสเก็ตช์เฉียง ๆ บาง ๆ กระจายอยู่ด้านหลังบุคคลอย่างเป็นธรรมชาติ ไม่แย่งความโดดเด่นจากตัวแบบ',
+            en: 'Use a clean white or slightly warm-white paper background with subtle diagonal graphite pencil hatching and loose sketch strokes around the subject. Keep the background minimal, soft, and understated so that the subject remains the main focus.',
+            keywords: ['White Paper Background', 'Subtle Diagonal Pencil Hatching']
+          },
+          cutout_rich_hatching: {
+            th: 'ตัดพื้นหลังเดิมออกจากภาพต้นฉบับให้เป็นกระดาษวาดเขียนสีขาว แล้ววาดเติมลายเส้นดินสอสเก็ตช์เฉียงๆ (Diagonal Pencil Hatching Aura) ล้อมรอบศีรษะและไหล่ของตัวแบบให้ชัดเจนและสมจริงเหมือนภาพตัวอย่างที่แนบ ไม่ให้ดูเหมือนภาพตัดแปะโล่งๆ',
+            en: 'Remove the original photo scene background completely and place the subject on clean white drawing paper surrounded by an expressive halo of diagonal hand-drawn graphite and colored pencil hatching strokes behind the head, shoulders, and torso—replicating a traditional hand-shaded studio portrait background.',
+            keywords: ['Cutout Background with Diagonal Pencil Hatching', 'Hand-Shaded Halo Background', 'White Drawing Paper']
+          },
+          pure_white_no_strokes: {
+            th: 'ตัดพื้นหลังออกเป็นกระดาษวาดเขียนสีขาวสะอาดล้วน (Pure Clean White Drawing Paper) โดยไม่ต้องเติมลายเส้นดินสอแรเงาใดๆ บนพื้นหลัง เพื่อให้ตัวบุคคลลอยเด่นบนกระดาษขาว',
+            en: 'Isolate the subject on a completely clean, unshaded white drawing paper background with zero background hatching or stray background strokes, keeping 100% of pencil work strictly on the subject.',
+            keywords: ['Pure Clean White Paper Background', 'Isolated Portrait on White Paper']
+          },
+          keep_original_sketch_bg: {
+            th: 'คงสภาพแวดล้อมและพื้นหลังตามภาพถ่ายต้นฉบับไว้ แต่เปลี่ยนพื้นหลังให้เป็นภาพสเก็ตช์เส้นดินสอจางๆ น้ำหนักเบา (Soft Faded Graphite & Colored Pencil Background) เพื่อไม่ให้แย่งจุดสนใจจากใบหน้า',
+            en: 'Retain the original environment from the reference photo, but render the background as a soft, lightly sketched graphite and muted colored pencil vignette with looser strokes so the subject remains the sharp focal point.',
+            keywords: ['Soft Sketched Original Background', 'Hand-Drawn Environmental Context']
+          },
+          warm_cream_hatching: {
+            th: 'ตัดพื้นหลังเดิมออกแล้ววางบนกระดาษวาดเขียนสีขาวนวลอมครีม (Warm Ivory/Cream Sketch Paper) พร้อมเติมลายเส้นดินสอสเก็ตช์เฉียงบางๆ รอบตัวแบบอย่างเป็นธรรมชาติ',
+            en: 'Remove the original photo background and render on warm ivory/cream textured drawing paper featuring delicate diagonal graphite hatching strokes radiating softly behind the subject.',
+            keywords: ['Warm Ivory Drawing Paper', 'Diagonal Graphite Hatching Background']
+          }
+        },
+
+        hatchingDirection: {
+          default: {
+            th: '',
+            en: ''
+          },
+          diagonal_color_aura: {
+            th: 'เส้นดินสอพื้นหลังเอียงทำมุมประมาณ 45 องศา มีการลงน้ำหนักดินสอสีอ่อนๆ ล้อตามโทนสีผิวและเสื้อผ้ากระจายออกด้านข้างแล้วจางหายไปกับกระดาษขาว (ตรงตามภาพคู่ตัวอย่าง)',
+            en: 'Apply 45-degree diagonal parallel pencil strokes behind the figure using very light graphite and subtle pastel tints that echo the subject’s clothing and skin tones, softly feathering out into pure white paper.'
+          },
+          cross_hatching_vignette: {
+            th: 'ใช้เทคนิคเส้นดินสอเฉียงสานกัน (Loose Cross-Hatching) ให้มีความเข้มเล็กน้อยบริเวณชิดขอบไหล่และศีรษะ แล้วค่อยๆ ผ่อนน้ำหนักมือจางหายไปด้านนอก',
+            en: 'Frame the torso and head with loose artist cross-hatching that is slightly denser near the shoulder contours and gradually tapers off into blank paper.'
+          },
+          none: {
+            th: 'เว้นพื้นที่กระดาษด้านหลังให้ขาวสะอาดปราศจากรอยขีดดินสอ',
+            en: 'Leave the surrounding paper surface completely untouched and free of background hatching marks.'
+          }
+        },
+
+        facialSkinDetail: {
+          default: {
+            th: 'ใช้เทคนิคการลงสีแบบดินสอสีที่มีการไล่น้ำหนักอย่างละเอียด ผิวมีมิติและดูเป็นธรรมชาติ ไม่เรียบเนียนเหมือนภาพดิจิทัล',
+            en: 'Render realistic facial details using delicate colored pencil layering. Create soft, natural skin tones with subtle tonal transitions and visible pencil texture.'
+          },
+          micro_hatch_skin: {
+            th: 'ลงสีผิวด้วยการขีดเส้นดินสอขนาดเล็กเรียงตามโครงสร้างกล้ามเนื้อใบหน้า (Contour Micro-Hatching) ให้เห็นเนื้อเกรนดินสอชัดเจนบนแก้ม หน้าผาก และสันจมูก',
+            en: 'Build skin tones through fine directional micro-hatching that follows facial planes across cheeks, forehead, and nose bridge, keeping authentic grainy pencil texture visible.'
+          },
+          high_focus_eyes: {
+            th: 'เน้นความคมชัดและแววตาให้มีชีวิตชีวาด้วยดินสอกราไฟต์และดินสอสีปลายแหลมคม ส่วนผิวแก้มไล่เฉดนุ่มนวลเห็นเท็กซ์เจอร์กระดาษบางๆ',
+            en: 'Apply razor-sharp graphite and colored pencil precision to the eyes, eyelashes, eyebrows, and lip contours, balanced with soft grainy layered shading across the cheeks.'
+          }
+        },
+
+        hairStrokeStyle: {
+          default: {
+            th: 'เส้นผมมีรายละเอียดเป็นเส้นดินสอเล็ก ๆ เรียงตัวตามทิศทางของเส้นผม',
+            en: 'Draw individual hair strands using fine, directional pencil strokes.'
+          },
+          flyaway_strands: {
+            th: 'วาดเส้นผมทีละเส้นตามทิศทางการแสกและทิ้งตัวของผมจริงด้วยดินสอปลายแหลม พร้อมขีดเส้นลูกผมและเส้นผมที่ปลิวแยกออกมาเล็กน้อยให้ดูเหมือนคนวาดมือจริง',
+            en: 'Render individual hair strands with sharp directional graphite and dark colored pencil strokes, including natural flyaway hairs and fine wisps along the hairline.'
+          },
+          glossy_graphite_locks: {
+            th: 'สร้างมิติความเงางามของเส้นผมด้วยการเว้นเนื้อกระดาษสีขาวเป็นไฮไลท์ สลับกับการกดน้ำหนักดินสอเข้มลึกในร่องผมเหมือนภาพหญิงสาวผมยาวในตัวอย่าง',
+            en: 'Create natural hair volume and sheen by reserving crisp unshaded paper highlights between dense, directional dark pencil strokes.'
+          }
+        },
+
+        clothingEdgeStyle: {
+          default: {
+            th: 'เสื้อผ้ามีรอยเส้นดินสอและการลงเงาที่แสดงถึงเนื้อผ้า',
+            en: 'Reproduce clothing folds and fabric textures through carefully layered pencil shading.'
+          },
+          hand_sketched_fade_bottom: {
+            th: 'เสื้อผ้าแสดงรอยเส้นดินสอแรเงาตามรอยยับของเนื้อผ้าและลวดลายสกรีนอย่างชัดเจน และปล่อยขอบชายเสื้อด้านล่างของภาพให้ค่อยๆ เฟดเป็นเส้นสเก็ตช์ดินสอเฉียงๆ กลืนไปกับกระดาษขาวเหมือนภาพตัวอย่าง',
+            en: 'Render garment folds, collar ribbing, and fabric grain with visible directional pencil strokes, allowing the bottom edge of the torso and clothing to taper off into loose, unfinished diagonal sketch lines fading into the white paper.'
+          },
+          loose_sketch_garment: {
+            th: 'บริเวณเสื้อผ้าใช้เส้นสเก็ตช์ดินสอที่โปร่งและผ่อนคลายกว่าส่วนใบหน้า เพื่อดึงสายตาให้โฟกัสที่ใบหน้าของบุคคลเป็นหลัก',
+            en: 'Render the clothing with slightly looser, more expressive graphite hatching so the finely detailed facial portrait remains the primary focal point.'
+          }
+        },
+
+        paperTextureType: {
+          default: {
+            th: 'กระดาษวาดเขียนสีขาว (Textured White Drawing Paper)',
+            en: 'textured white drawing paper'
+          },
+          fine_tooth_bristol: {
+            th: 'กระดาษวาดเขียน Fine-Tooth Bristol 100lb สีขาวที่มีผิวละเอียดช่วยให้เส้นดินสอคมชัด',
+            en: '100lb fine-tooth white Bristol vellum drawing paper with subtle surface grain'
+          },
+          cold_press_textured: {
+            th: 'กระดาษวาดเขียนชนิดผิวหยาบปานกลาง (Medium-Tooth Cold-Press Sketch Paper) ที่เห็นเม็ดกระดาษชัดเจนเวลาแรเงาดินสอ',
+            en: 'heavyweight cold-press drawing paper with pronounced organic paper tooth'
+          }
+        }
+      };
+
+      // AI-Specific Wrappers
+      const AI_ADAPTERS = {
+        general: {
+          name: 'General Multimodal AI (Standard md_prompt.txt)',
+          thPrefix: '',
+          enPrefix: '',
+          enSuffix: ''
+        },
+        gemini: {
+          name: 'Google Gemini (Imagen 3 / Multimodal)',
+          thPrefix: '[คำสั่งสำหรับ Google Gemini: ใช้รูปภาพที่แนบมานี้เป็นต้นแบบอ้างอิงหลัก (Image-to-Image Reference) ห้ามเปลี่ยนโครงหน้าหรือตัวตนของบุคคล]\n\n',
+          enPrefix: '[Instruction for Google Gemini: Use the attached image as the strict primary reference. Transform only the artistic medium into a hand-drawn colored pencil & graphite portrait while locking facial identity and pose.]\n\n',
+          enSuffix: ''
+        },
+        chatgpt: {
+          name: 'ChatGPT (GPT-4o / DALL-E 3)',
+          thPrefix: '[คำสั่งสำหรับ ChatGPT / GPT-4o: กรุณาอ้างอิงใบหน้า สัดส่วน ท่าทาง และองค์ประกอบจากรูปที่แนบมาอย่างเคร่งครัด แล้ววาดใหม่เป็นงานวาดดินสอสีผสมกราไฟต์ด้วยมือ]\n\n',
+          enPrefix: '[Instruction for ChatGPT / GPT-4o: Strictly reference the attached photo. Maintain exact facial likeness, expressions, and pose, converting the image into a genuine hand-drawn colored pencil and graphite portrait on paper.]\n\n',
+          enSuffix: ''
+        },
+        midjourney: {
+          name: 'Midjourney v6.1',
+          thPrefix: '[คำแนะนำ Midjourney: แนบลิงก์รูปภาพต้นฉบับไว้หน้าสุดของ Prompt แล้วตามด้วยข้อความภาษาอังกฤษด้านล่าง]\n\n',
+          enPrefix: '[Attach Reference Image URL] ',
+          enSuffix: ' --style raw --v 6.1 --iw 1.75 --no cartoon, anime, 3d render, digital airbrush, plastic skin, oil painting, watermark'
+        },
+        flux: {
+          name: 'Flux.1 Dev / Pro & SDXL (Image-to-Image / ControlNet)',
+          thPrefix: '[คำแนะนำสำหรับ Flux.1 / SDXL: แนะนำให้ตั้งค่า Denoising Strength 0.45 - 0.60 ร่วมกับ Canny/Lineart หรือ IP-Adapter FaceID]\n\n',
+          enPrefix: '',
+          enSuffix: '\n\n[Recommended Parameters: Guidance Scale 3.5, Image-to-Image Denoise 0.52, IP-Adapter FaceID weight 0.85]'
+        },
+        leonardo: {
+          name: 'Leonardo.ai / Ideogram 2.0',
+          thPrefix: '[คำแนะนำสำหรับ Leonardo.ai / Ideogram: เปิดใช้งาน Image Guidance (Character Reference + Content Reference ระดับ High)]\n\n',
+          enPrefix: '',
+          enSuffix: '\n\n[Negative Prompt: smooth digital painting, airbrushed skin, 3D CGI, anime, cartoon, altered facial features, oversaturated colors, photographic filter]'
+        }
+      };
+
+      // Presets for "Generate Auto" button
+      const AUTO_PRESETS = [
+        {
+          label: 'Preset 1: เหมือนภาพคู่ตัวอย่างสูงสุด (วาดมือ 100% + พื้นหลังขาวลายเส้นดินสอเฉียง + ชายเสื้อเฟดสเก็ตช์)',
+          colorPencilMode: 'default',
+          pencilLeadGrade: 'wax_prismacolor',
+          handDrawnLevel: 'ultra_human',
+          imperfectionDetail: 'raw_unfinished_edges',
+          backgroundStyle: 'cutout_rich_hatching',
+          hatchingDirection: 'diagonal_color_aura',
+          facialSkinDetail: 'micro_hatch_skin',
+          hairStrokeStyle: 'glossy_graphite_locks',
+          clothingEdgeStyle: 'hand_sketched_fade_bottom',
+          paperTextureType: 'fine_tooth_bristol',
+          chkStrictIdentity: true,
+          chkAntiDigitalSkin: true
+        },
+        {
+          label: 'Preset 2: ขาวดำ ดินสอกราไฟต์ล้วน (Monochrome Graphite 2B/4B/6B + ลายเส้นดินสอเฉียงรอบตัวแบบ)',
+          colorPencilMode: 'bw_graphite',
+          pencilLeadGrade: 'graphite_range',
+          handDrawnLevel: 'ultra_human',
+          imperfectionDetail: 'pressure_smudge',
+          backgroundStyle: 'cutout_rich_hatching',
+          hatchingDirection: 'cross_hatching_vignette',
+          facialSkinDetail: 'high_focus_eyes',
+          hairStrokeStyle: 'flyaway_strands',
+          clothingEdgeStyle: 'hand_sketched_fade_bottom',
+          paperTextureType: 'cold_press_textured',
+          chkStrictIdentity: true,
+          chkAntiDigitalSkin: true
+        },
+        {
+          label: 'Preset 3: งานวาดมือระดับแกลเลอรี พื้นหลังขาวสะอาด (ไม่มีลายเส้นพื้นหลัง เน้นตัวบุคคลคมชัด)',
+          colorPencilMode: 'default',
+          pencilLeadGrade: 'polychromos_fine',
+          handDrawnLevel: 'master_fine',
+          imperfectionDetail: 'paper_tooth_break',
+          backgroundStyle: 'pure_white_no_strokes',
+          hatchingDirection: 'none',
+          facialSkinDetail: 'high_focus_eyes',
+          hairStrokeStyle: 'flyaway_strands',
+          clothingEdgeStyle: 'hand_sketched_fade_bottom',
+          paperTextureType: 'fine_tooth_bristol',
+          chkStrictIdentity: true,
+          chkAntiDigitalSkin: true
+        },
+        {
+          label: 'Preset 4: สเก็ตช์ดินสอสีโทนอุ่นบนกระดาษขาวนวล + เส้นแรเงาเฉียงแบบสตูดิโอ',
+          colorPencilMode: 'vintage_sepia',
+          pencilLeadGrade: 'wax_prismacolor',
+          handDrawnLevel: 'studio_sketch',
+          imperfectionDetail: 'raw_unfinished_edges',
+          backgroundStyle: 'warm_cream_hatching',
+          hatchingDirection: 'diagonal_color_aura',
+          facialSkinDetail: 'micro_hatch_skin',
+          hairStrokeStyle: 'flyaway_strands',
+          clothingEdgeStyle: 'loose_sketch_garment',
+          paperTextureType: 'cold_press_textured',
+          chkStrictIdentity: true,
+          chkAntiDigitalSkin: true
+        }
+      ];
+
+      // DOM Elements
+      const els = {
+        artworkTitle: document.getElementById('artworkTitle'),
+        targetAi: document.getElementById('targetAi'),
+        promptLangMode: document.getElementById('promptLangMode'),
+        subjectCountType: document.getElementById('subjectCountType'),
+        subjectDescription: document.getElementById('subjectDescription'),
+        colorPencilMode: document.getElementById('colorPencilMode'),
+        pencilLeadGrade: document.getElementById('pencilLeadGrade'),
+        handDrawnLevel: document.getElementById('handDrawnLevel'),
+        imperfectionDetail: document.getElementById('imperfectionDetail'),
+        chkStrictIdentity: document.getElementById('chkStrictIdentity'),
+        chkAntiDigitalSkin: document.getElementById('chkAntiDigitalSkin'),
+        backgroundStyle: document.getElementById('backgroundStyle'),
+        hatchingDirection: document.getElementById('hatchingDirection'),
+        facialSkinDetail: document.getElementById('facialSkinDetail'),
+        hairStrokeStyle: document.getElementById('hairStrokeStyle'),
+        clothingEdgeStyle: document.getElementById('clothingEdgeStyle'),
+        paperTextureType: document.getElementById('paperTextureType'),
+        fullTextOutput: document.getElementById('fullTextOutput'),
+        jsonOutput: document.getElementById('jsonOutput'),
+        modeStatusBadge: document.getElementById('modeStatusBadge'),
+        activeSummaryText: document.getElementById('activeSummaryText'),
+        userImageInput: document.getElementById('userImageInput'),
+        refPreviewImg: document.getElementById('refPreviewImg'),
+        refPreviewCaption: document.getElementById('refPreviewCaption'),
+        imgSourceBadge: document.getElementById('imgSourceBadge'),
+        btnRestoreSampleImg: document.getElementById('btnRestoreSampleImg'),
+        btnFillCoupleSample: document.getElementById('btnFillCoupleSample'),
+        btnClearSubjectDesc: document.getElementById('btnClearSubjectDesc'),
+        btnAutoGenerate: document.getElementById('btnAutoGenerate'),
+        btnResetDefault: document.getElementById('btnResetDefault'),
+        btnThemeToggle: document.getElementById('btnThemeToggle'),
+        themeIcon: document.getElementById('themeIcon'),
+        themeText: document.getElementById('themeText'),
+        btnCopyFullText: document.getElementById('btnCopyFullText'),
+        copyFullTextLabel: document.getElementById('copyFullTextLabel'),
+        btnCopyTextEnQuick: document.getElementById('btnCopyTextEnQuick'),
+        copyTextEnQuickLabel: document.getElementById('copyTextEnQuickLabel'),
+        btnCopyJson: document.getElementById('btnCopyJson'),
+        copyJsonLabel: document.getElementById('copyJsonLabel'),
+        btnCopyJsonEnQuick: document.getElementById('btnCopyJsonEnQuick'),
+        copyJsonEnQuickLabel: document.getElementById('copyJsonEnQuickLabel')
+      };
+
+      let lastCompiledThaiText = '';
+      let lastCompiledEngText = '';
+      let lastCompiledJsonTh = '';
+      let lastCompiledJsonEn = '';
+
+      function syncLangButtonsUI(langMode) {
+        const langBtns = document.querySelectorAll('[data-lang-select]');
+        langBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-lang-select') === langMode);
+        });
+
+        if (langMode === 'th') {
+          els.copyFullTextLabel.textContent = 'คัดลอก Prompt (เฉพาะภาษาไทย)';
+          els.copyJsonLabel.textContent = 'คัดลอก JSON (เฉพาะภาษาไทย)';
+          els.copyTextEnQuickLabel.textContent = 'คัดลอกเฉพาะ EN';
+          els.copyJsonEnQuickLabel.textContent = 'คัดลอก JSON (EN)';
+        } else if (langMode === 'en') {
+          els.copyFullTextLabel.textContent = 'คัดลอก Prompt (เฉพาะภาษาอังกฤษ)';
+          els.copyJsonLabel.textContent = 'คัดลอก JSON (เฉพาะภาษาอังกฤษ)';
+          els.copyTextEnQuickLabel.textContent = 'คัดลอกเฉพาะ ไทย';
+          els.copyJsonEnQuickLabel.textContent = 'คัดลอก JSON (ไทย)';
+        } else {
+          els.copyFullTextLabel.textContent = 'คัดลอก Prompt (ทั้ง 2 ภาษา)';
+          els.copyJsonLabel.textContent = 'คัดลอก JSON (ทั้ง 2 ภาษา)';
+          els.copyTextEnQuickLabel.textContent = 'คัดลอกเฉพาะ ไทย';
+          els.copyJsonEnQuickLabel.textContent = 'คัดลอก JSON (ไทย)';
+        }
+      }
+
+      // Check if all technical selectors are in their exact default state
+      function isPureBaseState() {
+        return (
+          els.targetAi.value === 'general' &&
+          els.subjectCountType.value === 'default' &&
+          els.subjectDescription.value.trim() === '' &&
+          els.colorPencilMode.value === 'default' &&
+          els.pencilLeadGrade.value === 'default' &&
+          els.handDrawnLevel.value === 'default' &&
+          els.imperfectionDetail.value === 'default' &&
+          els.backgroundStyle.value === 'default' &&
+          els.hatchingDirection.value === 'default' &&
+          els.facialSkinDetail.value === 'default' &&
+          els.hairStrokeStyle.value === 'default' &&
+          els.clothingEdgeStyle.value === 'default' &&
+          els.paperTextureType.value === 'default' &&
+          els.chkStrictIdentity.checked === true &&
+          els.chkAntiDigitalSkin.checked === true
+        );
+      }
+
+      function buildPrompts(customStatusNotice) {
+        const title = els.artworkTitle.value.trim() || 'Semi-Realistic Colored Pencil Portrait Illustration';
+        const aiKey = els.targetAi.value;
+        const aiAdapter = AI_ADAPTERS[aiKey] || AI_ADAPTERS.general;
+        const langMode = els.promptLangMode.value;
+        const subjectDesc = els.subjectDescription.value.trim();
+        const countType = els.subjectCountType.value;
+
+        const cMode = OPTIONS.colorPencilMode[els.colorPencilMode.value];
+        const leadGrade = OPTIONS.pencilLeadGrade[els.pencilLeadGrade.value];
+        const hdLevel = OPTIONS.handDrawnLevel[els.handDrawnLevel.value];
+        const impDetail = OPTIONS.imperfectionDetail[els.imperfectionDetail.value];
+        const bgStyle = OPTIONS.backgroundStyle[els.backgroundStyle.value];
+        const hatchDir = OPTIONS.hatchingDirection[els.hatchingDirection.value];
+        const skinDetail = OPTIONS.facialSkinDetail[els.facialSkinDetail.value];
+        const hairDetail = OPTIONS.hairStrokeStyle[els.hairStrokeStyle.value];
+        const clothDetail = OPTIONS.clothingEdgeStyle[els.clothingEdgeStyle.value];
+        const paperDetail = OPTIONS.paperTextureType[els.paperTextureType.value];
+
+        const pureBase = isPureBaseState();
+
+        // Update top badge & status bar
+        if (customStatusNotice) {
+          els.modeStatusBadge.textContent = 'Auto-Enhanced Mode';
+          els.activeSummaryText.textContent = '✨ ' + customStatusNotice;
+        } else if (pureBase) {
+          els.modeStatusBadge.textContent = 'โหมดพื้นฐาน (md_prompt.txt)';
+          els.activeSummaryText.textContent = '✨ สถานะปัจจุบัน: ค่าพื้นฐานตรงตามไฟล์ md_prompt.txt ทุกประการ (ดินสอสีผสมกราไฟต์ + พื้นหลังขาวมีเส้นดินสอเฉียงบางๆ)';
+        } else {
+          els.modeStatusBadge.textContent = 'โหมดปรับแต่งเอง (Custom)';
+          const modeLabel = els.colorPencilMode.options[els.colorPencilMode.selectedIndex].text.split('(')[0].trim();
+          const bgLabel = els.backgroundStyle.options[els.backgroundStyle.selectedIndex].text.split('(')[0].trim();
+          els.activeSummaryText.textContent = `🎨 กำลังใช้งาน: ${modeLabel} | พื้นหลัง: ${bgLabel} | AI: ${aiAdapter.name}`;
+        }
+
+        let thaiText = '';
+        let engText = '';
+
+        if (pureBase) {
+          // Exact base prompt from md_prompt.txt
+          thaiText = BASE_THAI_PROMPT;
+          engText = BASE_ENGLISH_PROMPT;
+        } else {
+          // Subject composition helper
+          let thCountLine = '';
+          let enCountLine = '';
+          if (countType === 'couple') {
+            thCountLine = '- ภาพบุคคลคู่ (Couple Portrait): รักษาความสัมพันธ์ของท่าทาง ระยะห่าง การโอบไหล่หรือเอียงศีรษะเข้าหากันตามภาพต้นฉบับ\n';
+            enCountLine = '- Couple Portrait Composition: Accurately preserve the interaction, head tilt, shoulder embrace, and relative proportions between both individuals.\n';
+          } else if (countType === 'single') {
+            thCountLine = '- ภาพบุคคลเดี่ยว (Solo Portrait): โฟกัสรายละเอียดใบหน้า แววตา และอารมณ์ของตัวแบบเดี่ยวตามต้นฉบับ\n';
+            enCountLine = '- Solo Portrait Composition: Focus intently on the single subject’s facial likeness, gaze, and upper-body posture.\n';
+          } else if (countType === 'family') {
+            thCountLine = '- ภาพครอบครัว/กลุ่ม (Family/Group Portrait): รักษาใบหน้าและสัดส่วนของทุกคนในภาพให้ครบถ้วนแม่นยำ\n';
+            enCountLine = '- Family/Group Portrait Composition: Preserve the distinct facial identity and relative scale of every person in the reference image.\n';
+          }
+
+          const thUserDescBlock = subjectDesc
+            ? `\nรายละเอียดรูปภาพ/คำบรรยายเพิ่มเติม:\n- ${subjectDesc}\n`
+            : '';
+          const enUserDescBlock = subjectDesc
+            ? `\nSPECIFIC SUBJECT & REFERENCE DESCRIPTION:\n- ${subjectDesc}\n`
+            : '';
+
+          const thAntiAiLines = [];
+          const enAntiAiLines = [];
+          if (els.chkStrictIdentity.checked) {
+            thAntiAiLines.push('ห้ามปรับโครงหน้าให้สวยหล่อเกินจริง (Do NOT Beautify, Idealize, or alter facial anatomy) ต้องคงเอกลักษณ์ใบหน้าคนจริงตามต้นฉบับ 100%');
+            enAntiAiLines.push('Strictly forbid facial beautification or idealization (NO Beautify, NO Idealized Face, NO Perfect Face filter); lock 100% authentic original facial structure.');
+          }
+          if (els.chkAntiDigitalSkin.checked) {
+            thAntiAiLines.push('ห้ามเกลี่ยผิวเนียนเรียบแบบพลาสติกหรือภาพดิจิทัล ต้องเห็นรอยขีดของเส้นดินสอและเม็ดกระดาษในทุกส่วน');
+            enAntiAiLines.push('Eliminate all smooth digital skin airbrushing; every shaded surface must display tactile hand-drawn pencil strokes and physical paper grain.');
+          }
+
+          const visualKeywords = [
+            'Semi-Realistic Portrait',
+            ...cMode.keywords,
+            'Hand-Drawn Illustration',
+            'Delicate Pencil Texture',
+            'Realistic Facial Anatomy',
+            ...bgStyle.keywords,
+            'Visible Paper Tooth',
+            'Authentic Human Sketch',
+            'Highly Detailed Artwork'
+          ].join(', ');
+
+          thaiText = `${aiAdapter.thPrefix}ชื่อผลงาน: ${title}
+${cMode.thIntro}
+
+ลักษณะงานศิลปะ:
+${hdLevel.th} บน${paperDetail.th} ${leadGrade.th}
+- ${impDetail.th}${thUserDescBlock}
+รายละเอียดบุคคล:
+${thCountLine}- รักษาใบหน้าและเอกลักษณ์ของบุคคลจากภาพต้นฉบับให้เหมือนเดิมมากที่สุด
+- คงรูปทรงใบหน้า ดวงตา จมูก ปาก และสัดส่วนของร่างกายตามต้นฉบับ
+- รักษาทรงผม สีผม เสื้อผ้า และเครื่องประดับให้ตรงกับภาพอ้างอิง
+- ${skinDetail.th}
+- ${hairDetail.th}
+- ${clothDetail.th}
+
+แสงและเงา:
+${cMode.thColor}
+
+พื้นหลัง:
+${bgStyle.th}${hatchDir.th ? '\n- ' + hatchDir.th : ''}
+
+ข้อกำหนดสำคัญ (เพื่อให้เหมือนคนวาดมือจริงที่สุด):
+ต้องให้ผลงานสุดท้ายดูเหมือนภาพวาดด้วยมือจริง ๆ โดยศิลปินวาดภาพเหมือน ไม่ใช่ภาพถ่ายที่ใส่ฟิลเตอร์ ไม่ใช่ภาพการ์ตูน ไม่ใช่ภาพอนิเมะ และไม่ใช่ภาพ 3D
+${thAntiAiLines.map(l => '- ' + l).join('\n')}
+รักษาองค์ประกอบ ท่าทาง มุมกล้อง และจำนวนบุคคลตามภาพต้นฉบับให้มากที่สุด
+
+Visual Keywords: ${visualKeywords}`;
+
+          engText = `${aiAdapter.enPrefix}${cMode.enIntro}
+
+ART STYLE AND TECHNIQUE:
+${hdLevel.en} Rendered on ${paperDetail.en}. ${leadGrade.en}
+- ${impDetail.en}${enUserDescBlock}
+SUBJECT AND FACIAL DETAILS:
+${enCountLine}- Preserve the original person's identity and facial features as accurately as possible.
+- Maintain the original face shape, eyes, nose, lips, facial proportions, and natural expression.
+- Preserve the original hairstyle, hair color, clothing, accessories, and body proportions.
+- ${skinDetail.en}
+- ${hairDetail.en}
+- ${clothDetail.en}
+- Maintain the original pose, body position, camera angle, and composition.
+
+COLOR AND LIGHTING:
+${cMode.enColor}
+
+BACKGROUND:
+${bgStyle.en}${hatchDir.en ? '\n- ' + hatchDir.en : ''}
+
+IMPORTANT REQUIREMENTS (HUMAN HAND-DRAWN AUTHENTICITY):
+The final artwork must look like a genuine traditional pencil drawing created by an experienced human portrait artist on physical paper.
+Do not turn the subject into a cartoon, anime, 3D character, or digital painting.
+Do not change the person's identity, facial structure, body proportions, pose, or original composition.
+${enAntiAiLines.map(l => '- ' + l).join('\n')}
+
+Visual Keywords: ${visualKeywords}${aiAdapter.enSuffix}`;
+        }
+
+        lastCompiledThaiText = thaiText;
+        lastCompiledEngText = engText;
+        syncLangButtonsUI(langMode);
+
+        // Compose Full Text Display based on selected language mode
+        let finalFullText = '';
+        if (langMode === 'en') {
+          finalFullText = engText;
+        } else if (langMode === 'th') {
+          finalFullText = thaiText;
+        } else {
+          finalFullText = `=== PROMPT ภาษาไทย (THAI PROMPT) ===\n\n${thaiText}\n\n------------------------------------------------------------\n\n=== PROMPT ภาษาอังกฤษ (ENGLISH PROMPT) ===\n\n${engText}`;
+        }
+
+        els.fullTextOutput.textContent = finalFullText;
+
+        const visualKeywordList = [
+          "Semi-Realistic Portrait",
+          ...cMode.keywords,
+          "Hand-Drawn Illustration",
+          "Delicate Pencil Texture",
+          "Realistic Facial Anatomy",
+          ...bgStyle.keywords,
+          "Highly Detailed Artwork"
+        ];
+
+        // 1) Thai-Only JSON Prompt (Default - no duplicate English text)
+        const jsonPayloadTh = {
+          prompt_title: title,
+          language: "th",
+          recommended_style_name: "Realistic Colored Pencil Sketch Portrait",
+          target_ai_platform: aiAdapter.name,
+          is_default_md_prompt_baseline: pureBase,
+          reference_image: {
+            source_file: uploadedFileName,
+            composition_type: countType,
+            subject_description: subjectDesc || "อ้างอิงบุคคล ท่าทาง เสื้อผ้า และองค์ประกอบจากรูปภาพต้นฉบับที่แนบมาโดยตรง 100%"
+          },
+          core_controls: {
+            identity_preservation: "รักษาใบหน้าและเอกลักษณ์ของบุคคลจากภาพต้นฉบับให้เหมือนเดิมมากที่สุด 100%",
+            art_style_transformation: cMode.styleName,
+            original_composition: "รักษาองค์ประกอบ ท่าทาง มุมกล้อง และจำนวนบุคคลตามภาพต้นฉบับ"
+          },
+          art_style_and_technique: {
+            style: "Semi-Realistic Illustration (ภาพวาดกึ่งสมจริงด้วยมือ)",
+            medium: cMode.techName,
+            pencil_lead_and_layering: leadGrade.th,
+            paper_surface: paperDetail.th,
+            hand_drawn_authenticity: hdLevel.th,
+            human_stroke_imperfections: impDetail.th
+          },
+          subject_and_facial_details: {
+            face_and_skin_shading: skinDetail.th,
+            hair_rendering: hairDetail.th,
+            clothing_and_lower_edge: clothDetail.th
+          },
+          color_and_lighting: {
+            color_mode: els.colorPencilMode.value === 'default' ? 'ดินสอสีโทนธรรมชาติผสมเส้นสเก็ตช์กราไฟต์' : els.colorPencilMode.value,
+            lighting_direction_and_tone: cMode.thColor
+          },
+          background_specification: {
+            background_mode: els.backgroundStyle.value,
+            description: bgStyle.th,
+            diagonal_pencil_hatching_detail: hatchDir.th || "มีร่องรอยเส้นดินสอสเก็ตช์เฉียงๆ บางๆ กระจายอยู่ด้านหลังบุคคลอย่างเป็นธรรมชาติ"
+          },
+          anti_ai_and_negative_constraints: {
+            forbid_beautify_or_idealized_face: els.chkStrictIdentity.checked,
+            forbid_smooth_digital_airbrush_skin: els.chkAntiDigitalSkin.checked,
+            negative_prompts: [
+              "ห้ามใส่ฟิลเตอร์แต่งภาพ",
+              "ห้ามเกลี่ยผิวเนียนพลาสติกแบบดิจิทัล",
+              "ห้ามปรับโครงหน้า (No Beautify / No Idealized Face)",
+              "ไม่ใช่ภาพการ์ตูน",
+              "ไม่ใช่ภาพอนิเมะ",
+              "ไม่ใช่ภาพ 3D CGI"
+            ]
+          },
+          visual_keywords: visualKeywordList,
+          compiled_prompt: thaiText
+        };
+
+        // 2) English-Only JSON Prompt (Clean English - no Thai text)
+        const jsonPayloadEn = {
+          prompt_title: title,
+          language: "en",
+          recommended_style_name: "Realistic Colored Pencil Sketch Portrait",
+          target_ai_platform: aiAdapter.name,
+          is_default_md_prompt_baseline: pureBase,
+          reference_image: {
+            source_file: uploadedFileName,
+            composition_type: countType,
+            subject_description: subjectDesc || "Use attached reference photograph directly (preserve original subjects, clothing, and pose)"
+          },
+          core_controls: {
+            identity_preservation: "Strictly preserve 100% original facial features, proportions, expression, and likeness",
+            art_style_transformation: cMode.styleName,
+            original_composition: "Maintain exact camera angle, pose, body proportions, and garment layout"
+          },
+          art_style_and_technique: {
+            style: "Semi-Realistic Illustration",
+            medium: cMode.techName,
+            pencil_lead_and_layering: leadGrade.en,
+            paper_surface: paperDetail.en,
+            hand_drawn_authenticity: hdLevel.en,
+            human_stroke_imperfections: impDetail.en
+          },
+          subject_and_facial_details: {
+            face_and_skin_shading: skinDetail.en,
+            hair_rendering: hairDetail.en,
+            clothing_and_lower_edge: clothDetail.en
+          },
+          color_and_lighting: {
+            color_mode: els.colorPencilMode.value === 'default' ? 'Natural Soft Colored Pencil + Graphite' : els.colorPencilMode.value,
+            lighting_direction_and_tone: cMode.enColor
+          },
+          background_specification: {
+            background_mode: els.backgroundStyle.value,
+            description: bgStyle.en,
+            diagonal_pencil_hatching_detail: hatchDir.en || "Subtle diagonal graphite pencil hatching and loose sketch strokes around the subject"
+          },
+          anti_ai_and_negative_constraints: {
+            forbid_beautify_or_idealized_face: els.chkStrictIdentity.checked,
+            forbid_smooth_digital_airbrush_skin: els.chkAntiDigitalSkin.checked,
+            negative_prompts: [
+              "photo filter",
+              "digital airbrush",
+              "smooth plastic skin",
+              "cartoon",
+              "anime",
+              "3D CGI render",
+              "beautify filter",
+              "idealized face",
+              "altered facial identity",
+              "oversaturated neon colors"
+            ]
+          },
+          visual_keywords: visualKeywordList,
+          compiled_prompt: engText
+        };
+
+        // 3) Bilingual JSON Prompt (Only when explicitly requested)
+        const jsonPayloadBilingual = {
+          ...jsonPayloadTh,
+          language: "bilingual (th + en)",
+          compiled_prompts: {
+            thai_full_prompt: thaiText,
+            english_full_prompt: engText
+          }
+        };
+        delete jsonPayloadBilingual.compiled_prompt;
+
+        lastCompiledJsonTh = JSON.stringify(jsonPayloadTh, null, 2);
+        lastCompiledJsonEn = JSON.stringify(jsonPayloadEn, null, 2);
+
+        if (langMode === 'th') {
+          els.jsonOutput.textContent = lastCompiledJsonTh;
+        } else if (langMode === 'en') {
+          els.jsonOutput.textContent = lastCompiledJsonEn;
+        } else {
+          els.jsonOutput.textContent = JSON.stringify(jsonPayloadBilingual, null, 2);
+        }
+      }
+
+      // Attach listeners to all inputs/selects/checkboxes
+      const formElements = [
+        els.artworkTitle,
+        els.targetAi,
+        els.promptLangMode,
+        els.subjectCountType,
+        els.subjectDescription,
+        els.colorPencilMode,
+        els.pencilLeadGrade,
+        els.handDrawnLevel,
+        els.imperfectionDetail,
+        els.chkStrictIdentity,
+        els.chkAntiDigitalSkin,
+        els.backgroundStyle,
+        els.hatchingDirection,
+        els.facialSkinDetail,
+        els.hairStrokeStyle,
+        els.clothingEdgeStyle,
+        els.paperTextureType
+      ];
+
+      formElements.forEach(el => {
+        el.addEventListener('input', () => buildPrompts());
+        el.addEventListener('change', () => buildPrompts());
+      });
+
+      // Sample description quick-fill buttons
+      els.btnFillCoupleSample.addEventListener('click', () => {
+        els.subjectCountType.value = 'couple';
+        els.subjectDescription.value = 'ภาพคู่ชายหญิง: ผู้ชายผมสั้นมีหนวดเคราบางๆ ยิ้มอบอุ่น สวมเสื้อยืดสีเทาอ่อนมีโลโก้หน้าอก โอบไหล่ผู้หญิงผมยาวตรงสีดำเข้มที่สวมเสื้อคอกว้างสีดำเทาเข้มและสร้อยคอจี้ดอกไม้เล็กๆ ทำปากจู๋น่ารัก ปล่อยขอบชายเสื้อด้านล่างเฟดเป็นเส้นสเก็ตช์ดินสอ และตัดพื้นหลังเป็นสีขาวพร้อมเติมลายเส้นดินสอเฉียงรอบตัวแบบ';
+        buildPrompts('โหลดคำบรรยายจากภาพคู่ตัวอย่างเรียบร้อย');
+      });
+
+      els.btnClearSubjectDesc.addEventListener('click', () => {
+        els.subjectDescription.value = '';
+        buildPrompts();
+      });
+
+      // Image Upload handling
+      els.userImageInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          els.refPreviewImg.src = evt.target.result;
+          uploadedFileName = file.name;
+          els.imgSourceBadge.textContent = 'รูปของคุณ: ' + file.name;
+          els.refPreviewCaption.textContent = 'อัปโหลดรูปอ้างอิงแล้ว: ' + file.name + ' (พร้อมนำรูปนี้แนบคู่กับ Prompt ที่สร้างด้านขวา)';
+          els.btnRestoreSampleImg.style.display = 'inline-flex';
+          buildPrompts();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      els.btnRestoreSampleImg.addEventListener('click', () => {
+        els.refPreviewImg.src = SAMPLE_PORTRAIT_SRC;
+        uploadedFileName = '903235996_1134082045700250_377172209807032110_n.png (ภาพตัวอย่างต้นแบบ)';
+        els.imgSourceBadge.textContent = 'ภาพตัวอย่างต้นแบบ';
+        els.refPreviewCaption.textContent = 'ภาพต้นแบบ: ตัดพื้นหลังเป็นสีขาว แต่เพิ่มลายเส้นดินสอสเก็ตช์เฉียงบางๆ รอบตัวแบบ และปล่อยชายเสื้อด้านล่างเฟดเป็นเส้นดินสอ';
+        els.btnRestoreSampleImg.style.display = 'none';
+        els.userImageInput.value = '';
+        buildPrompts();
+      });
+
+      // Generate Auto Button (Cycles through rich Hand-Drawn presets)
+      els.btnAutoGenerate.addEventListener('click', () => {
+        const preset = AUTO_PRESETS[autoPresetIndex % AUTO_PRESETS.length];
+        autoPresetIndex++;
+
+        els.colorPencilMode.value = preset.colorPencilMode;
+        els.pencilLeadGrade.value = preset.pencilLeadGrade;
+        els.handDrawnLevel.value = preset.handDrawnLevel;
+        els.imperfectionDetail.value = preset.imperfectionDetail;
+        els.backgroundStyle.value = preset.backgroundStyle;
+        els.hatchingDirection.value = preset.hatchingDirection;
+        els.facialSkinDetail.value = preset.facialSkinDetail;
+        els.hairStrokeStyle.value = preset.hairStrokeStyle;
+        els.clothingEdgeStyle.value = preset.clothingEdgeStyle;
+        els.paperTextureType.value = preset.paperTextureType;
+        els.chkStrictIdentity.checked = preset.chkStrictIdentity;
+        els.chkAntiDigitalSkin.checked = preset.chkAntiDigitalSkin;
+
+        buildPrompts(preset.label);
+      });
+
+      // Reset to exact md_prompt.txt default (with Thai as default output language)
+      els.btnResetDefault.addEventListener('click', () => {
+        els.artworkTitle.value = 'Semi-Realistic Colored Pencil Portrait Illustration';
+        els.targetAi.value = 'general';
+        els.promptLangMode.value = 'th';
+        els.subjectCountType.value = 'default';
+        els.subjectDescription.value = '';
+        els.colorPencilMode.value = 'default';
+        els.pencilLeadGrade.value = 'default';
+        els.handDrawnLevel.value = 'default';
+        els.imperfectionDetail.value = 'default';
+        els.chkStrictIdentity.checked = true;
+        els.chkAntiDigitalSkin.checked = true;
+        els.backgroundStyle.value = 'default';
+        els.hatchingDirection.value = 'default';
+        els.facialSkinDetail.value = 'default';
+        els.hairStrokeStyle.value = 'default';
+        els.clothingEdgeStyle.value = 'default';
+        els.paperTextureType.value = 'default';
+        buildPrompts();
+      });
+
+      // Language Switcher Buttons in Output Toolbar (Full Text & JSON)
+      document.querySelectorAll('[data-lang-select]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const selectedLang = btn.getAttribute('data-lang-select');
+          els.promptLangMode.value = selectedLang;
+          buildPrompts();
+        });
+      });
+
+      // Day / Night Theme Toggle
+      els.btnThemeToggle.addEventListener('click', () => {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme') || 'light';
+        const next = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        if (next === 'dark') {
+          els.themeIcon.textContent = '☀️';
+          els.themeText.textContent = 'โหมดกลางวัน';
+        } else {
+          els.themeIcon.textContent = '🌙';
+          els.themeText.textContent = 'โหมดกลางคืน';
+        }
+      });
+
+      // Tabs Navigation
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabPanes = document.querySelectorAll('.tab-pane');
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-tab');
+          tabButtons.forEach(b => {
+            b.classList.toggle('active', b === btn);
+            b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+          });
+          tabPanes.forEach(pane => {
+            pane.classList.toggle('active', pane.id === targetId);
+          });
+        });
+      });
+
+      // Copy Helper
+      function copyTextWithFeedback(text, labelEl, restoreCallback) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            labelEl.textContent = 'คัดลอกสำเร็จ ✓';
+            setTimeout(restoreCallback, 1600);
+          }).catch(() => {
+            fallbackCopy(text, labelEl, restoreCallback);
+          });
+        } else {
+          fallbackCopy(text, labelEl, restoreCallback);
+        }
+      }
+
+      function fallbackCopy(text, labelEl, restoreCallback) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          labelEl.textContent = 'คัดลอกสำเร็จ ✓';
+        } catch (e) {
+          labelEl.textContent = 'เลือกข้อความแล้วกด Ctrl+C';
+        }
+        document.body.removeChild(ta);
+        setTimeout(restoreCallback, 1600);
+      }
+
+      els.btnCopyFullText.addEventListener('click', () => {
+        copyTextWithFeedback(els.fullTextOutput.textContent, els.copyFullTextLabel, () => {
+          syncLangButtonsUI(els.promptLangMode.value);
+        });
+      });
+
+      els.btnCopyTextEnQuick.addEventListener('click', () => {
+        const isCurrentTh = els.promptLangMode.value === 'th';
+        const targetText = isCurrentTh ? lastCompiledEngText : lastCompiledThaiText;
+        copyTextWithFeedback(targetText, els.copyTextEnQuickLabel, () => {
+          syncLangButtonsUI(els.promptLangMode.value);
+        });
+      });
+
+      els.btnCopyJson.addEventListener('click', () => {
+        copyTextWithFeedback(els.jsonOutput.textContent, els.copyJsonLabel, () => {
+          syncLangButtonsUI(els.promptLangMode.value);
+        });
+      });
+
+      els.btnCopyJsonEnQuick.addEventListener('click', () => {
+        const isCurrentTh = els.promptLangMode.value === 'th';
+        const targetJson = isCurrentTh ? lastCompiledJsonEn : lastCompiledJsonTh;
+        copyTextWithFeedback(targetJson, els.copyJsonEnQuickLabel, () => {
+          syncLangButtonsUI(els.promptLangMode.value);
+        });
+      });
+
+      // Initial render (starts in exact md_prompt.txt baseline, Thai-only default)
+      buildPrompts();
+    })();
+  </script>
+</body>
+</html>
