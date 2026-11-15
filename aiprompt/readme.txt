@@ -103,3 +103,21 @@ JSON แก้ไขภาพ AI ให้เป๊ะทุกจุด (Detail
 4. มีปุ่มสำหรับ Generate Auto เพื่อให้ได้ Prompt ที่มีรายละเอียดมากขึ้น
 5. สามารถสร้างส่วนเพิ่มเติมในส่วนที่คุณคิดว่าเหมาะสม และควรมี ในการทำ Semi-Realistic Colored Pencil Portrait Illustration โดยใช้เทคนิคการวาดด้วยดินสอสีผสมดินสอกราไฟต์ (Colored Pencil and Graphite Pencil Drawing) แต่ หากไม่ เลือกอะไร ก็ ให้ออกมาเหมือน propmt ที่ มีแนบในไฟล์เป็นขั้นพื้นฐาน
 6.ข้อมูลรายละเอียดของภาพ ได้เก็บไว้ md_prompt.txt ให้นำมาพิจารณา ในการทำโปรแกรมนี้ ผมเน้นว่า ให้ปรับปรับเวลาทำ prompt แล้ว ai ทำออกมา ใกล้เคียงคนวาดมือเองที่สุด
+------------------------------------
+สร้างโปรแกรมช่วยเขียน Prompt สำหรับ สร้าง JSON Prompt , full text Prompt , สร้าง Semi-realistic caricature / Disney-Pixar stylized 2D/3D ,Dynamic caricature  JSON Prompt Builder ,ใช้งานผ่าน Browser เป็น html+ภาษาที่เหมาะสม ง่ายต่อการใช้งาน ,ส่วน คัดลอก prompt ให้เลือกเอาระหว่าง  ภาษาใดภาษาหนึ่ง Th/En 
+ต่อไปนี้คือรายละเอียดที่ต้องการ
+1. มีช่องพิมพ์ชื่อภาพที่ต้องการ มีช่อง เลือกว่าจะใช้ กับ ai ตัวไหน เช่น (Gemini,ChatGpt,อื่นตามความเหมาะสม) สามารถพิมพ์ข้อความได้ทั้งภาษาไทย และภาษาอังกฤษ,เปลี่ยน theme กลางวัน / กลางคืน
+2. มีส่วนอัพรูป มีช่องกรอก เพิ่มสิ่งทีต้องการ และหากมี การอัพภาพตัวอย่าง อยากให้เน้นย่ำว่า การสร้างที่ออก มาต้อง เป็น หากภาพคน ก็ต้องหน้าและรูปร่าง เอกลักษณ์ ที่คนดูต้องจำได้ว่า เป็นคนนี้ หากเป็นอย่างอื่น สัตว์ สิ่งของต่างๆ ก็ ต้องให้ดูออกชัดเจนว่า คือสิ่ง ๆ นั้น ให้มากที่สุด เพราะจาก prompt ตัวอย่างจากข้อ 5 นั้น พอใช้จริงมีความห่างไกล จากภาพที่ อัพโหลดมาก
+3. ผมมีองค์ประกอบ ในหัวข้อย่อยเพื่อพิจาณา
+	3.1 สไตล์ภาพ (Art Style):
+		ดิจิทัลอิลลัสเตรชันสไตล์การ์ตูนล้อเลียนแบบมีระดับ (Semi-realistic caricature / Disney-Pixar stylized 2D/3D).
+		ศีรษะและดวงตาโตกว่าสัดส่วนจริงเล็กน้อย (Chibi/Caricature proportions) เน้นรอยยิ้ม ดวงตากลมโตเป็นประกาย และเส้นผมเงางามดูมีมิติ
+	3.2 บรรยากาศและฉากหลัง (Setting & Theme):
+		ผมอยากให้มีหัวข้อ เลือก หลากหลาย หรือเลือกตามอารมณ์แล้ว สุ่มฉากหลัง เป็นอารมณ์นั้นๆ อาจมี Dropdown list หัวข้อหลัก และย่อยให้เลือกตามควรจะเป็น
+	3.3 โทนสีและแสง (Color & Lighting):
+		โทนสีอบอุ่น คมชัด แสงสว่างนุ่มนวลแบบสตูดิโอ (Soft studio lighting)
+4. หากมีส่วนที่ เห็นสมวควร มีเพิ่มเติม ก็ เสริมเข้าไปได้ เอาแบบ ภาพออกให้ ฮา หรือ ทะเล้นได้ ยิ่งดี
+5. ผมมีตัวอย่าง prompt ให้นำไปพิจาณาว่า ควรออกมา ประมาณนี้ หรือดีกว่านี้ ได้ ยิ่งดี
+	"Prompt (ภาษาอังกฤษ):
+	A semi-realistic cute cartoon caricature based on the provided portrait photo, keeping facial likeness. A professional person sitting at an office desk working on a laptop, warm confident smile, large expressive eyes, glossy hair, Pixar-style 2D digital illustration. Background filled with ESG infographics, TNFD charts, sticky notes, wind turbines poster, coffee mug on desk. Clean outlines, soft office lighting, highly detailed, vibrant colors --ar 2:3"
+ 

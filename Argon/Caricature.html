@@ -1,0 +1,2273 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynamic Caricature & Pixar Prompt Builder (JSON + Full Text)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --surface-highlight: #eef2ff;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --ink: #0f172a;
+      --ink-secondary: #334155;
+      --muted: #64748b;
+      --brand: #4f46e5;
+      --brand-hover: #4338ca;
+      --brand-ink: #ffffff;
+      --accent: #f59e0b;
+      --accent-soft: #fef3c7;
+      --accent-ink: #92400e;
+      --playful: #ec4899;
+      --playful-soft: #fce7f3;
+      --success: #10b981;
+      --code-bg: #0f172a;
+      --code-ink: #e2e8f0;
+      --radius-sm: 8px;
+      --radius: 14px;
+      --radius-lg: 18px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --font: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #1e293b;
+      --surface-alt: #0f172a;
+      --surface-highlight: #1e1b4b;
+      --border: #334155;
+      --border-strong: #475569;
+      --ink: #f8fafc;
+      --ink-secondary: #cbd5e1;
+      --muted: #94a3b8;
+      --brand: #6366f1;
+      --brand-hover: #818cf8;
+      --brand-ink: #ffffff;
+      --accent: #fbbf24;
+      --accent-soft: rgba(245, 158, 11, 0.16);
+      --accent-ink: #fde68a;
+      --playful: #f472b6;
+      --playful-soft: rgba(236, 72, 153, 0.16);
+      --success: #34d399;
+      --code-bg: #090d16;
+      --code-ink: #e2e8f0;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Header */
+    .app-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: var(--shadow);
+    }
+
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), var(--playful));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Main Grid */
+    .main-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    @media (min-width: 1024px) {
+      .main-container {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      }
+      .output-column {
+        position: sticky;
+        top: 82px;
+      }
+    }
+
+    .builder-column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--space-5);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: var(--surface-highlight);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .step-badge.playful {
+      background: var(--playful-soft);
+      color: var(--playful);
+    }
+
+    .section-desc {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Form Controls */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 640px) {
+      .form-grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .form-grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      font: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--surface-alt);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 78px;
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--brand);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+    }
+
+    /* Buttons */
+    .btn {
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--ink);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-accent {
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-accent:hover {
+      filter: brightness(0.96);
+    }
+
+    .btn-playful {
+      background: var(--playful-soft);
+      color: var(--playful);
+      border-color: rgba(236, 72, 153, 0.35);
+    }
+
+    .btn-playful:hover {
+      filter: brightness(0.95);
+    }
+
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 12.5px;
+    }
+
+    /* Upload Box */
+    .upload-zone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface-alt);
+      padding: var(--space-4);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--brand);
+      background: var(--surface-highlight);
+    }
+
+    .upload-input {
+      display: none;
+    }
+
+    .upload-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: var(--space-2) 0;
+    }
+
+    .upload-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .upload-preview-wrap {
+      display: none;
+      align-items: center;
+      gap: var(--space-4);
+      text-align: left;
+    }
+
+    .upload-preview-wrap.active {
+      display: flex;
+    }
+
+    .upload-thumb {
+      width: 76px;
+      height: 76px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid var(--brand);
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    .upload-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .upload-filename {
+      font-weight: 600;
+      font-size: 14px;
+      margin: 0 0 4px 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .upload-details {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 8px 0;
+    }
+
+    /* Toggle Pills / Checkboxes */
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-alt);
+      color: var(--ink-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .chip-toggle:hover {
+      border-color: var(--brand);
+    }
+
+    .chip-toggle input {
+      accent-color: var(--brand);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .chip-toggle.checked {
+      background: var(--surface-highlight);
+      border-color: var(--brand);
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    .chip-toggle.playful-chip.checked {
+      background: var(--playful-soft);
+      border-color: var(--playful);
+      color: var(--playful);
+    }
+
+    /* Mood Randomizer Bar */
+    .mood-bar {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .mood-bar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .mood-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mood-btn {
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mood-btn:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    .mood-btn.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: var(--brand-ink);
+    }
+
+    /* Output Panel */
+    .output-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .lang-Segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface-alt);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .lang-btn {
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--brand);
+      color: var(--brand-ink);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .format-tabs {
+      display: flex;
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: var(--space-2);
+    }
+
+    .tab-btn {
+      font: inherit;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--ink);
+      background: var(--surface-alt);
+    }
+
+    .tab-btn.active {
+      color: var(--brand);
+      background: var(--surface-highlight);
+      border-color: rgba(79, 70, 229, 0.25);
+    }
+
+    .prompt-box-wrapper {
+      position: relative;
+    }
+
+    .prompt-output {
+      width: 100%;
+      min-height: 290px;
+      max-height: 440px;
+      overflow-y: auto;
+      margin: 0;
+      padding: var(--space-4);
+      border-radius: var(--radius-sm);
+      background: var(--code-bg);
+      color: var(--code-ink);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid var(--border-strong);
+    }
+
+    .copy-bar {
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .copy-main-btn {
+      flex: 1;
+      padding: 12px 18px;
+      font-size: 14.5px;
+    }
+
+    .copy-main-btn.copied {
+      background: var(--success);
+      border-color: var(--success);
+      color: #ffffff;
+    }
+
+    .ai-badge-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    .ai-tag {
+      font-weight: 700;
+      color: var(--brand);
+    }
+
+    .Quick-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .quick-tag-btn {
+      font: inherit;
+      font-size: 12px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      border: 1px dashed var(--border-strong);
+      background: var(--surface);
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .quick-tag-btn:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+      background: var(--surface-highlight);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-icon" aria-hidden="true">🎨</div>
+        <div>
+          <h1 class="brand-title">Dynamic Caricature Prompt Builder</h1>
+          <p class="brand-subtitle">สร้าง JSON Prompt &amp; Full Text สไตล์ Semi-realistic Caricature / Disney-Pixar 2D &amp; 3D</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-accent btn-sm" id="loadExampleBtn" title="โหลดตัวอย่าง Prompt ต้นแบบ ESG Office">
+          ⭐ โหลดตัวอย่างต้นแบบ (ESG Office)
+        </button>
+        <button type="button" class="btn btn-playful btn-sm" id="randomAllBtn" title="สุ่มไอเดียภาพแบบฮาๆ ทะเล้นๆ">
+          🎲 สุ่มไอเดียสายฮา/ทะเล้น
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" id="themeToggleBtn" aria-label="สลับโหมดกลางวันและกลางคืน">
+          <span id="themeIcon">🌙</span> <span id="themeLabel">โหมดกลางคืน</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="main-container">
+    <!-- Left Column: Builder Controls -->
+    <div class="builder-column">
+
+      <!-- 1. ชื่อภาพ & AI ปลายทาง -->
+      <section class="card" aria-labelledby="sec-1">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-1">
+              <span class="step-badge">1</span> ข้อมูลภาพและ AI ที่ใช้งาน (Project &amp; Target AI)
+            </h2>
+            <p class="section-desc">พิมพ์ได้ทั้งภาษาไทยและภาษาอังกฤษ ระบบจะจัดโครงสร้างตาม AI ที่เลือก</p>
+          </div>
+        </div>
+
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label class="field-label" for="imageTitle">
+              <span>ชื่อภาพที่ต้องการ (Image Title)</span>
+              <span class="field-hint">ไทย / EN</span>
+            </label>
+            <input type="text" id="imageTitle" placeholder="เช่น นักบริหารสาย ESG สุดคูล / Playful CEO Portrait" value="ESG Professional Caricature Portrait">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="targetAi">
+              <span>เลือก AI ที่ต้องการนำไปใช้</span>
+            </label>
+            <select id="targetAi">
+              <option value="midjourney" selected>Midjourney v6 (รองรับ --ar, --stylize)</option>
+              <option value="gemini">Google Gemini / Imagen 3</option>
+              <option value="chatgpt">ChatGPT (DALL·E 3)</option>
+              <option value="leonardo">Leonardo.ai / Flux.1</option>
+              <option value="stablediffusion">Stable Diffusion XL / WebUI</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="subjectDesc">
+              <span>ตัวละครหลัก / บุคคลในภาพ (Subject / Character)</span>
+            </label>
+            <input type="text" id="subjectDesc" placeholder="เช่น พนักงานออฟฟิศนั่งทำงานหน้าแล็ปท็อป / A professional person sitting at an office desk working on a laptop" value="A professional person sitting at an office desk working on a laptop">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="aspectRatio">
+              <span>สัดส่วนภาพ (Aspect Ratio)</span>
+            </label>
+            <select id="aspectRatio">
+              <option value="2:3" selected>2:3 (แนวตั้ง พอร์ตเทรตมาตรฐาน --ar 2:3)</option>
+              <option value="1:1">1:1 (จัตุรัส โปรไฟล์โซเชียล --ar 1:1)</option>
+              <option value="3:4">3:4 (แนวตั้ง การ์ด/โปสเตอร์ --ar 3:4)</option>
+              <option value="16:9">16:9 (แนวนอน ภาพปก/พรีเซนเทชัน --ar 16:9)</option>
+              <option value="9:16">9:16 (แนวตั้งเต็มจอ Story/Reels --ar 9:16)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. อัปโหลดรูปอ้างอิง & เพิ่มสิ่งที่ต้องการ -->
+      <section class="card" aria-labelledby="sec-2">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-2">
+              <span class="step-badge">2</span> อัปโหลดรูปต้นแบบ &amp; ล็อกเอกลักษณ์ความเหมือน (Reference Lock &amp; Custom Details)
+            </h2>
+            <p class="section-desc">เน้นย้ำให้ AI คงเอกลักษณ์จากรูปที่อัปโหลดอย่างเข้มงวด (คนจำหน้าและรูปร่างได้ทันที / สัตว์และสิ่งของดูออกชัดเจนที่สุดว่าคืออะไร)</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="คลิกหรือลากไฟล์รูปภาพมาวางเพื่ออัปโหลด">
+            <input type="file" id="imageInput" class="upload-input" accept="image/*">
+            <div class="upload-empty" id="uploadEmpty">
+              <span class="upload-icon">📸</span>
+              <strong>คลิกเพื่อเลือกรูปต้นแบบ (คน / สัตว์เลี้ยง / สิ่งของ) หรือลากไฟล์รูปมาวางที่นี่</strong>
+              <span class="field-hint">รองรับ JPG, PNG, WEBP — ระบบจะสร้างคำสั่งบังคับ AI ให้รักษาโครงหน้า รูปร่าง และจุดเด่นจากภาพจริง</span>
+            </div>
+            <div class="upload-preview-wrap" id="uploadPreviewWrap">
+              <img src="" alt="ตัวอย่างรูปต้นแบบ" id="uploadThumb" class="upload-thumb">
+              <div class="upload-meta">
+                <p class="upload-filename" id="uploadFilename">portrait.jpg</p>
+                <p class="upload-details" id="uploadDetails">พร้อมใช้อ้างอิงเอกลักษณ์เข้มงวด (Strict Identity &amp; Subject Fidelity Lock)</p>
+                <button type="button" class="btn btn-secondary btn-sm" id="removeImgBtn">ลบรูปออก</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chip-group" aria-label="ตั้งค่ารูปอ้างอิง">
+            <label class="chip-toggle checked">
+              <input type="checkbox" id="keepLikeness" checked>
+              <span>🔒 บังคับคงเอกลักษณ์จากรูปต้นแบบขั้นสูงสุด (Strict Likeness &amp; Recognizable Identity Lock)</span>
+            </label>
+          </div>
+
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label class="field-label" for="refSubjectType">
+                <span>สิ่งที่อยู่ในภาพต้นแบบ (Reference Subject Type)</span>
+              </label>
+              <select id="refSubjectType">
+                <option value="person" selected>👤 ภาพคน / บุคคล (ล็อกโครงหน้า ทรงผม และรูปร่างให้จำได้ทันทีว่าเป็นคนนี้)</option>
+                <option value="animal">🐾 สัตว์เลี้ยง / สัตว์ (ล็อกสายพันธุ์ สีขน ลวดลาย และรูปร่างให้ดูออกชัดเจนที่สุด)</option>
+                <option value="object">📦 สิ่งของ / ยานพาหนะ / วัตถุ (ล็อกรูปทรง สีสัน และดีไซน์ให้ดูออกชัดเจนว่าเป็นสิ่งนั้น)</option>
+                <option value="person_and_pet">👥 คนคู่กับสัตว์เลี้ยง / สิ่งของคู่ใจ (ล็อกทั้งหน้าตา-รูปร่างคน และเอกลักษณ์สัตว์/สิ่งของ)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="likenessStrength">
+                <span>ระดับการย้ำความเหมือน (Fidelity &amp; Likeness Intensity)</span>
+              </label>
+              <select id="likenessStrength">
+                <option value="strict_max" selected>🔥 เข้มงวดสูงสุด 100% — ห้ามเพี้ยน คนดูต้องจำได้ทันที (Strict Unmistakable Likeness)</option>
+                <option value="high_balanced">⚖️ เหมือนต้นแบบสูง 85% — คงโครงหน้าและรูปร่างจริงผสานลายเส้นพิกซาร์</option>
+                <option value="stylized_light">🎨 เน้นกลิ่นอายการ์ตูนล้อเลียน (อ้างอิงโครงสร้างภาพรวม)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="keyTraitsLock">
+              <span>ระบุจุดเด่นจากรูปจริงที่ห้ามเพี้ยนเด็ดขาด (Key Recognizable Traits to Lock)</span>
+              <span class="field-hint">ช่วยให้ AI ไม่วาดมั่ว</span>
+            </label>
+            <input type="text" id="keyTraitsLock" placeholder="เช่น โครงหน้าเรียว/แก้มอิ่ม, ทรงผมแสกข้าง, สวมแว่นตากรอบดำ, รูปร่างสูงโปร่ง หรือ ลายขนแมวสีส้มหน้ากลม...">
+            <div class="Quick-tags">
+              <span class="field-hint" style="align-self:center;">ล็อกจุดเด่นด่วน:</span>
+              <button type="button" class="quick-tag-btn trait-tag-btn" data-trait="exact facial structure, eye shape, nose, smile, and body build from photo">+ ล็อกโครงหน้าและรูปร่างตามรูปเป๊ะ</button>
+              <button type="button" class="quick-tag-btn trait-tag-btn" data-trait="exact hairstyle, hairline, and hair color from reference photo">+ ล็อกทรงผมเดิมเป๊ะ</button>
+              <button type="button" class="quick-tag-btn trait-tag-btn" data-trait="signature eyeglasses and exact outfit style from photo">+ ล็อกแว่นตาและชุดตามรูป</button>
+              <button type="button" class="quick-tag-btn trait-tag-btn" data-trait="exact animal breed, fur markings, and body proportions">+ ล็อกสายพันธุ์/ลายขนสัตว์เลี้ยง</button>
+              <button type="button" class="quick-tag-btn trait-tag-btn" data-trait="exact object shape, brand silhouette, and colors">+ ล็อกรูปทรงและสีของสิ่งของ</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="customAdditions">
+              <span>ช่องกรอกเพิ่มสิ่งที่ต้องการในภาพ (Additional Props / Custom Elements)</span>
+              <span class="field-hint">พิมพ์ไทยหรืออังกฤษได้</span>
+            </label>
+            <textarea id="customAdditions" placeholder="เช่น แก้วกาแฟบนโต๊ะ, โพสต์อิทแปะเต็มจอ, ป้ายชื่อ, สัตว์เลี้ยงตัวจิ๋ว..."></textarea>
+            <div class="Quick-tags">
+              <span class="field-hint" style="align-self:center;">กดเพิ่มด่วน:</span>
+              <button type="button" class="quick-tag-btn prop-tag-btn" data-add="coffee mug on desk">+ แก้วกาแฟบนโต๊ะ</button>
+              <button type="button" class="quick-tag-btn prop-tag-btn" data-add="colorful sticky notes">+ โพสต์อิทแปะรัวๆ</button>
+              <button type="button" class="quick-tag-btn prop-tag-btn" data-add="cute chubby cat sleeping nearby">+ แมวอ้วนแอบหลับ</button>
+              <button type="button" class="quick-tag-btn prop-tag-btn" data-add="boba milk tea cup with giant pearls">+ ชานมไข่มุกแก้วโต</button>
+              <button type="button" class="quick-tag-btn prop-tag-btn" data-add="floating golden trophy and sparkles">+ ถ้วยรางวัลลอยได้</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3.1 สไตล์ภาพ (Art Style) -->
+      <section class="card" aria-labelledby="sec-3-1">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-3-1">
+              <span class="step-badge">3.1</span> สไตล์ภาพและสัดส่วน (Art Style &amp; Caricature Proportions)
+            </h2>
+            <p class="section-desc">ดิจิทัลอิลลัสเตรชันสไตล์การ์ตูนล้อเลียนแบบมีระดับ เน้นดวงตากลมโตเป็นประกายและเส้นผมมีมิติ</p>
+          </div>
+        </div>
+
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label class="field-label" for="artStyle">
+              <span>สไตล์หลัก (Core Art Style)</span>
+            </label>
+            <select id="artStyle">
+              <option value="pixar_2d" selected>Pixar-style 2D Digital Illustration (ภาพวาด 2D มีมิติสไตล์พิกซาร์)</option>
+              <option value="pixar_3d">Disney-Pixar Stylized 3D Render (แอนิเมชัน 3D นุ่มนวลทะลุจอ)</option>
+              <option value="hybrid_2d3d">Semi-realistic Caricature 2.5D Hybrid (กึ่งสมจริงผสานการ์ตูน 2D/3D)</option>
+              <option value="dynamic_caricature">Dynamic Editorial Caricature Illustration (การ์ตูนล้อเลียนลายเส้นไดนามิกสุดคม)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="headProportion">
+              <span>สัดส่วนศีรษะและตัวละคร (Chibi / Caricature Proportions)</span>
+            </label>
+            <select id="headProportion">
+              <option value="slight_caricature" selected>ศีรษะและดวงตาโตกว่าสัดส่วนจริงเล็กน้อย (Subtle Chibi/Caricature proportions)</option>
+              <option value="chibi_cute">หัวโตตัวเล็กน่ารักชัดเจน (Cute Chibi 1:2 body ratio)</option>
+              <option value="exaggerated_fun">ล้อเลียนเน้นจุดเด่นสุดฮา (Exaggerated comedic caricature proportions)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: var(--space-4);">
+          <span class="field-label">จุดเด่นใบหน้าและรายละเอียด (Signature Features)</span>
+          <div class="chip-group">
+            <label class="chip-toggle checked">
+              <input type="checkbox" class="style-feat" value="large_eyes" checked>
+              <span>✨ ดวงตากลมโตเป็นประกาย (Large expressive sparkling eyes)</span>
+            </label>
+            <label class="chip-toggle checked">
+              <input type="checkbox" class="style-feat" value="glossy_hair" checked>
+              <span>💇‍♀️ เส้นผมเงางามดูมีมิติ (Glossy dimensional hair)</span>
+            </label>
+            <label class="chip-toggle checked">
+              <input type="checkbox" class="style-feat" value="clean_outlines" checked>
+              <span>✒️ ลายเส้นคมชัดสะอาดตา (Clean outlines &amp; highly detailed)</span>
+            </label>
+            <label class="chip-toggle">
+              <input type="checkbox" class="style-feat" value="rosy_cheeks">
+              <span>😊 แก้มอมชมพูดูมีชีวิตชีวา (Soft rosy expressive cheeks)</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3.2 บรรยากาศและฉากหลัง (Setting & Theme) -->
+      <section class="card" aria-labelledby="sec-3-2">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-3-2">
+              <span class="step-badge">3.2</span> บรรยากาศและฉากหลัง (Setting, No-BG &amp; Mood Randomizer)
+            </h2>
+            <p class="section-desc">มีทั้งแบบไม่มีพื้นหลัง (No Background), พื้นหลังคลีนๆ ของน้อย/แอคชั่นน้อย และฉากหลังหลากหลายอารมณ์</p>
+          </div>
+        </div>
+
+        <!-- Mood Selector + Randomize by Mood -->
+        <div class="mood-bar">
+          <div class="mood-bar-header">
+            <span class="field-label">🎭 เลือกสไตล์พื้นหลัง/อารมณ์ แล้วสุ่มฉากหลัง (Mood Filter &amp; Scene Randomizer)</span>
+            <button type="button" class="btn btn-primary btn-sm" id="randomSceneByMoodBtn">
+              🎲 สุ่มฉากหลังตามหมวดอารมณ์ที่เลือก
+            </button>
+          </div>
+          <div class="mood-pills" id="moodPills">
+            <button type="button" class="mood-btn active" data-mood="all">ทั้งหมด (All)</button>
+            <button type="button" class="mood-btn" data-mood="nobg">⚪ ไม่มีพื้นหลัง / สีพื้นคลีนๆ (No Background)</button>
+            <button type="button" class="mood-btn" data-mood="minimal">🌿 ของไม่เยอะ / แอคชั่นน้อย (Minimal &amp; Calm)</button>
+            <button type="button" class="mood-btn" data-mood="pro">💼 มืออาชีพ / สมาร์ท (Smart Pro)</button>
+            <button type="button" class="mood-btn" data-mood="hilarious">🤪 ฮาปั่น / ออฟฟิศสุดป่วน (Hilarious Chaos)</button>
+            <button type="button" class="mood-btn" data-mood="chill">☕ ชิลล์ / คาเฟ่สายฮีลใจ (Cozy &amp; Chill)</button>
+            <button type="button" class="mood-btn" data-mood="fantasy">🚀 แฟนตาซี / ไซไฟทะลุมิติ (Fantasy &amp; Epic)</button>
+            <button type="button" class="mood-btn" data-mood="thai">🛺 ไทยแลนด์โอนลี่ / สตรีทฟู้ด (Thai Vibe)</button>
+          </div>
+        </div>
+
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label class="field-label" for="sceneCategory">
+              <span>หมวดหมู่ฉากหลัก (Main Category)</span>
+            </label>
+            <select id="sceneCategory"></select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="scenePreset">
+              <span>ฉากหลังย่อย (Sub-Setting / Background Preset)</span>
+            </label>
+            <select id="scenePreset"></select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: var(--space-3);">
+          <label class="field-label" for="sceneDetailText">
+            <span>รายละเอียดฉากหลัง (ปรับแก้เพิ่มเติมได้อิสระ)</span>
+          </label>
+          <input type="text" id="sceneDetailText" value="">
+        </div>
+      </section>
+
+      <!-- 3.3 โทนสีและแสง (Color & Lighting) -->
+      <section class="card" aria-labelledby="sec-3-3">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-3-3">
+              <span class="step-badge">3.3</span> โทนสีและแสง (Color &amp; Studio Lighting)
+            </h2>
+            <p class="section-desc">ค่าเริ่มต้นเน้นโทนสีอบอุ่น คมชัด แสงสว่างนุ่มนวลแบบสตูดิโอ (Soft studio lighting)</p>
+          </div>
+        </div>
+
+        <div class="form-grid cols-2">
+          <div class="field">
+            <label class="field-label" for="lightingPreset">
+              <span>รูปแบบการจัดแสง (Lighting Setup)</span>
+            </label>
+            <select id="lightingPreset">
+              <option value="soft_studio" selected>Soft Studio &amp; Office Lighting (แสงสตูดิโอ/ออฟฟิศนุ่มนวล คมชัด)</option>
+              <option value="golden_rim">Warm Golden Hour &amp; Rim Light (แสงสีทองอบอุ่นตัดขอบตัวละคร)</option>
+              <option value="cinematic_pixar">Pixar Cinematic Global Illumination (แสงภาพยนตร์แอนิเมชันมีมิติ)</option>
+              <option value="neon_pop">Playful Neon &amp; Cyber Glow (แสงนีออนสดใสซุกซน)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="colorTone">
+              <span>โทนสีภาพ (Color Palette)</span>
+            </label>
+            <select id="colorTone">
+              <option value="warm_vibrant" selected>โทนสีอบอุ่น สดใส คมชัด (Warm, vibrant &amp; rich colors)</option>
+              <option value="pastel_cheerful">โทนพาสเทลสดใส น่ารักละมุน (Cheerful bright pastel palette)</option>
+              <option value="high_contrast_pop">สีสันจัดจ้าน คอนทราสต์เด้งสะดุดตา (Dynamic pop-art vibrant contrast)</option>
+              <option value="natural_clean">โทนสีธรรมชาติ คลีนสบายตา (Clean natural modern tones)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. เลือก Action ตัวละคร & โหมดเพิ่มความฮา / แอคติ้งกวนๆ แบบภาพล้อเลียน -->
+      <section class="card" aria-labelledby="sec-4">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title" id="sec-4">
+              <span class="step-badge playful">4</span> เลือก Action ตัวละคร &amp; ท่าฮา/แอคติ้งกวนๆ แบบภาพล้อเลียน (Character Action &amp; Comedic Pose)
+            </h2>
+            <p class="section-desc">เลือกได้ทั้งท่าทางนิ่งๆ แอคชั่นน้อยเน้นความคลีน หรือท่าแอคติ้งกวนๆ ฮาๆ สไตล์ภาพล้อเลียน (Caricature Act)</p>
+          </div>
+          <button type="button" class="btn btn-playful btn-sm" id="randomFunnyActBtn">
+            🤪 สุ่มท่าแอคชั่นกวนๆ / ฮาๆ
+          </button>
+        </div>
+
+        <div class="form-grid cols-3">
+          <div class="field">
+            <label class="field-label" for="expressionSelect">
+              <span>สีหน้าและอินเนอร์ (Facial Expression)</span>
+            </label>
+            <select id="expressionSelect">
+              <optgroup label="😊 สีหน้าเรียบง่าย / ดูดีมีระดับ">
+                <option value="warm_confident" selected>😊 ยิ้มอบอุ่นมั่นใจตามรูปจริง (Warm confident smile)</option>
+                <option value="calm_gentle">😌 ยิ้มมุมปากนิดๆ สุขุมดูแพง (Calm composed gentle smile)</option>
+              </optgroup>
+              <optgroup label="🤪 สีหน้าฮาๆ / แอคติ้งกวนๆ ล้อเลียน">
+                <option value="cheeky_wink">😜 ยิ้มทะเล้นขยิบตา คิ้วโก่งกวนๆ (Cheeky playful grin with a wink &amp; raised eyebrow)</option>
+                <option value="sassy_sideeye">😒 เหล่ตามองบนอมยิ้มกวนประสาท (Hilarious sassy side-eye smirk with raised eyebrow)</option>
+                <option value="laughing_joy">😆 หัวเราะร่าเริงสุดขีด ตาหยีสะใจ (Bursting with infectious joyful laughter)</option>
+                <option value="caffeine_shock">☕ ตาโตค้างเพราะฤทธิ์กาแฟ ปั่นงานด่วน (Hilariously wide-eyed caffeine rush expression)</option>
+                <option value="smug_boss">😎 ยิ้มมุมปากมาดเท่ เก๊กหล่อ/สวยเกินเบอร์ (Funny overconfident smug boss grin)</option>
+                <option value="dramatic_gasp">😱 อ้าปากตกใจโอเวอร์แอคติ้งแบบการ์ตูน (Comedic jaw-drop cartoon surprise)</option>
+                <option value="duck_face">😗 ทำปากจู๋สู้กล้องสุดกวน (Funny exaggerated selfie duck-face pout)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="actionPoseSelect">
+              <span>ท่าทางแอคชั่นตัวละคร (Character Action / Pose)</span>
+            </label>
+            <select id="actionPoseSelect">
+              <optgroup label="🌿 แอคชั่นน้อย / ท่าโพสเรียบง่ายคลีนๆ (Low-Action)">
+                <option value="standard_pose" selected>💻 ท่าทางธรรมชาติตามเนื้อเรื่องหลัก (Natural pose matching subject)</option>
+                <option value="calm_portrait">🧍 ยืน/นั่งโพสท่าสบายๆ มองกล้องนิ่งๆ (Calm relaxed portrait posture, minimal movement)</option>
+                <option value="arms_crossed">👔 ยืนกอดอกเท่ๆ มาดสมาร์ท (Standing calmly with arms crossed in a smart pose)</option>
+                <option value="holding_cup_calm">☕ ถือแก้วเครื่องดื่มเบาๆ แบบชิลล์ๆ (Calmly holding a drink with a relaxed posture)</option>
+              </optgroup>
+              <optgroup label="🤪 ท่าฮา / แอคติ้งกวนๆ แบบภาพล้อเลียน (Cheeky Caricature Act)">
+                <option value="sassy_hips">💁 ยืนเท้าสะเอวเชิดหน้าเก๊กกวนโอ๊ย (Hands on hips, chin tilted up in a cheeky cocky caricature pose)</option>
+                <option value="peek_sunglasses">🕶️ ดึงแว่นดำลงมามองลอดแว่นสายตากวนสุดๆ (Pulling sunglasses down to peek over the rim with sassy attitude)</option>
+                <option value="point_at_viewer">🫵 ขยิบตาชี้นิ้วสองข้างมาที่คนดูแบบกวนๆ (Pointing both index fingers directly at the viewer with a cheeky grin)</option>
+                <option value="salt_bae">🧂 ทำท่าโรยเกลือ Salt Bae สุดกวนใส่หน้าจอ/งาน (Doing the dramatic 'Salt Bae' sprinkling gesture with comedic flair)</option>
+                <option value="double_thumbs_fine">👍 ยกนิ้วโป้งสองข้าง ยิ้มสู้ชีวิตสุดฮา (Exaggerated double thumbs-up with a hilariously forced 'everything is fine' grin)</option>
+                <option value="home_alone_shock">🙀 สองมือกุมแก้มอ้าปากค้าง ตกใจโอเวอร์แอคติ้ง (Hands on both cheeks in a classic cartoon 'Home Alone' shock pose)</option>
+                <option value="boss_snap">🫰 ดีดนิ้วสั่งการมาดบอสใหญ่กวนประสาท (Snapping fingers with exaggerated sassy boss swagger)</option>
+                <option value="peace_double">✌️ ชูสองนิ้วสองข้างเอียงคอสุดทะเล้น (Playful double peace V-signs &amp; cheeky head tilt)</option>
+                <option value="finger_guns">👉 ยิงมินิฮาร์ท / นิ้วปืนปิ้วๆ สุดกวน (Cheeky finger-guns &amp; mini-heart gesture)</option>
+                <option value="multitask_octopus">🐙 พิมพ์งานมือเป็นระวิงเหมือนมีแปดมือ (Comically typing at lightning speed like an octopus)</option>
+                <option value="chair_racing">🏎️ ขี่เก้าอี้ล้อเลื่อนไถลซิ่งเหมือนรถแข่ง (Riding a rolling office chair like a race car with comedic energy)</option>
+                <option value="victory_jump">🙌 ชูมือกระโดดดีใจเหมือนถูกรางวัลที่ 1 (Dramatic celebration fist-pump pose)</option>
+                <option value="zen_float">🧘 นั่งสมาธิลอยตัวหนีเดดไลน์อย่างสงบ (Hilariously floating in mid-air zen meditation)</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="funnyGagSelect">
+              <span>เอฟเฟกต์เสริมความฮา (Comedic Gag)</span>
+            </label>
+            <select id="funnyGagSelect">
+              <option value="none" selected>✨ ไม่ใส่เอฟเฟกต์เสริม (คลีนๆ โฟกัสตัวละคร)</option>
+              <option value="comic_sparks">💥 เส้นสปีดไลน์ + อีโมจิดาววิ้งๆ รอบตัว (Playful comic action lines &amp; floating sparkles)</option>
+              <option value="flying_papers">📄 กระดาษรายงานและโพสต์อิทปลิวว่อน (Funny flying papers &amp; chaotic sticky notes)</option>
+              <option value="battery_low">🪫 ไอคอนแบตเตอรี่ 1% ลอยอยู่บนหัว (Glowing 1% low-battery icon floating above head)</option>
+              <option value="crown_sunglasses">👑 แว่นดำพิกเซล Deal With It + มงกุฎจิ๋ว (Tiny floating gold crown &amp; cool sunglasses)</option>
+              <option value="rubber_duck">🐥 กองทัพเป็ดยางสีเหลืองแอบมองอยู่บนโต๊ะ (Cute yellow rubber ducks cheering on the desk)</option>
+              <option value="question_marks">❓ เครื่องหมายคำถาม &amp; หยดเหงื่อการ์ตูนลอยข้างหัว (Funny cartoon sweat drop &amp; floating question marks)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: var(--space-3);">
+          <label class="field-label" for="customActionText">
+            <span>ระบุท่าทาง Action ตัวละครเพิ่มเติมด้วยตัวเอง (Custom Action / Pose Override)</span>
+            <span class="field-hint">เว้นว่างได้หากใช้ท่าจากตัวเลือกด้านบน</span>
+          </label>
+          <input type="text" id="customActionText" placeholder="เช่น ยืนกอดแมวส้มทำหน้ากวนๆ, ยกแก้วกาแฟชนกับคนดู, นั่งไขว่ห้างจิบชานมแบบตัวแม่...">
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Live Prompt Output (Full Text + JSON, TH / EN Selector) -->
+    <aside class="output-column">
+      <div class="output-card">
+        <div class="section-header" style="margin-bottom: 0;">
+          <div>
+            <h2 class="section-title">📋 ผลลัพธ์ Prompt พร้อมใช้งาน</h2>
+            <p class="section-desc">เลือกภาษา (TH / EN) และรูปแบบ (Full Text / JSON) เพื่อคัดลอก</p>
+          </div>
+        </div>
+
+        <!-- Language Switcher (Choose TH or EN for Output & Copy) -->
+        <div>
+          <span class="field-label" style="margin-bottom: 6px; display:block;">เลือกภาษาสำหรับแสดงผลและคัดลอก (Prompt Language):</span>
+          <div class="lang-Segmented" role="radiogroup" aria-label="เลือกภาษาของ Prompt">
+            <button type="button" class="lang-btn active" data-lang="en" id="langEnBtn">
+              🇬🇧 ภาษาอังกฤษ (English)
+            </button>
+            <button type="button" class="lang-btn" data-lang="th" id="langThBtn">
+              🇹🇭 ภาษาไทย (Thai)
+            </button>
+          </div>
+        </div>
+
+        <!-- Format Switcher (Full Text vs JSON Prompt) -->
+        <div class="format-tabs" role="tablist" aria-label="รูปแบบ Prompt">
+          <button type="button" class="tab-btn active" data-format="text" id="tabTextBtn" role="tab" aria-selected="true">
+            📝 Full Text Prompt
+          </button>
+          <button type="button" class="tab-btn" data-format="json" id="tabJsonBtn" role="tab" aria-selected="false">
+            { } Dynamic JSON Prompt
+          </button>
+        </div>
+
+        <!-- Target AI Info Bar -->
+        <div class="ai-badge-bar">
+          <span>ปรับฟอร์แมตสำหรับ: <strong class="ai-tag" id="activeAiBadge">Midjourney v6</strong></span>
+          <span id="activeLangBadge">Output: EN</span>
+        </div>
+
+        <!-- Live Output Display -->
+        <div class="prompt-box-wrapper">
+          <pre class="prompt-output" id="promptOutput" tabindex="0" aria-live="polite"></pre>
+        </div>
+
+        <!-- Copy Action Bar -->
+        <div class="copy-bar">
+          <button type="button" class="btn btn-primary copy-main-btn" id="copyPromptBtn">
+            📋 คัดลอก Prompt (<span id="copyBtnLangLabel">EN - Full Text</span>)
+          </button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // Scene Database with Categories, Presets, and Mood Tags (EN & TH)
+    const SCENE_CATEGORIES = [
+      {
+        id: 'nobg_clean',
+        nameTh: '⚪ ไม่มีพื้นหลัง / พื้นหลังสีล้วนคลีนๆ (No Background & Cutout)',
+        Presets: [
+          {
+            id: 'pure_white_nobg',
+            moods: ['nobg', 'minimal'],
+            labelTh: 'ไม่มีพื้นหลัง — พื้นหลังสีขาวล้วนคลีน 100% (Isolated Pure White No-BG)',
+            en: 'No background, isolated subject on a pure solid white background, completely uncluttered, zero background props, clean cutout composition focusing 100% on the subject',
+            th: 'ไม่มีพื้นหลัง แยกเฉพาะตัวแบบโดดเด่นอยู่บนพื้นหลังสีขาวล้วนคลีน 100% ไม่มีสิ่งของรบกวนข้างหลัง โฟกัสที่ตัวหลักอย่างเดียวชัดเจน'
+          },
+          {
+            id: 'transparent_sticker',
+            moods: ['nobg', 'minimal'],
+            labelTh: 'ไม่มีฉากหลัง — สไตล์สติกเกอร์ไดคัทขอบคมชัด (Die-Cut Sticker / PNG Style)',
+            en: 'No background scenery, clean die-cut character illustration with a subtle crisp white contour border on a plain neutral backdrop, zero background clutter',
+            th: 'ไม่มีฉากหลัง สไตล์ภาพไดคัทตัดขอบคมชัดคลีนๆ บนพื้นเรียบ ไม่มีสิ่งของประกอบฉากหลัง เหมาะนำไปใช้งานต่อ'
+          },
+          {
+            id: 'studio_gradient_nobg',
+            moods: ['nobg', 'minimal', 'pro'],
+            labelTh: 'พื้นหลังสีพื้นไล่เฉดสตูดิโอเรียบหรู ไม่มีของประกอบฉาก (Clean Studio Gradient)',
+            en: 'Plain minimalist studio backdrop with a soft smooth warm-gray gradient, no background objects or furniture, calm and distraction-free',
+            th: 'พื้นหลังสตูดิโอสีพื้นไล่เฉดนุ่มนวลเรียบหรู ไม่มีเฟอร์นิเจอร์หรือสิ่งของประกอบฉากหลัง ดูคลีนและสมาร์ทมาก'
+          },
+          {
+            id: 'pastel_flat_nobg',
+            moods: ['nobg', 'minimal', 'chill'],
+            labelTh: 'พื้นหลังสีพาสเทลเรียบๆ โล่งสบายตา (Minimal Flat Pastel Backdrop)',
+            en: 'Simple flat soft pastel cream backdrop with zero background clutter, no extra objects, clean minimalist portrait framing',
+            th: 'พื้นหลังสีครีมพาสเทลเรียบโล่งสบายตา ไม่มีสิ่งของรกฉากหลัง เน้นความเด่นของตัวละครเต็มที่'
+          }
+        ]
+      },
+      {
+        id: 'minimal_calm',
+        nameTh: '🌿 พื้นหลังของไม่เยอะ / แอคชั่นน้อย เรียบง่ายสบายตา (Minimal & Low-Action)',
+        Presets: [
+          {
+            id: 'minimal_clean_desk',
+            moods: ['minimal', 'pro'],
+            labelTh: 'โต๊ะทำงานมินิมอลคลีนๆ มีแค่แล็ปท็อปและแก้วกาแฟ 1 ใบ (Minimal Clean Desk)',
+            en: 'Clean minimalist wooden desk with only a sleek laptop and a single ceramic coffee mug, softly blurred plain wall behind, low-action calm atmosphere, uncluttered',
+            th: 'โต๊ะทำงานสไตล์มินิมอลคลีนสะอาดตา มีเพียงแล็ปท็อปและแก้วกาแฟเซรามิก 1 ใบ ฉากหลังเป็นผนังเรียบเบลอละมุน ของไม่เยอะ สบายตา'
+          },
+          {
+            id: 'calm_window_light',
+            moods: ['minimal', 'chill'],
+            labelTh: 'มุมห้องแสงธรรมชาติเรียบๆ กับต้นไม้ 1 ต้น (Calm Window & Single Plant)',
+            en: 'Quiet minimalist room corner by a sunlit window with sheer white curtains and a single small potted plant, soft bokeh, calm low-action mood, very few objects',
+            th: 'มุมห้องเรียบง่ายริมหน้าต่างแสงธรรมชาติ มีผ้าม่านโปร่งแสงสีขาวและต้นไม้กระถางเล็กๆ เพียง 1 ต้น บรรยากาศนิ่งสงบ ของน้อยไม่รกตา'
+          },
+          {
+            id: 'soft_park_bokeh',
+            moods: ['minimal', 'chill'],
+            labelTh: 'ฉากหลังสวนสีเขียวเบลอละมุน โล่งสบายตา (Soft Blurred Nature Bokeh)',
+            en: 'Out-of-focus soft green park bokeh background with gentle sunlight, no crowded elements, calm and peaceful outdoor portrait setting',
+            th: 'ฉากหลังเป็นโบเก้ต้นไม้สีเขียวเบลอละมุนรับแสงแดดอ่อนๆ ไม่มีรายละเอียดรกตา ให้ความรู้สึกสดชื่นและเรียบง่าย'
+          },
+          {
+            id: 'modern_arch_wall',
+            moods: ['minimal', 'pro'],
+            labelTh: 'ผนังสตูดิโอโมเดิร์นโทนอุ่น เรียบเท่ดูแพง (Modern Minimalist Wall)',
+            en: 'Simple modern architectural warm-toned wall with gentle shadow play, minimal composition, clean and understated elegance',
+            th: 'ผนังสตูดิโอสถาปัตยกรรมโมเดิร์นโทนอบอุ่น มีมิติแสงเงาเบาๆ เรียบเท่ดูแพงโดยไม่ต้องมีพร็อพเยอะ'
+          }
+        ]
+      },
+      {
+        id: 'office_esg',
+        nameTh: '🏢 ออฟฟิศยุคใหม่ & ความยั่งยืน (Office & ESG)',
+        Presets: [
+          {
+            id: 'esg_desk',
+            moods: ['pro'],
+            labelTh: 'โต๊ะทำงาน ESG & TNFD Charts (ตามตัวอย่างต้นแบบ)',
+            en: 'Background filled with ESG infographics, TNFD charts, sticky notes, wind turbines poster, coffee mug on desk',
+            th: 'ฉากหลังเต็มไปด้วยอินโฟกราฟิกด้านความยั่งยืน ESG, กราฟข้อมูล TNFD, กระดาษโพสต์อิท, โปสเตอร์กังหันลมพลังงานสะอาด และแก้วกาแฟบนโต๊ะทำงาน'
+          },
+          {
+            id: 'ceo_penthouse',
+            moods: ['pro'],
+            labelTh: 'ห้องทำงานผู้บริหารวิวตึกระฟ้า (Modern Executive Room)',
+            en: 'Modern glass-walled executive office overlooking a glowing city skyline, subtle KPI screen, sleek indoor plants',
+            th: 'ห้องทำงานผู้บริหารกระจกใสเห็นวิวตึกระฟ้าสวยงาม มีหน้าจอ KPI และต้นไม้ฟอกอากาศสุดหรู'
+          },
+          {
+            id: 'boardroom_pitch',
+            moods: ['pro', 'minimal'],
+            labelTh: 'ห้องประชุมโมเดิร์น พรีเซนต์โปรเจกต์แบบสมาร์ท',
+            en: 'Clean modern glass meeting room with a presentation screen showing a simple growth chart, sleek table, smart corporate vibe',
+            th: 'ห้องประชุมกระจกโมเดิร์นสะอาดตา มีจอพรีเซนเทชันแสดงกราฟเติบโตเรียบง่าย ดูเป็นมืออาชีพ'
+          },
+          {
+            id: 'deadline_chaos',
+            moods: ['hilarious'],
+            labelTh: 'โต๊ะทำงานวันเดดไลน์สุดป่วน กองเอกสารท่วมหัว',
+            en: 'Chaotic humorous office desk surrounded by towering stacks of folders, empty espresso cups, colorful sticky notes everywhere, funny deadline calendar',
+            th: 'โต๊ะทำงานสุดป่วนในวันเดดไลน์ รายล้อมด้วยแฟ้มเอกสารกองโต แก้วเอสเพรสโซ่เรียงราย โพสต์อิทแปะเต็มจอและปฏิทินขีดเส้นตายสุดฮา'
+          },
+          {
+            id: 'zoom_pajamas',
+            moods: ['hilarious'],
+            labelTh: 'ประชุมออนไลน์ Work from Home ท่อนบนใส่สูท ท่อนล่างขาสั้น',
+            en: 'Funny Work-From-Home desk setup with ring light and webcam, wearing a smart blazer on top with silly cartoon pajama shorts, cozy living room behind',
+            th: 'มุมประชุมออนไลน์ Work from Home มีไฟริงไลท์และเว็บแคม สวมสูทสุดเนี้ยบท่อนบนแต่ใส่กางเกงขาสั้นลายการ์ตูนสุดฮาในห้องนั่งเล่น'
+          }
+        ]
+      },
+      {
+        id: 'cafe_lifestyle',
+        nameTh: '☕ คาเฟ่ & ไลฟ์สไตล์ฮีลใจ (Cafe & Cozy Lifestyle)',
+        Presets: [
+          {
+            id: 'minimal_cafe_table',
+            moods: ['chill', 'minimal'],
+            labelTh: 'มุมโต๊ะคาเฟ่มินิมอลคลีนๆ กาแฟ 1 แก้ว (Minimalist Korean-Style Cafe)',
+            en: 'Clean minimalist Korean-style cafe corner with white walls, warm wood table, and a single iced latte glass, uncluttered and calm',
+            th: 'มุมโต๊ะคาเฟ่มินิมอลสไตล์เกาหลีผนังสีขาวคลีน โต๊ะไม้สีอุ่นและกาแฟลาเต้เย็น 1 แก้ว เรียบง่ายสบายตา'
+          },
+          {
+            id: 'artisan_cafe',
+            moods: ['chill'],
+            labelTh: 'คาเฟ่ไม้สุดอบอุ่น กลิ่นกาแฟหอมกรุ่น',
+            en: 'Cozy sunlit artisan coffee shop with warm wooden shelves, espresso machine, hanging Edison bulbs, lush green monstera plants',
+            th: 'คาเฟ่ตกแต่งไม้แสนอบอุ่นแสงแดดส่องถึง มีเครื่องชงกาแฟเอสเพรสโซ่ ไฟเอดิสันสีวอร์มไวท์ และต้นมอนสเตอร่า'
+          },
+          {
+            id: 'camping_glamp',
+            moods: ['chill'],
+            labelTh: 'แคมป์ปิ้งริมภูเขา จิบดริปกาแฟยามเช้า',
+            en: 'Scenic mountain glamping site at sunrise, cozy canvas tent, folding camp chair, pour-over coffee gear, misty pine forest background',
+            th: 'ลานกางเต็นท์แคมป์ปิ้งวิวภูเขายามเช้า มีเต็นท์ผ้าใบ เก้าอี้แคมป์ปิ้ง ชุดดริปกาแฟ และสายหมอกท่ามกลางป่าสน'
+          },
+          {
+            id: 'buffet_king',
+            moods: ['hilarious', 'chill'],
+            labelTh: 'ราชาบุฟเฟต์ชาบู-ปิ้งย่าง หม้อเดือดปุดๆ',
+            en: 'Lively premium shabu and yakiniku buffet table overflowing with marbled wagyu beef trays, bubbling hotpot, cheese dip, and joyful foodie atmosphere',
+            th: 'โต๊ะบุฟเฟต์ชาบูและปิ้งย่างสุดอลังการ ถาดเนื้อวากิวเรียงซ้อนเป็นคอนโด หม้อชาบูเดือดปุดๆ และบรรยากาศสายกินสุดฟิน'
+          }
+        ]
+      },
+      {
+        id: 'thai_vibe',
+        nameTh: '🛺 สีสันไทยแลนด์ & สตรีทฟู้ด (Thai Pop & Street Vibe)',
+        Presets: [
+          {
+            id: 'tuktuk_neon',
+            moods: ['thai', 'hilarious'],
+            labelTh: 'ซิ่งตุ๊กตุ๊กไฟนีออน ตะลุยสตรีทฟู้ดเยาวราช',
+            en: 'Vibrant Bangkok Chinatown night street filled with glowing neon signs, customized colorful Thai Tuk-Tuk, sizzling street food stalls',
+            th: 'ถนนเยาวราชยามค่ำคืนที่เต็มไปด้วยป้ายไฟนีออนสีสันสดใส รถตุ๊กตุ๊กแต่งซิ่งไฟวิบวับ และร้านสตรีทฟู้ดควันฉุย'
+          },
+          {
+            id: 'floating_market',
+            moods: ['thai', 'chill'],
+            labelTh: 'ตลาดน้ำยามเช้า เรือผลไม้และขนมไทยสีสดใส',
+            en: 'Charming Thai floating market with wooden boats brimming with tropical mangoes, coconut ice cream, colorful Thai desserts, warm morning sunlight',
+            th: 'บรรยากาศตลาดน้ำไทยสุดคลาสสิก เรือไม้เต็มไปด้วยมะม่วงน้ำปลาหวาน ไอศกรีมกะทิ ขนมไทยสีสวย และแสงแดดอ่อนยามเช้า'
+          },
+          {
+            id: 'thai_temple_minimal',
+            moods: ['thai', 'minimal'],
+            labelTh: 'ฉากหลังสถาปัตยกรรมไทยร่วมสมัย คลีนสง่างาม',
+            en: 'Clean contemporary Thai architectural backdrop with warm golden sunlight and soft bokeh, minimal and graceful atmosphere',
+            th: 'ฉากหลังสถาปัตยกรรมไทยร่วมสมัยโทนขาว-ทองเบลอละมุนรับแสงแดดอบอุ่น เรียบหรูไม่รกตา'
+          }
+        ]
+      },
+      {
+        id: 'fantasy_tech',
+        nameTh: '🚀 แฟนตาซี & ไซไฟล้ำอนาคต (Fantasy & Sci-Fi Studio)',
+        Presets: [
+          {
+            id: 'ai_command',
+            moods: ['fantasy', 'pro'],
+            labelTh: 'ห้องบัญชาการ AI แห่งอนาคต โฮโลแกรมลอยตัว',
+            en: 'Futuristic AI innovation command center with floating 3D holographic data nodes, sleek glass consoles, friendly mini robot assistant',
+            th: 'ศูนย์บัญชาการนวัตกรรม AI แห่งอนาคต มีหน้าจอโฮโลแกรม 3 มิติลอยตัว คอนโซลกระจกล้ำสมัย และหุ่นยนต์ผู้ช่วยตัวจิ๋วสุดน่ารัก'
+          },
+          {
+            id: 'magic_alchemist',
+            moods: ['fantasy', 'hilarious'],
+            labelTh: 'ห้องปรุงยาพ่อมด/แม่มดยุคดิจิทัล ใช้แล็ปท็อปร่ายเวทย์',
+            en: 'Whimsical Pixar-style wizard study with glowing potion bottles, floating spellbooks, magical sparkles swirling around a modern laptop',
+            th: 'ห้องทำงานพ่อมดแม่มดสไตล์พิกซาร์ มีขวดน้ำยาเรืองแสง หนังสือเวทมนตร์ลอยได้ และละอองเวทมนตร์หมุนรอบแล็ปท็อปคู่ใจ'
+          }
+        ]
+      }
+    ];
+
+    const ART_STYLES = {
+      pixar_2d: {
+        en: 'semi-realistic cute cartoon caricature, Pixar-style 2D digital illustration',
+        th: 'ภาพวาดดิจิทัลอิลลัสเตรชัน 2D สไตล์การ์ตูนล้อเลียนกึ่งสมจริงแบบมีระดับ (Pixar-style 2D digital illustration)'
+      },
+      pixar_3d: {
+        en: 'semi-realistic cute 3D cartoon caricature, Disney-Pixar stylized 3D animation render, subsurface scattering',
+        th: 'งานเรนเดอร์ 3D สไตล์แอนิเมชัน Disney-Pixar การ์ตูนล้อเลียนกึ่งสมจริง ผิวสัมผัสและมิติแสงนุ่มนวลสมจริง'
+      },
+      hybrid_2d3d: {
+        en: 'semi-realistic stylized 2D/3D hybrid caricature illustration, Disney-Pixar inspired depth and shading',
+        th: 'ดิจิทัลอิลลัสเตรชันกึ่งสมจริงผสานมิติ 2D/3D สไตล์ Disney-Pixar แรเงาดูมีมิติทะลุจอ'
+      },
+      dynamic_caricature: {
+        en: 'dynamic expressive semi-realistic caricature illustration, high-end stylized character art',
+        th: 'ภาพการ์ตูนล้อเลียนกึ่งสมจริงลายเส้นไดนามิกสุดคมชัด งานอาร์ตคาแรกเตอร์ระดับพรีเมียม'
+      }
+    };
+
+    const PROPORTIONS = {
+      slight_caricature: {
+        en: 'subtle Chibi/Caricature proportions with head and eyes slightly larger than real life while keeping true body build and facial identity',
+        th: 'ศีรษะและดวงตาโตกว่าสัดส่วนจริงเล็กน้อย (Chibi/Caricature proportions) โดยยังคงรูปร่างและโครงหน้าจริงของต้นแบบอย่างชัดเจน'
+      },
+      chibi_cute: {
+        en: 'adorable Chibi caricature proportions with oversized expressive head and compact stylized body while preserving unmistakable facial identity',
+        th: 'สัดส่วนการ์ตูนจิบิหัวโตตัวเล็กสุดน่ารัก (Chibi caricature proportions) โดยล็อกเอกลักษณ์ใบหน้าของต้นแบบให้จำได้ทันที'
+      },
+      exaggerated_fun: {
+        en: 'playfully exaggerated comedic caricature proportions amplifying the subject’s real signature facial features and body traits so they remain 100% recognizable',
+        th: 'สัดส่วนการ์ตูนล้อเลียนแบบดึงจุดเด่นจริงบนใบหน้าและรูปร่างให้สนุกสนานและจำได้แม่นยำ 100% ว่าเป็นใคร'
+      }
+    };
+
+    const STYLE_FEATURES = {
+      large_eyes: {
+        en: 'large expressive sparkling eyes matching the reference eye shape',
+        th: 'ดวงตากลมโตเป็นประกายโดยคงรูปตาเดิมของต้นแบบ'
+      },
+      glossy_hair: {
+        en: 'glossy dimensional hair matching the exact reference hairstyle',
+        th: 'เส้นผมเงางามดูมีมิติตามทรงผมจริงในรูปต้นแบบเป๊ะ'
+      },
+      clean_outlines: {
+        en: 'clean outlines, highly detailed',
+        th: 'ลายเส้นคมชัดสะอาดตา รายละเอียดสูง'
+      },
+      rosy_cheeks: {
+        en: 'soft rosy expressive cheeks',
+        th: 'แก้มอมชมพูดูสดใสมีชีวิตชีวา'
+      }
+    };
+
+    const LIGHTING_MAP = {
+      soft_studio: {
+        en: 'soft studio and office lighting, crisp clarity',
+        th: 'แสงสว่างนุ่มนวลแบบสตูดิโอและออฟฟิศ (Soft studio lighting) คมชัดทุกมิติ'
+      },
+      golden_rim: {
+        en: 'warm golden hour rim lighting with soft studio fill light',
+        th: 'แสงสีทองอบอุ่นตัดขอบตัวละครผสานไฟสตูดิโอนุ่มนวล'
+      },
+      cinematic_pixar: {
+        en: 'cinematic Pixar-grade global illumination, soft volumetric light rays',
+        th: 'การจัดแสงระดับภาพยนตร์แอนิเมชันพิกซาร์ มีมิติแสงเงาละมุนตา'
+      },
+      neon_pop: {
+        en: 'playful dual-tone neon studio rim light with soft key lighting',
+        th: 'แสงไฟสตูดิโอผสานแสงนีออนทูโทนสุดป๊อปและทันสมัย'
+      }
+    };
+
+    const COLOR_MAP = {
+      warm_vibrant: {
+        en: 'warm tones, vibrant colors',
+        th: 'โทนสีอบอุ่น สีสันสดใสคมชัด'
+      },
+      pastel_cheerful: {
+        en: 'cheerful bright pastel color palette, warm inviting hues',
+        th: 'โทนสีพาสเทลสว่างสดใส อบอุ่นละมุนตา'
+      },
+      high_contrast_pop: {
+        en: 'rich saturated pop-art color palette, vivid contrast',
+        th: 'โทนสีสดจัดจ้าน คอนทราสต์โดดเด่นสะดุดตา'
+      },
+      natural_clean: {
+        en: 'clean modern natural color grading, balanced warm highlights',
+        th: 'โทนสีธรรมชาติคลีนสะอาดตา ไฮไลต์โทนอุ่นลงตัว'
+      }
+    };
+
+    const EXPRESSIONS = {
+      warm_confident: {
+        en: 'warm confident smile',
+        th: 'รอยยิ้มอบอุ่นและมั่นใจตามเอกลักษณ์จริง'
+      },
+      calm_gentle: {
+        en: 'calm composed gentle smile with relaxed eyes',
+        th: 'ยิ้มมุมปากนิดๆ สุขุมนุ่มลึกดูแพง'
+      },
+      cheeky_wink: {
+        en: 'cheeky playful grin with a mischievous wink and raised eyebrow',
+        th: 'ยิ้มทะเล้นขยิบตาข้างหนึ่งพร้อมเลิกคิ้วกวนๆ สุดน่ารัก'
+      },
+      sassy_sideeye: {
+        en: 'hilarious sassy side-eye smirk with one high arched eyebrow full of cheeky attitude',
+        th: 'เหล่ตามองบนพร้อมอมยิ้มมุมปากกวนประสาทแบบภาพล้อเลียนสุดฮา'
+      },
+      laughing_joy: {
+        en: 'hilariously infectious wide joyful laugh with sparkling happy eyes',
+        th: 'หัวเราะร่าเริงสุดขีดอย่างอารมณ์ดี ดวงตาเป็นประกายสดใส'
+      },
+      caffeine_shock: {
+        en: 'funny wide-eyed hyper-focused caffeine rush expression with an awkward grin',
+        th: 'สีหน้าตาโตค้างแบบคนดีดกาแฟ ตั้งใจปั่นงานสุดชีวิตปนยิ้มแห้งสุดฮา'
+      },
+      smug_boss: {
+        en: 'comedically overconfident smug boss smirk with charismatic charm',
+        th: 'ยิ้มมุมปากมาดบอสสุดเท่ เก๊กหล่อ/สวยแบบทะลุปรอท'
+      },
+      dramatic_gasp: {
+        en: 'exaggerated cartoon jaw-drop surprise expression full of humor',
+        th: 'สีหน้าอ้าปากเซอร์ไพรส์โอเวอร์แอคติ้งสไตล์การ์ตูนสุดฮา'
+      },
+      duck_face: {
+        en: 'hilariously exaggerated selfie duck-face pout with playful eyes',
+        th: 'ทำปากจู๋สู้กล้องแบบโอเวอร์แอคติ้งสุดกวน'
+      }
+    };
+
+    const POSES = {
+      standard_pose: { en: '', th: '' },
+      calm_portrait: {
+        en: 'in a calm relaxed portrait posture with minimal movement, looking naturally at the viewer',
+        th: 'ยืนหรือนั่งโพสท่าสบายๆ นิ่งๆ แอคชั่นน้อย มองกล้องอย่างเป็นธรรมชาติ'
+      },
+      arms_crossed: {
+        en: 'standing calmly with arms crossed in a smart, composed, low-action pose',
+        th: 'ยืนกอดอกเท่ๆ มาดสมาร์ทสุขุม แอคชั่นน้อยแต่ดูดี'
+      },
+      holding_cup_calm: {
+        en: 'calmly holding a warm drink cup with a relaxed, unhurried posture',
+        th: 'ถือแก้วเครื่องดื่มเบาๆ ด้วยท่าทางผ่อนคลายสบายๆ'
+      },
+      sassy_hips: {
+        en: 'striking a cheeky caricature pose with both hands on hips, leaning slightly forward with chin tilted up in a funny cocky attitude',
+        th: 'แอคติ้งยืนเท้าสะเอวโน้มตัวมาข้างหน้า เชิดคางเก๊กท่ากวนโอ๊ยสไตล์ภาพล้อเลียน'
+      },
+      peek_sunglasses: {
+        en: 'pulling stylish sunglasses slightly down the nose with one hand to peek over the rim with a hilarious sassy caricature attitude',
+        th: 'ใช้มือข้างหนึ่งดึงแว่นตากันแดดลงมาครึ่งจมูกแล้วมองลอดแว่นด้วยสายตากวนสุดๆ'
+      },
+      point_at_viewer: {
+        en: 'leaning toward the camera and pointing both index fingers directly at the viewer in a funny, cheeky "gotcha!" caricature pose',
+        th: 'โน้มตัวเข้าหากล้องพร้อมชี้นิ้วทั้งสองข้างมาที่คนดูด้วยท่าทางกวนประสาทสุดทะเล้น'
+      },
+      salt_bae: {
+        en: 'doing the iconic dramatic "Salt Bae" seasoning sprinkle gesture with one arm raised high in a hilarious over-the-top caricature act',
+        th: 'ทำท่าโรยเกลือ Salt Bae ยกแขนสูงแบบโอเวอร์แอคติ้งสุดกวน'
+      },
+      double_thumbs_fine: {
+        en: 'giving an exaggerated double thumbs-up with a hilariously stiff "everything is totally fine" comedic posture',
+        th: 'ยกนิ้วโป้งสองข้างเกร็งๆ พร้อมยิ้มสู้ชีวิตแบบภาพล้อเลียนสุดฮา'
+      },
+      home_alone_shock: {
+        en: 'pressing both hands against the cheeks in a classic cartoon "Home Alone" shock pose with comedic flair',
+        th: 'ยกสองมือกุมแก้มอ้าปากค้าง ตกใจโอเวอร์แอคติ้งแบบการ์ตูนล้อเลียน'
+      },
+      boss_snap: {
+        en: 'snapping fingers with exaggerated sassy boss swagger and a playful dramatic shoulder tilt',
+        th: 'โพสท่าดีดนิ้วสั่งการมาดบอสใหญ่ เอียงไหล่เก๊กท่ากวนโอ๊ยสุดฮา'
+      },
+      peace_double: {
+        en: 'making playful double peace V-signs with a cheeky head tilt',
+        th: 'โพสท่าชูสองนิ้วสองข้างพร้อมเอียงคอสุดทะเล้น'
+      },
+      finger_guns: {
+        en: 'flashing cheeky finger-guns and a playful mini-heart gesture at the viewer',
+        th: 'ทำท่าส่งมินิฮาร์ทและนิ้วปืนปิ้วๆ สุดกวนมาทางคนดู'
+      },
+      multitask_octopus: {
+        en: 'comically multitasking and typing at lightning speed with dynamic motion blur on hands like an octopus',
+        th: 'กำลังพิมพ์งานและรับมือทุกอย่างด้วยความเร็วแสงเหมือนมีแปดมือ'
+      },
+      chair_racing: {
+        en: 'hilariously riding and drifting on a rolling office chair like a Formula 1 race car',
+        th: 'นั่งขี่เก้าอี้ล้อเลื่อนไถลซิ่งดริฟต์เหมือนขับรถแข่งสุดปั่น'
+      },
+      victory_jump: {
+        en: 'throwing both hands up in a dramatic joyful victory celebration pose',
+        th: 'ชูสองมือกระโดดดีใจสุดขีดเหมือนถูกรางวัลที่ 1'
+      },
+      zen_float: {
+        en: 'hilariously levitating in a calm zen meditation pose right above the chair',
+        th: 'นั่งสมาธิลอยตัวเหนือเก้าอี้ด้วยความสงบนิ่งท่ามกลางความวุ่นวาย'
+      }
+    };
+
+    const GAGS = {
+      none: { en: '', th: '' },
+      comic_sparks: {
+        en: 'surrounded by playful comic action lines and glowing floating star sparkles',
+        th: 'เสริมเอฟเฟกต์เส้นสปีดไลน์การ์ตูนและประกายดาววิ้งๆ ลอยรอบตัว'
+      },
+      flying_papers: {
+        en: 'with humorous flying documents and colorful sticky notes swirling in the air',
+        th: 'มีกระดาษเอกสารและโพสต์อิทหลากสีปลิวว่อนในอากาศเพิ่มความปั่นป่วน'
+      },
+      battery_low: {
+        en: 'with a funny glowing 1% low-battery hologram icon floating above the head',
+        th: 'มีไอคอนแบตเตอรี่เหลือ 1% เรืองแสงลอยอยู่เหนือศีรษะสุดฮา'
+      },
+      crown_sunglasses: {
+        en: 'wearing cool tilted sunglasses with a tiny floating golden crown above the head',
+        th: 'สวมแว่นกันแดดเอียงเท่ๆ พร้อมมงกุฎทองคำจิ๋วลอยอยู่เหนือหัว'
+      },
+      rubber_duck: {
+        en: 'accompanied by a squad of cute yellow rubber ducks cheering on the desk',
+        th: 'มีแก๊งเป็ดยางสีเหลืองตัวจิ๋วเรียงแถวคอยเชียร์อยู่บนโต๊ะ'
+      },
+      question_marks: {
+        en: 'with a funny cartoon sweat drop and floating comic question marks near the head',
+        th: 'มีหยดเหงื่อการ์ตูนและเครื่องหมายคำถาม ? ลอยปุดๆ อยู่ข้างหัวสุดฮา'
+      }
+    };
+
+    // Strict Reference Identity & Subject Fidelity Templates
+    const REFERENCE_LOCK_TEMPLATES = {
+      person: {
+        strict_max: {
+          en: 'CRITICAL IDENTITY & LIKENESS LOCK: Strictly preserve 100% unmistakable facial likeness, exact face shape, eye structure, nose, mouth, skin tone, exact hairstyle, hairline, and true body build/physique from the uploaded reference photo. Anyone looking at this caricature MUST immediately recognize it is the exact same person from the photo—do NOT replace their face with a generic cartoon face',
+          th: 'คำสั่งล็อกโครงหน้าและรูปร่างขั้นสูงสุด (CRITICAL IDENTITY LOCK 100%): บังคับรักษาเอกลักษณ์ใบหน้า โครงหน้า รูปตา จมูก ปาก สีผิว ทรงผมจริง และสัดส่วนรูปร่าง/หุ่นจริงจากรูปที่อัปโหลดอย่างเคร่งครัด คนดูต้องจำได้ทันทีว่าเป็นคนคนนี้ ห้ามเปลี่ยนหน้าเป็นตัวการ์ตูนทั่วไปเด็ดขาด'
+        },
+        high_balanced: {
+          en: 'HIGH FACIAL & BODY LIKENESS: Faithfully preserve the person’s recognizable facial features, hairstyle, glasses/accessories, and body shape from the provided reference photo so they remain clearly identifiable in stylized caricature form',
+          th: 'ล็อกความเหมือนใบหน้าและรูปร่างระดับสูง (High Likeness 85%): รักษาเค้าโครงหน้าจริง ทรงผม แว่นตา/เครื่องประดับ และรูปร่างของบุคคลในภาพต้นแบบให้ดูออกชัดเจนว่าเป็นคนนี้ในสไตล์การ์ตูนพิกซาร์'
+        },
+        stylized_light: {
+          en: 'Based on the provided portrait photo, keeping overall facial likeness and character vibe',
+          th: 'อ้างอิงจากรูปถ่ายพอร์ตเทรตที่แนบมา โดยคงกลิ่นอายและเค้าโครงหน้าเดิม'
+        }
+      },
+      animal: {
+        strict_max: {
+          en: 'CRITICAL ANIMAL/PET FIDELITY LOCK: Strictly preserve the exact animal species, breed, fur color pattern, distinctive markings, ear shape, eye color, muzzle, and body proportions from the uploaded reference photo so it is 100% unmistakably recognizable as this specific animal/pet',
+          th: 'คำสั่งล็อกเอกลักษณ์สัตว์เลี้ยง/สัตว์ขั้นสูงสุด (STRICT ANIMAL FIDELITY 100%): บังคับคงสายพันธุ์ ลวดลายสีขน ตำหนิเด่น รูปทรงหู สีตา และสัดส่วนรูปร่างของสัตว์ในภาพต้นแบบอย่างแม่นยำที่สุด ให้ดูออกชัดเจนทันทีว่าเป็นสัตว์ตัวนี้'
+        },
+        high_balanced: {
+          en: 'HIGH ANIMAL LIKENESS: Faithfully preserve the exact breed, fur markings, colors, and recognizable silhouette of the animal in the reference image',
+          th: 'ล็อกความเหมือนสัตว์เลี้ยงระดับสูง: คงสายพันธุ์ สีขน ลวดลาย และรูปร่างเด่นของสัตว์ในรูปต้นแบบให้ดูออกชัดเจน'
+        },
+        stylized_light: {
+          en: 'Based on the provided animal photo, keeping recognizable breed and color markings',
+          th: 'อ้างอิงจากรูปสัตว์เลี้ยงที่แนบมา โดยคงสายพันธุ์และสีขนหลักไว้'
+        }
+      },
+      object: {
+        strict_max: {
+          en: 'CRITICAL OBJECT/SUBJECT FIDELITY LOCK: Strictly preserve the exact shape, structural proportions, color scheme, surface materials, logos/details, and unmistakable silhouette of the object/vehicle/item in the uploaded reference photo so viewers immediately recognize what specific item it is with maximum clarity',
+          th: 'คำสั่งล็อกรูปทรงและเอกลักษณ์สิ่งของขั้นสูงสุด (STRICT OBJECT FIDELITY 100%): บังคับรักษารูปทรง สัดส่วน โทนสี รายละเอียดดีไซน์ และโครงสร้างของสิ่งของ/วัตถุในภาพต้นแบบให้ชัดเจนที่สุด ดูออกทันทีว่าเป็นสิ่งนั้นโดยไม่บิดเพี้ยน'
+        },
+        high_balanced: {
+          en: 'HIGH OBJECT FIDELITY: Accurately maintain the recognizable shape, design details, and colors of the object from the reference image',
+          th: 'ล็อกความเหมือนสิ่งของระดับสูง: คงรูปทรง ดีไซน์ และสีสันของสิ่งของในภาพต้นแบบให้ดูออกชัดเจน'
+        },
+        stylized_light: {
+          en: 'Based on the provided reference object photo, keeping its core shape and design',
+          th: 'อ้างอิงจากรูปสิ่งของที่แนบมา โดยคงรูปทรงและสีสันหลักไว้'
+        }
+      },
+      person_and_pet: {
+        strict_max: {
+          en: 'CRITICAL DUAL FIDELITY LOCK (PERSON + PET/ITEM): Strictly preserve 100% unmistakable facial likeness, hairstyle, and true body build of the person AND the exact breed, markings, shape, and recognizable details of the pet/object from the uploaded reference photo so both are immediately identifiable',
+          th: 'คำสั่งล็อกเอกลักษณ์คู่ขั้นสูงสุด (คน + สัตว์เลี้ยง/สิ่งของ 100%): บังคับรักษาทั้งโครงหน้า ทรงผม และรูปร่างจริงของคนให้จำได้ทันที พร้อมทั้งคงสายพันธุ์ ลวดลาย และรูปทรงของสัตว์เลี้ยง/สิ่งของคู่ใจในรูปต้นแบบให้ชัดเจนที่สุดทั้งคู่'
+        },
+        high_balanced: {
+          en: 'HIGH DUAL LIKENESS: Faithfully preserve both the person’s facial/body likeness and the companion pet/object’s exact recognizable traits from the reference photo',
+          th: 'ล็อกความเหมือนทั้งคนและสัตว์เลี้ยง/สิ่งของระดับสูง: คงเอกลักษณ์หน้าตาและรูปร่างของคนรวมถึงจุดเด่นของสัตว์/สิ่งของตามรูปต้นแบบชัดเจน'
+        },
+        stylized_light: {
+          en: 'Based on the provided reference photo, keeping recognizable likeness of both the person and companion pet/object',
+          th: 'อ้างอิงจากรูปต้นแบบ โดยคงเอกลักษณ์ของทั้งบุคคลและสัตว์เลี้ยง/สิ่งของคู่ใจ'
+        }
+      }
+    };
+
+    const AI_NAMES = {
+      midjourney: 'Midjourney v6',
+      gemini: 'Google Gemini / Imagen 3',
+      chatgpt: 'ChatGPT (DALL·E 3)',
+      leonardo: 'Leonardo.ai / Flux.1',
+      stablediffusion: 'Stable Diffusion XL'
+    };
+
+    // App State
+    const state = {
+      lang: 'en',       // 'en' | 'th'
+      format: 'text',   // 'text' | 'json'
+      mood: 'all',
+      uploadedFile: null
+    };
+
+    // DOM Elements
+    const imageTitleEl = document.getElementById('imageTitle');
+    const targetAiEl = document.getElementById('targetAi');
+    const subjectDescEl = document.getElementById('subjectDesc');
+    const aspectRatioEl = document.getElementById('aspectRatio');
+    const keepLikenessEl = document.getElementById('keepLikeness');
+    const refSubjectTypeEl = document.getElementById('refSubjectType');
+    const likenessStrengthEl = document.getElementById('likenessStrength');
+    const keyTraitsLockEl = document.getElementById('keyTraitsLock');
+    const customAdditionsEl = document.getElementById('customAdditions');
+    const artStyleEl = document.getElementById('artStyle');
+    const headProportionEl = document.getElementById('headProportion');
+    const sceneCategoryEl = document.getElementById('sceneCategory');
+    const scenePresetEl = document.getElementById('scenePreset');
+    const sceneDetailTextEl = document.getElementById('sceneDetailText');
+    const lightingPresetEl = document.getElementById('lightingPreset');
+    const colorToneEl = document.getElementById('colorTone');
+    const expressionSelectEl = document.getElementById('expressionSelect');
+    const actionPoseSelectEl = document.getElementById('actionPoseSelect');
+    const funnyGagSelectEl = document.getElementById('funnyGagSelect');
+    const customActionTextEl = document.getElementById('customActionText');
+    const promptOutputEl = document.getElementById('promptOutput');
+    const activeAiBadgeEl = document.getElementById('activeAiBadge');
+    const activeLangBadgeEl = document.getElementById('activeLangBadge');
+    const copyBtnLangLabelEl = document.getElementById('copyBtnLangLabel');
+    const copyPromptBtn = document.getElementById('copyPromptBtn');
+
+    // Populate Scene Dropdowns
+    function initSceneDropdowns() {
+      sceneCategoryEl.innerHTML = '';
+      SCENE_CATEGORIES.forEach((cat) => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.nameTh;
+        sceneCategoryEl.appendChild(opt);
+      });
+      // Default to office_esg -> esg_desk on initial load
+      sceneCategoryEl.value = 'office_esg';
+      populatePresetsForCategory('office_esg', 'esg_desk');
+    }
+
+    function populatePresetsForCategory(catId, selectedPresetId) {
+      const cat = SCENE_CATEGORIES.find(c => c.id === catId) || SCENE_CATEGORIES[0];
+      scenePresetEl.innerHTML = '';
+      cat.Presets.forEach((preset) => {
+        const opt = document.createElement('option');
+        opt.value = preset.id;
+        opt.textContent = preset.labelTh;
+        scenePresetEl.appendChild(opt);
+      });
+      if (selectedPresetId) {
+        scenePresetEl.value = selectedPresetId;
+      }
+      syncSceneTextFromPreset();
+    }
+
+    function findCurrentPreset() {
+      const cat = SCENE_CATEGORIES.find(c => c.id === sceneCategoryEl.value) || SCENE_CATEGORIES[0];
+      return cat.Presets.find(p => p.id === scenePresetEl.value) || cat.Presets[0];
+    }
+
+    function syncSceneTextFromPreset() {
+      const preset = findCurrentPreset();
+      if (!preset) return;
+      sceneDetailTextEl.value = state.lang === 'th' ? preset.th : preset.en;
+      sceneDetailTextEl.dataset.presetId = preset.id;
+    }
+
+    // Build Prompts (EN & TH, Full Text & JSON)
+    function buildPromptData() {
+      const lang = state.lang;
+      const ai = targetAiEl.value;
+      const ar = aspectRatioEl.value;
+      const title = imageTitleEl.value.trim() || (lang === 'th' ? 'ภาพการ์ตูนล้อเลียนดิจิทัล' : 'Untitled Caricature Portrait');
+      const subject = subjectDescEl.value.trim() || (lang === 'th' ? 'บุคคลในภาพต้นแบบ' : 'A professional person');
+      const customProps = customAdditionsEl.value.trim();
+      const keyTraits = keyTraitsLockEl.value.trim();
+      const customAction = customActionTextEl.value.trim();
+
+      const styleObj = ART_STYLES[artStyleEl.value];
+      const propObj = PROPORTIONS[headProportionEl.value];
+      const lightObj = LIGHTING_MAP[lightingPresetEl.value];
+      const colorObj = COLOR_MAP[colorToneEl.value];
+      const exprObj = EXPRESSIONS[expressionSelectEl.value] || EXPRESSIONS.warm_confident;
+      const poseObj = POSES[actionPoseSelectEl.value] || POSES.standard_pose;
+      const gagObj = GAGS[funnyGagSelectEl.value] || GAGS.none;
+
+      const refType = refSubjectTypeEl.value;
+      const refStrength = likenessStrengthEl.value;
+      const lockTemplate = REFERENCE_LOCK_TEMPLATES[refType][refStrength];
+
+      // Checked features
+      const checkedFeats = Array.from(document.querySelectorAll('.style-feat:checked')).map(cb => STYLE_FEATURES[cb.value]);
+      const featTextEn = checkedFeats.map(f => f.en).join(', ');
+      const featTextTh = checkedFeats.map(f => f.th).join(', ');
+
+      // Scene text (if user kept preset, use language-matched preset; otherwise use user's custom text)
+      const currentPreset = findCurrentPreset();
+      let bgEn = sceneDetailTextEl.value.trim();
+      let bgTh = sceneDetailTextEl.value.trim();
+      if (currentPreset && (bgEn === currentPreset.en || bgEn === currentPreset.th)) {
+        bgEn = currentPreset.en;
+        bgTh = currentPreset.th;
+      }
+
+      const hasLikeness = keepLikenessEl.checked;
+      const refImageName = state.uploadedFile ? state.uploadedFile.name : null;
+
+      // Action text (combine selected pose + custom action override if provided)
+      const finalActionEn = [poseObj.en, customAction].filter(Boolean).join(', ');
+      const finalActionTh = [poseObj.th, customAction].filter(Boolean).join(', ');
+
+      // Construct English Full Text Prompt with strong identity/fidelity anchoring
+      const enParts = [];
+      if (hasLikeness) {
+        enParts.push(`[${lockTemplate.en}${refImageName ? ` (Reference file: ${refImageName})` : ''}${keyTraits ? `. Must-keep traits: ${keyTraits}` : ''}.]`);
+        enParts.push(`A ${styleObj.en} faithfully based on the uploaded reference image.`);
+      } else {
+        enParts.push(`A ${styleObj.en}.`);
+      }
+
+      const subjectAndActionEn = [
+        subject,
+        finalActionEn,
+        exprObj.en,
+        propObj.en,
+        featTextEn
+      ].filter(Boolean).join(', ');
+      enParts.push(`${subjectAndActionEn}.`);
+
+      if (bgEn) {
+        enParts.push(bgEn.endsWith('.') ? bgEn : `${bgEn}.`);
+      }
+      if (customProps) {
+        enParts.push(`Additional elements: ${customProps}.`);
+      }
+      if (gagObj.en) {
+        enParts.push(`Comedic touch: ${gagObj.en}.`);
+      }
+
+      enParts.push(`${lightObj.en}, ${colorObj.en}.`);
+
+      // AI-specific suffix for EN (adjusted stylize/iw when strict likeness is active so Midjourney doesn't drift away from the photo)
+      let enSuffix = '';
+      if (ai === 'midjourney') {
+        const mjStylize = (hasLikeness && refStrength === 'strict_max') ? '--iw 2 --stylize 120' : '--stylize 250';
+        enSuffix = ` --ar ${ar} ${mjStylize}`;
+      } else if (ai === 'gemini' || ai === 'chatgpt') {
+        enSuffix = hasLikeness
+          ? ` (Aspect Ratio: ${ar} | Note to AI: Keep the exact face, body build, and recognizable identity of the attached image without altering who they are.)`
+          : ` (Aspect Ratio: ${ar})`;
+      } else {
+        enSuffix = ` [Aspect Ratio ${ar}, High Identity Fidelity, Masterpiece, 8k resolution]`;
+      }
+
+      const fullTextEn = enParts.join(' ') + enSuffix;
+
+      // Construct Thai Full Text Prompt
+      const thParts = [];
+      if (hasLikeness) {
+        thParts.push(`[${lockTemplate.th}${refImageName ? ` (ไฟล์อ้างอิง: ${refImageName})` : ''}${keyTraits ? ` | จุดเด่นที่ห้ามเพี้ยน: ${keyTraits}` : ''}]`);
+        thParts.push(`สร้าง${styleObj.th} โดยยึดโครงหน้า รูปร่าง และเอกลักษณ์จากภาพต้นแบบที่แนบมาอย่างแม่นยำ`);
+      } else {
+        thParts.push(`สร้าง${styleObj.th}`);
+      }
+
+      const subjectAndActionTh = [
+        `ตัวหลักในภาพ: ${subject}`,
+        finalActionTh ? `ท่าทางแอคชั่น: ${finalActionTh}` : '',
+        `สีหน้าและอินเนอร์: ${exprObj.th}`,
+        propObj.th,
+        featTextTh
+      ].filter(Boolean).join(', ');
+      thParts.push(`${subjectAndActionTh}`);
+
+      if (bgTh) {
+        thParts.push(`ฉากหลังและบรรยากาศ: ${bgTh}`);
+      }
+      if (customProps) {
+        thParts.push(`สิ่งของและรายละเอียดเพิ่มเติม: ${customProps}`);
+      }
+      if (gagObj.th) {
+        thParts.push(`ลูกเล่นความฮา/ทะเล้น: ${gagObj.th}`);
+      }
+
+      thParts.push(`โทนสีและแสง: ${lightObj.th}, ${colorObj.th}`);
+
+      let thSuffix = '';
+      if (ai === 'midjourney') {
+        const mjStylize = (hasLikeness && refStrength === 'strict_max') ? '--iw 2 --stylize 120' : '--stylize 250';
+        thSuffix = ` --ar ${ar} ${mjStylize}`;
+      } else {
+        thSuffix = ` (สัดส่วนภาพ ${ar})`;
+      }
+
+      const fullTextTh = thParts.join(' | ') + thSuffix;
+
+      // Construct Dynamic JSON Prompt (in selected language)
+      const jsonObj = lang === 'en' ? {
+        prompt_title: title,
+        target_ai: AI_NAMES[ai],
+        language: "en",
+        reference_identity_lock: {
+          use_reference_photo: hasLikeness,
+          reference_subject_type: refType,
+          likeness_intensity: refStrength,
+          file_name: refImageName || "attached_reference_image.jpg",
+          must_keep_recognizable_traits: keyTraits || "All facial features, hairstyle, body build, and key subject details from reference image",
+          strict_instruction: hasLikeness ? lockTemplate.en : "Generate original character"
+        },
+        art_style: {
+          core_style: styleObj.en,
+          proportions: propObj.en,
+          character_features: checkedFeats.map(f => f.en)
+        },
+        character_action_and_comedy: {
+          subject: subject,
+          facial_expression: exprObj.en,
+          action_pose: finalActionEn || "Natural pose matching subject",
+          playful_gag: gagObj.en || "None"
+        },
+        setting_and_background: {
+          category: sceneCategoryEl.options[sceneCategoryEl.selectedIndex]?.text || "",
+          mood_filter: state.mood,
+          is_no_background: sceneCategoryEl.value === 'nobg_clean',
+          scene_description: bgEn,
+          custom_additions: customProps || "None"
+        },
+        color_and_lighting: {
+          lighting: lightObj.en,
+          color_palette: colorObj.en
+        },
+        parameters: {
+          aspect_ratio: ar,
+          midjourney_flags: ai === 'midjourney' ? `--ar ${ar} ${(hasLikeness && refStrength === 'strict_max') ? '--iw 2 --stylize 120' : '--stylize 250'}` : undefined
+        },
+        compiled_prompt: fullTextEn
+      } : {
+        ชื่อภาพ: title,
+        AI_ที่ใช้งาน: AI_NAMES[ai],
+        ภาษา: "th",
+        การล็อกเอกลักษณ์จากรูปต้นแบบ: {
+          อ้างอิงรูปต้นแบบ: hasLikeness,
+          ประเภทสิ่งในภาพ: refSubjectTypeEl.options[refSubjectTypeEl.selectedIndex]?.text || "",
+          ระดับความเข้มงวดความเหมือน: likenessStrengthEl.options[likenessStrengthEl.selectedIndex]?.text || "",
+          ชื่อไฟล์รูป: refImageName || "แนบรูปต้นแบบ",
+          จุดเด่นที่ห้ามเพี้ยนเด็ดขาด: keyTraits || "ล็อกโครงหน้า ทรงผม รูปร่าง หรือลักษณะเด่นของสัตว์/สิ่งของตามรูปจริงทั้งหมด",
+          คำสั่งบังคับความเหมือน: hasLikeness ? lockTemplate.th : "สร้างตัวละครใหม่"
+        },
+        สไตล์ภาพ_Art_Style: {
+          สไตล์หลัก: styleObj.th,
+          สัดส่วนภาพล้อเลียน: propObj.th,
+          จุดเด่นตัวละคร: checkedFeats.map(f => f.th)
+        },
+        แอคชั่นตัวละครและความฮา: {
+          ตัวหลักในภาพ: subject,
+          สีหน้าและอินเนอร์: exprObj.th,
+          ท่าทางแอคชั่น: finalActionTh || "ท่าทางธรรมชาติตามเนื้อเรื่องหลัก",
+          ลูกเล่นเสริมความฮา: gagObj.th || "ไม่มี"
+        },
+        บรรยากาศและฉากหลัง: {
+          หมวดหมู่: sceneCategoryEl.options[sceneCategoryEl.selectedIndex]?.text || "",
+          อารมณ์ฉาก: state.mood,
+          โหมดไม่มีพื้นหลัง: sceneCategoryEl.value === 'nobg_clean',
+          รายละเอียดฉากหลัง: bgTh,
+          สิ่งที่เพิ่มเข้ามา: customProps || "ไม่มี"
+        },
+        โทนสีและแสง: {
+          การจัดแสง: lightObj.th,
+          โทนสี: colorObj.th
+        },
+        พารามิเตอร์: {
+          สัดส่วนภาพ: ar
+        },
+        Prompt_รวมพร้อมใช้: fullTextTh
+      };
+
+      return {
+        fullText: lang === 'en' ? fullTextEn : fullTextTh,
+        jsonText: JSON.stringify(jsonObj, null, 2)
+      };
+    }
+
+    function renderOutput() {
+      const { fullText, jsonText } = buildPromptData();
+      promptOutputEl.textContent = state.format === 'json' ? jsonText : fullText;
+      activeAiBadgeEl.textContent = AI_NAMES[targetAiEl.value];
+      activeLangBadgeEl.textContent = `ภาษาที่เลือก: ${state.lang.toUpperCase()}`;
+      const formatLabel = state.format === 'json' ? 'JSON Prompt' : 'Full Text';
+      copyBtnLangLabelEl.textContent = `${state.lang.toUpperCase()} - ${formatLabel}`;
+    }
+
+    // Event Listeners for Live Updates
+    const allInputs = [
+      imageTitleEl, targetAiEl, subjectDescEl, aspectRatioEl,
+      keepLikenessEl, refSubjectTypeEl, likenessStrengthEl, keyTraitsLockEl,
+      customAdditionsEl, artStyleEl, headProportionEl,
+      sceneDetailTextEl, lightingPresetEl, colorToneEl,
+      expressionSelectEl, actionPoseSelectEl, funnyGagSelectEl, customActionTextEl
+    ];
+
+    allInputs.forEach(el => {
+      el.addEventListener('input', renderOutput);
+      el.addEventListener('change', renderOutput);
+    });
+
+    // Checkbox chip visual state
+    document.querySelectorAll('.chip-toggle input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.closest('.chip-toggle').classList.toggle('checked', cb.checked);
+        renderOutput();
+      });
+    });
+
+    // Quick-add prop tag buttons
+    document.querySelectorAll('.prop-tag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const toAdd = btn.dataset.add;
+        const curr = customAdditionsEl.value.trim();
+        if (!curr) {
+          customAdditionsEl.value = toAdd;
+        } else if (!curr.includes(toAdd)) {
+          customAdditionsEl.value = `${curr}, ${toAdd}`;
+        }
+        renderOutput();
+      });
+    });
+
+    // Quick-add trait lock tag buttons
+    document.querySelectorAll('.trait-tag-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const toAdd = btn.dataset.trait;
+        const curr = keyTraitsLockEl.value.trim();
+        if (!curr) {
+          keyTraitsLockEl.value = toAdd;
+        } else if (!curr.includes(toAdd)) {
+          keyTraitsLockEl.value = `${curr}, ${toAdd}`;
+        }
+        renderOutput();
+      });
+    });
+
+    // Scene Category & Preset Change
+    sceneCategoryEl.addEventListener('change', () => {
+      populatePresetsForCategory(sceneCategoryEl.value);
+      renderOutput();
+    });
+
+    scenePresetEl.addEventListener('change', () => {
+      syncSceneTextFromPreset();
+      renderOutput();
+    });
+
+    // Mood Pills Selection & Random Scene by Mood
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.mood = btn.dataset.mood;
+        randomizeSceneByMood(state.mood);
+      });
+    });
+
+    function randomizeSceneByMood(mood) {
+      const pool = [];
+      SCENE_CATEGORIES.forEach(cat => {
+        cat.Presets.forEach(preset => {
+          if (mood === 'all' || preset.moods.includes(mood)) {
+            pool.push({ catId: cat.id, presetId: preset.id });
+          }
+        });
+      });
+      if (pool.length === 0) return;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      sceneCategoryEl.value = pick.catId;
+      populatePresetsForCategory(pick.catId, pick.presetId);
+      renderOutput();
+    }
+
+    document.getElementById('randomSceneByMoodBtn').addEventListener('click', () => {
+      randomizeSceneByMood(state.mood);
+    });
+
+    // Randomize Funny / Cheeky Caricature Action Only (Section 4 Button)
+    document.getElementById('randomFunnyActBtn').addEventListener('click', () => {
+      const funnyExprKeys = ['cheeky_wink', 'sassy_sideeye', 'laughing_joy', 'caffeine_shock', 'smug_boss', 'dramatic_gasp', 'duck_face'];
+      const funnyPoseKeys = [
+        'sassy_hips', 'peek_sunglasses', 'point_at_viewer', 'salt_bae',
+        'double_thumbs_fine', 'home_alone_shock', 'boss_snap', 'peace_double',
+        'finger_guns', 'multitask_octopus', 'chair_racing', 'victory_jump', 'zen_float'
+      ];
+      const gagKeys = ['none', 'comic_sparks', 'flying_papers', 'battery_low', 'crown_sunglasses', 'rubber_duck', 'question_marks'];
+
+      expressionSelectEl.value = funnyExprKeys[Math.floor(Math.random() * funnyExprKeys.length)];
+      actionPoseSelectEl.value = funnyPoseKeys[Math.floor(Math.random() * funnyPoseKeys.length)];
+      funnyGagSelectEl.value = gagKeys[Math.floor(Math.random() * gagKeys.length)];
+      renderOutput();
+    });
+
+    // Language Selection (EN vs TH)
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const prevLang = state.lang;
+        state.lang = btn.dataset.lang;
+
+        // If scene detail matches the preset in the previous language, switch it smoothly
+        const preset = findCurrentPreset();
+        if (preset && (sceneDetailTextEl.value.trim() === preset[prevLang])) {
+          sceneDetailTextEl.value = preset[state.lang];
+        }
+        renderOutput();
+      });
+    });
+
+    // Format Tab Selection (Full Text vs JSON)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        state.format = btn.dataset.format;
+        renderOutput();
+      });
+    });
+
+    // Copy Button (Copies selected language & format)
+    copyPromptBtn.addEventListener('click', async () => {
+      const textToCopy = promptOutputEl.textContent;
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+      } catch (e) {
+        const temp = document.createElement('textarea');
+        temp.value = textToCopy;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+      }
+      copyPromptBtn.classList.add('copied');
+      const originalHtml = copyPromptBtn.innerHTML;
+      copyPromptBtn.innerHTML = `✅ คัดลอก Prompt (${state.lang.toUpperCase()}) เรียบร้อยแล้ว!`;
+      setTimeout(() => {
+        copyPromptBtn.classList.remove('copied');
+        copyPromptBtn.innerHTML = originalHtml;
+        renderOutput();
+      }, 1800);
+    });
+
+    // Image Upload Handling
+    const uploadZone = document.getElementById('uploadZone');
+    const imageInput = document.getElementById('imageInput');
+    const uploadEmpty = document.getElementById('uploadEmpty');
+    const uploadPreviewWrap = document.getElementById('uploadPreviewWrap');
+    const uploadThumb = document.getElementById('uploadThumb');
+    const uploadFilename = document.getElementById('uploadFilename');
+    const uploadDetails = document.getElementById('uploadDetails');
+    const removeImgBtn = document.getElementById('removeImgBtn');
+
+    uploadZone.addEventListener('click', (e) => {
+      if (e.target === removeImgBtn) return;
+      imageInput.click();
+    });
+
+    uploadZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        imageInput.click();
+      }
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleImageFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files && imageInput.files[0]) {
+        handleImageFile(imageInput.files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      if (!file.type.startsWith('image/')) return;
+      state.uploadedFile = file;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        uploadThumb.src = ev.target.result;
+        uploadFilename.textContent = file.name;
+        const sizeKb = Math.round(file.size / 1024);
+        uploadDetails.textContent = `ขนาดไฟล์ ${sizeKb} KB • ล็อกเอกลักษณ์ความเหมือนสูงสุด 100% อัตโนมัติ`;
+        uploadEmpty.style.display = 'none';
+        uploadPreviewWrap.classList.add('active');
+        keepLikenessEl.checked = true;
+        keepLikenessEl.closest('.chip-toggle').classList.add('checked');
+        likenessStrengthEl.value = 'strict_max';
+        renderOutput();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    removeImgBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.uploadedFile = null;
+      imageInput.value = '';
+      uploadThumb.src = '';
+      uploadPreviewWrap.classList.remove('active');
+      uploadEmpty.style.display = 'flex';
+      renderOutput();
+    });
+
+    // Load User's Sample ESG Prompt Preset
+    document.getElementById('loadExampleBtn').addEventListener('click', () => {
+      imageTitleEl.value = 'ESG Professional Caricature Portrait';
+      targetAiEl.value = 'midjourney';
+      subjectDescEl.value = 'A professional person sitting at an office desk working on a laptop';
+      aspectRatioEl.value = '2:3';
+      keepLikenessEl.checked = true;
+      keepLikenessEl.closest('.chip-toggle').classList.add('checked');
+      refSubjectTypeEl.value = 'person';
+      likenessStrengthEl.value = 'strict_max';
+      keyTraitsLockEl.value = '';
+      customAdditionsEl.value = '';
+      customActionTextEl.value = '';
+      artStyleEl.value = 'pixar_2d';
+      headProportionEl.value = 'slight_caricature';
+
+      document.querySelectorAll('.style-feat').forEach(cb => {
+        const shouldCheck = ['large_eyes', 'glossy_hair', 'clean_outlines'].includes(cb.value);
+        cb.checked = shouldCheck;
+        cb.closest('.chip-toggle').classList.toggle('checked', shouldCheck);
+      });
+
+      sceneCategoryEl.value = 'office_esg';
+      populatePresetsForCategory('office_esg', 'esg_desk');
+      lightingPresetEl.value = 'soft_studio';
+      colorToneEl.value = 'warm_vibrant';
+      expressionSelectEl.value = 'warm_confident';
+      actionPoseSelectEl.value = 'standard_pose';
+      funnyGagSelectEl.value = 'none';
+
+      renderOutput();
+    });
+
+    // Randomize Playful / Hilarious Caricature Idea
+    document.getElementById('randomAllBtn').addEventListener('click', () => {
+      const funnySubjects = [
+        'A charismatic person from the reference photo with unmistakable facial likeness and signature outfit',
+        'An energetic professional from the reference photo holding an iced coffee',
+        'A cheerful character based strictly on the uploaded photo showing off a project',
+        'A playful creative character keeping exact facial identity and body build from the reference photo'
+      ];
+      subjectDescEl.value = funnySubjects[Math.floor(Math.random() * funnySubjects.length)];
+      imageTitleEl.value = 'Hilarious Dynamic Caricature';
+
+      const exprKeys = ['cheeky_wink', 'sassy_sideeye', 'laughing_joy', 'caffeine_shock', 'smug_boss', 'dramatic_gasp', 'duck_face'];
+      expressionSelectEl.value = exprKeys[Math.floor(Math.random() * exprKeys.length)];
+
+      const poseKeys = [
+        'sassy_hips', 'peek_sunglasses', 'point_at_viewer', 'salt_bae',
+        'double_thumbs_fine', 'home_alone_shock', 'boss_snap', 'peace_double',
+        'finger_guns', 'multitask_octopus', 'chair_racing', 'victory_jump', 'zen_float'
+      ];
+      actionPoseSelectEl.value = poseKeys[Math.floor(Math.random() * poseKeys.length)];
+
+      const gagKeys = ['comic_sparks', 'flying_papers', 'battery_low', 'crown_sunglasses', 'rubber_duck', 'question_marks'];
+      funnyGagSelectEl.value = gagKeys[Math.floor(Math.random() * gagKeys.length)];
+
+      randomizeSceneByMood('hilarious');
+      renderOutput();
+    });
+
+    // Day / Night Theme Toggle
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+
+    themeToggleBtn.addEventListener('click', () => {
+      const htmlEl = document.documentElement;
+      const current = htmlEl.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', next);
+      if (next === 'dark') {
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'โหมดกลางวัน';
+      } else {
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'โหมดกลางคืน';
+      }
+    });
+
+    // Initialize App
+    initSceneDropdowns();
+    renderOutput();
+  </script>
+</body>
+</html>
